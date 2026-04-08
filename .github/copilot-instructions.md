@@ -66,10 +66,11 @@ Each task follows this exact sequence — **no exceptions**:
 2. **Implement**: make the code/file changes for the task
 3. **Update `tasks.md`**: mark the task `[X]` in `specs/<feature>/tasks.md` **on the same branch, before committing**
 4. **Commit & push**: include both the implementation files and `tasks.md` in the same branch but on separated commits
-5. **Open PR**: `gh pr create --title "[TXXX] ..." --body "... Closes #N" --label "feature:00X-..." --base main`
-6. **Kanban → In review**: `gh project item-edit --id <ITEM_ID> ... --single-select-option-id df73e18b`
-7. **Wait for merge**: do not start the next task until the PR is merged to main
-8. **After merge**: pull main, move kanban item → Done (`98236657`), then start next task
+5. **Ensure issue exists**: every PR must link to a GitHub issue via `Closes #N`. If no issue exists for the work (e.g. chore, hotfix, unplanned task), create one first: `gh issue create --title "..." --body "..." --label "..."`, add it to the kanban project, then use its number in the PR body
+6. **Open PR**: `gh pr create --title "[TXXX] ..." --body "... Closes #N" --label "feature:00X-..." --base main`
+7. **Kanban → In review**: `gh project item-edit --id <ITEM_ID> ... --single-select-option-id df73e18b`
+8. **Wait for merge**: do not start the next task until the PR is merged to main
+9. **After merge**: pull main, move kanban item → Done (`98236657`), then start next task
 
 ### tasks.md update rules
 - Mark a task `[X]` **as soon as it is implemented**, on the same branch where the work was done
