@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="SunnySunday.Core/SunnySunday.Core.csproj" />
+  <Project Path="SunnySunday.Server/SunnySunday.Server.csproj" />
 </Solution>

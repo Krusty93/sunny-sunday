@@ -24,7 +24,7 @@
 
 - [X] T001 Create `src/SunnySunday.slnx` solution file in the `src/` directory with `dotnet new sln -n SunnySunday -o src`
 - [X] T002 Create `src/SunnySunday.Core/SunnySunday.Core.csproj` as a class library targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/SunnySunday.slnx`
-- [ ] T003 [P] Create `src/SunnySunday.Server/SunnySunday.Server.csproj` as a web application targeting `net10.0` (SDK: `Microsoft.NET.Sdk.Web`)
+- [X] T003 [P] Create `src/SunnySunday.Server/SunnySunday.Server.csproj` as a web application targeting `net10.0` (SDK: `Microsoft.NET.Sdk.Web`); add to `src/SunnySunday.slnx`
 - [ ] T004 [P] Create `src/SunnySunday.Cli/SunnySunday.Cli.csproj` as a console app targeting `net10.0` (SDK: `Microsoft.NET.Sdk`)
 - [ ] T005 [P] Create `src/SunnySunday.Tests/SunnySunday.Tests.csproj` as an xUnit test project targeting `net10.0` with packages: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`
 - [X] T006 ~~Add all four projects to `src/SunnySunday.slnx` via `dotnet sln add`~~ — superseded: each project (T002–T005) adds itself to the solution in its own task
