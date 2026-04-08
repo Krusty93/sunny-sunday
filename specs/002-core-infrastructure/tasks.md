@@ -22,12 +22,12 @@
 
 **Purpose**: Create the .NET 10 solution file and project scaffolding.
 
-- [ ] T001 Create `SunnySunday.slnx` solution file at repository root with `dotnet new sln -n SunnySunday`
+- [ ] T001 Create `src/SunnySunday.slnx` solution file in the `src/` directory with `dotnet new sln -n SunnySunday -o src`
 - [ ] T002 Create `src/SunnySunday.Core/SunnySunday.Core.csproj` as a class library targeting `net10.0` (SDK: `Microsoft.NET.Sdk`)
 - [ ] T003 [P] Create `src/SunnySunday.Server/SunnySunday.Server.csproj` as a web application targeting `net10.0` (SDK: `Microsoft.NET.Sdk.Web`)
 - [ ] T004 [P] Create `src/SunnySunday.Cli/SunnySunday.Cli.csproj` as a console app targeting `net10.0` (SDK: `Microsoft.NET.Sdk`)
 - [ ] T005 [P] Create `src/SunnySunday.Tests/SunnySunday.Tests.csproj` as an xUnit test project targeting `net10.0` with packages: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`
-- [ ] T006 Add all four projects to `SunnySunday.slnx` via `dotnet sln add`
+- [ ] T006 Add all four projects to `src/SunnySunday.slnx` via `dotnet sln add`
 
 ---
 

@@ -55,6 +55,7 @@ specs/002-core-infrastructure/
 
 ```text
 src/
+├── SunnySunday.slnx
 ├── SunnySunday.Core/
 │   ├── SunnySunday.Core.csproj
 │   └── Models/
@@ -78,8 +79,6 @@ src/
     ├── SunnySunday.Tests.csproj
     └── Infrastructure/
         └── SchemaBootstrapTests.cs
-
-SunnySunday.slnx
 ```
 
 **Structure Decision**: Multi-project solution under `src/`. `SunnySunday.Core` is a class library with no dependencies. Server and CLI reference Core. Tests reference all three. This matches the constitution's Client/Server Separation principle and enables independent deployment of server (Docker) and CLI (single-file binary).
