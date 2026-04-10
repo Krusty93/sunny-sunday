@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="SunnySunday.Cli/SunnySunday.Cli.csproj" />
   <Project Path="SunnySunday.Core/SunnySunday.Core.csproj" />
   <Project Path="SunnySunday.Server/SunnySunday.Server.csproj" />
+  <Project Path="SunnySunday.Tests/SunnySunday.Tests.csproj" />
 </Solution>

@@ -25,8 +25,8 @@
 - [X] T001 Create `src/SunnySunday.slnx` solution file in the `src/` directory with `dotnet new sln -n SunnySunday -o src`
 - [X] T002 Create `src/SunnySunday.Core/SunnySunday.Core.csproj` as a class library targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/SunnySunday.slnx`
 - [X] T003 [P] Create `src/SunnySunday.Server/SunnySunday.Server.csproj` as a web application targeting `net10.0` (SDK: `Microsoft.NET.Sdk.Web`); add to `src/SunnySunday.slnx`
-- [ ] T004 [P] Create `src/SunnySunday.Cli/SunnySunday.Cli.csproj` as a console app targeting `net10.0` (SDK: `Microsoft.NET.Sdk`)
-- [ ] T005 [P] Create `src/SunnySunday.Tests/SunnySunday.Tests.csproj` as an xUnit test project targeting `net10.0` with packages: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`
+- [X] T004 [P] Create `src/SunnySunday.Cli/SunnySunday.Cli.csproj` as a console app targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/SunnySunday.slnx`; add stub `Program.cs`
+- [X] T005 [P] Create `src/SunnySunday.Tests/SunnySunday.Tests.csproj` as an xUnit test project targeting `net10.0` with packages: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`; add to `src/SunnySunday.slnx`
 - [X] T006 ~~Add all four projects to `src/SunnySunday.slnx` via `dotnet sln add`~~ — superseded: each project (T002–T005) adds itself to the solution in its own task
 
 ---
@@ -37,10 +37,10 @@
 
 **⚠️ CRITICAL**: T007–T010 must complete before US1/US2/US3 implementation tasks.
 
-- [ ] T007 Add project reference `SunnySunday.Core` → in `SunnySunday.Server.csproj`
-- [ ] T008 [P] Add project reference `SunnySunday.Core` → in `SunnySunday.Cli.csproj`
-- [ ] T009 Add project references `SunnySunday.Core`, `SunnySunday.Server`, `SunnySunday.Cli` → in `SunnySunday.Tests.csproj`
-- [ ] T010 [P] Add NuGet packages to `SunnySunday.Server.csproj`: `Microsoft.Data.Sqlite`, `Serilog`, `Serilog.Sinks.File`, `Serilog.Sinks.SQLite`, `Serilog.Extensions.Hosting`
+- [X] T007 Add project reference `SunnySunday.Core` → in `SunnySunday.Server.csproj`
+- [X] T008 [P] Add project reference `SunnySunday.Core` → in `SunnySunday.Cli.csproj`
+- [X] T009 Add project references `SunnySunday.Core`, `SunnySunday.Server`, `SunnySunday.Cli` → in `SunnySunday.Tests.csproj`
+- [X] T010 [P] Add NuGet packages to `SunnySunday.Server.csproj`: `Microsoft.Data.Sqlite`, `Serilog`, `Serilog.Sinks.File`, `Serilog.Sinks.SQLite`, `Serilog.Extensions.Hosting`
 
 **Checkpoint**: All project references and packages restored — user story implementation can begin.
 
