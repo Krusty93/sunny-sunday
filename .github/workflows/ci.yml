@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'Dockerfile.ci'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          context: .
+          file: Dockerfile.ci
+          target: build
+          tags: sunny-sunday-ci:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run tests
+        run: |
+          mkdir -p test-results
+          docker run --rm \
+            -v "${{ github.workspace }}/test-results:/test-results" \
+            sunny-sunday-ci:latest \
+            dotnet test /src/SunnySunday.Tests/SunnySunday.Tests.csproj \
+              --no-build \
+              --configuration Release \
+              --logger "trx;LogFileName=results.trx" \
+              --results-directory /test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: test-results/
+          if-no-files-found: warn
