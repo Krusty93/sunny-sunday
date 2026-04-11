@@ -1,0 +1,12 @@
+# Dockerfile.ci — used by CI to run tests in a consistent, reproducible environment.
+# Not intended for production deployment (see Dockerfile.server / Dockerfile.cli for that).
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS restore
+WORKDIR /src
+COPY src/ .
+RUN dotnet restore SunnySunday.slnx
+
+FROM restore AS build
+RUN dotnet build SunnySunday.slnx \
+    --no-restore \
+    --configuration Release
