@@ -60,7 +60,7 @@ winget install Krusty93.SunnySunday
 
 **Docker (no install)**
 ```sh
-docker run --rm -e SUNNY_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/sunny-sunday:latest sunny <command>
+docker run --rm -e SUNNY_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/sunnysunday.cli:latest <command>
 ```
 
 ### 3. Sync your highlights

@@ -41,7 +41,7 @@ That's it. The server is running and will start sending recaps on the default sc
 
 **Option A — Docker (no install required):**
 ```sh
-docker run --rm ghcr.io/krusty93/sunny-sunday:latest sunny <command>
+docker run --rm -e SUNNY_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/sunnysunday.cli:latest <command>
 ```
 
 **Option B — Download binary:**
