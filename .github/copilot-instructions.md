@@ -52,7 +52,7 @@ When asked to start a feature, follow this exact order **before writing any code
 
 1. Create the **Design subtask** issue (label = parent label), add to kanban → move to `In progress`
 2. Create the **Implementation subtask** issue (label = parent label), add to kanban → leave in `Backlog`
-3. Run spec-kit: `/speckit.specify` → `/speckit.plan` → `/speckit.tasks`
+3. Run spec-kit: `/speckit.specify` → `/speckit.plan` → `/speckit.tasks` — **each step requires user involvement**: ask the user for all decisions, feature preferences, constraints, and clarifications before proceeding to the next step; do not make assumptions on scope or design choices
 4. Once `tasks.md` is ready, create **one implementation phase subtask** per phase defined in `tasks.md`; each phase subtask is a child of the Implementation subtask issue (same label); add each to kanban → `Backlog`
 5. Mark Design subtask PR → `In review`; on merge → `Done`; move Implementation subtask → `In progress` and begin phase-by-phase implementation
 
