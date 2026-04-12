@@ -28,7 +28,15 @@ docker run -d \
   -e SMTP_PASSWORD=yourpassword \
   -p 8080:8080 \
   -v sunny-data:/data \
-  ghcr.io/krusty93/sunny-sunday:latest
+  ghcr.io/krusty93/sunnysunday.server:latest
+```
+
+Optional supply-chain verification:
+
+```sh
+gh attestation verify \
+  oci://ghcr.io/krusty93/sunnysunday.server:latest \
+  --owner Krusty93
 ```
 
 ### 2. Install the client CLI

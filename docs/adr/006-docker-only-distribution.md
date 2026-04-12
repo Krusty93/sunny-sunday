@@ -13,7 +13,7 @@ Alternatives considered:
 
 ## Decision
 
-Distribute the server exclusively as a **Docker image** published to GitHub Container Registry (`ghcr.io/krusty93/sunny-sunday`).
+Distribute the server exclusively as a **Docker image** published to GitHub Container Registry (`ghcr.io/krusty93/sunnysunday.server`).
 
 Configuration is passed entirely via environment variables:
 - `KINDLE_EMAIL` — the user's Send-to-Kindle email address
@@ -25,6 +25,7 @@ Data is persisted in a named Docker volume (`sunny-data`).
 ## Consequences
 
 - A single command (`docker run` or `docker-compose up`) fully deploys the server — no installation steps, no dependency management.
+- Image provenance is verifiable through GitHub Artifact Attestations (`gh attestation verify`).
 - Environment variables are a well-understood configuration pattern for containerized workloads.
 - The user is responsible for backing up the Docker volume (`/data/sunny.db`).
 - No native package is provided for the server — Docker is the only supported server deployment method.
