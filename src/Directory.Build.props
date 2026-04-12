@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>Andrea Grillo</Authors>
+    <Copyright>Copyright © Andrea Grillo $([System.DateTime]::Now.ToString('yyyy'))</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <EnableNETAnalyzer>True</EnableNETAnalyzer>
+    <AnalysisLevel>latest</AnalysisLevel> 
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <AllEnabledByDefault>True</AllEnabledByDefault>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>
