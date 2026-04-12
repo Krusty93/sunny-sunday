@@ -12,9 +12,9 @@ Self-hosted tool that delivers Kindle highlight recaps to the user's Kindle via 
 
 ## Coding conventions
 
-- .NET/C# conventions (PascalCase types, camelCase variables)
-- All REST endpoints return JSON; errors are actionable
-- TDD where applicable (e.g. API endpoints, parsers); not required for mechanical changes (e.g. NuGet updates, csproj edits)
+- .NET/C# conventions (use already installed skills csharp-async, dotnet-best-practices, dotnet-upgrade,etc.)
+- All REST endpoints return JSON; errors are actionable 
+- TDD where applicable (e.g. API endpoints, parsers) using already installed skills csharp-xunit, etc.; not required for mechanical changes (e.g. NuGet updates, csproj edits)
 - When adding new .NET projects: `dotnet sln src/SunnySunday.slnx add src/<Project>/<Project>.csproj` in the same PR
 - Diagrams: Mermaid preferred; ASCII only for spatial layouts
 
@@ -26,8 +26,18 @@ Register a new ADR whenever a significant architectural decision is made during 
 
 ## GitHub Project conventions
 
-**Kanban:** project #2 `PVT_kwHOAHg8ss4BT_OI` · field `PVTSSF_lAHOAHg8ss4BT_OIzhBKY1M`
-Statuses: `Backlog=f75ad846` · `Ready=61e4505c` · `In progress=47fc9ee4` · `In review=df73e18b` · `Done=98236657`
+**Kanban:** project #2 on `Krusty93/sunny-sunday`. Use `gh` CLI to resolve IDs at runtime:
+- Project ID + status field ID: `gh project view 2 --owner Krusty93 --format json`
+- Status option IDs: `gh project field-list 2 --owner Krusty93 --format json`
+- Item ID for an issue: `gh api graphql -f query='{ repository(owner:"Krusty93", name:"sunny-sunday") { issue(number:N) { projectItems(first:1) { nodes { id } } } } }'`
+- Move item: `gh project item-edit --id <ITEM_ID> --project-id <PROJECT_ID> --field-id <FIELD_ID> --single-select-option-id <OPTION_ID>`
+
+Status names: `Backlog` · `Ready` · `In progress` · `In review` · `Done`
+
+### Task lifecycle
+
+**Before starting any task or feature:** move the kanban item to `In progress`, then begin implementation.
+**On PR open:** move to `In review`. **On PR merge:** move to `Done`.
 
 ### Task structure for spec-kit features
 
