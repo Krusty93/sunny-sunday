@@ -46,6 +46,16 @@ Each feature (e.g. `003-highlight-parser`) has **one parent task** on the kanban
 1. **Design subtask** — runs spec-kit (`/speckit.specify` → `/speckit.plan` → `/speckit.tasks`); produces `specs/00X/spec.md`, `plan.md`, `research.md`, `data-model.md`, `quickstart.md`, `tasks.md`; implementation subtasks are created here
 2. **Implementation subtasks** — one per phase defined in `tasks.md`; each subtask carries the same label as the parent
 
+### Feature start sequence
+
+When asked to start a feature, follow this exact order **before writing any code or spec**:
+
+1. Create the **Design subtask** issue (label = parent label), add to kanban → move to `In progress`
+2. Create the **Implementation subtask** issue (label = parent label), add to kanban → leave in `Backlog`
+3. Run spec-kit: `/speckit.specify` → `/speckit.plan` → `/speckit.tasks`
+4. Once `tasks.md` is ready, create **one implementation phase subtask** per phase defined in `tasks.md`; each phase subtask is a child of the Implementation subtask issue (same label); add each to kanban → `Backlog`
+5. Mark Design subtask PR → `In review`; on merge → `Done`; move Implementation subtask → `In progress` and begin phase-by-phase implementation
+
 For non-feature tasks (e.g. CI/CD pipeline), check existing labels first. If no label matches, ask the user before proceeding.
 
 Task descriptions must be self-contained: an agent must be able to implement a task by reading only the repo docs and the task description.
