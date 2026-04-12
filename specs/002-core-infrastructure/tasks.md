@@ -52,13 +52,13 @@
 
 **Independent Test**: `dotnet build` exits 0 on a fresh clone; `dotnet test` exits 0.
 
-- [ ] T011 [US1] Create `src/SunnySunday.Core/Models/Highlight.cs` — plain C# class with properties: `Id`, `UserId`, `BookId`, `Text`, `Weight`, `Excluded`, `LastSeen`, `DeliveryCount`, `CreatedAt`
-- [ ] T012 [P] [US1] Create `src/SunnySunday.Core/Models/Book.cs` — plain C# class with properties: `Id`, `UserId`, `AuthorId`, `Title`
-- [ ] T013 [P] [US1] Create `src/SunnySunday.Core/Models/Author.cs` — plain C# class with properties: `Id`, `Name`
-- [ ] T014 [P] [US1] Create `src/SunnySunday.Core/Models/User.cs` — plain C# class with properties: `Id`, `KindleEmail`, `CreatedAt`
-- [ ] T015 [P] [US1] Create `src/SunnySunday.Core/Models/Settings.cs` — plain C# class with properties: `UserId`, `Schedule`, `DeliveryDay`, `DeliveryTime`, `Count`
-- [ ] T016 [US1] Create `src/SunnySunday.Cli/Program.cs` — minimal entry point using `Spectre.Console`; add `Spectre.Console` NuGet to `SunnySunday.Cli.csproj`; no commands yet, just application host bootstrap
-- [ ] T017 [US1] Verify `dotnet build` exits 0 with no errors and no warnings across all four projects
+- [X] T011 [US1] Create `src/SunnySunday.Core/Models/Highlight.cs` — plain C# class with properties: `Id`, `UserId`, `BookId`, `Text`, `Weight`, `Excluded`, `LastSeen`, `DeliveryCount`, `CreatedAt`
+- [X] T012 [P] [US1] Create `src/SunnySunday.Core/Models/Book.cs` — plain C# class with properties: `Id`, `UserId`, `AuthorId`, `Title`
+- [X] T013 [P] [US1] Create `src/SunnySunday.Core/Models/Author.cs` — plain C# class with properties: `Id`, `Name`
+- [X] T014 [P] [US1] Create `src/SunnySunday.Core/Models/User.cs` — plain C# class with properties: `Id`, `KindleEmail`, `CreatedAt`
+- [X] T015 [P] [US1] Create `src/SunnySunday.Core/Models/Settings.cs` — plain C# class with properties: `UserId`, `Schedule`, `DeliveryDay`, `DeliveryTime`, `Count`
+- [X] T016 [US1] Create `src/SunnySunday.Cli/Program.cs` — minimal entry point using `Spectre.Console`; add `Spectre.Console` NuGet to `SunnySunday.Cli.csproj`; no commands yet, just application host bootstrap
+- [X] T017 [US1] Verify `dotnet build` exits 0 with no errors and no warnings across all four projects
 
 ---
 
@@ -68,10 +68,10 @@
 
 **Independent Test**: Run server against empty volume → `sqlite3 /data/sunny.db .tables` shows all 7 tables.
 
-- [ ] T018 [US2] Create `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` — service with `ApplyAsync(string dbPath)` method that executes all `CREATE TABLE IF NOT EXISTS` DDL statements using `Microsoft.Data.Sqlite`
-- [ ] T019 [US2] Implement the full DDL in `SchemaBootstrap.cs` for all 7 tables: `users`, `authors`, `books`, `highlights`, `excluded_books`, `excluded_authors`, `settings` (exact DDL from `data-model.md`)
-- [ ] T020 [US2] Create `src/SunnySunday.Server/Program.cs` — minimal ASP.NET Core host; DB path hardcoded to `.data/sunny.db`; call `SchemaBootstrap.ApplyAsync()` before `app.Run()` (Serilog will be wired before this step in T023, so DB errors will be logged)
-- [ ] T021 [US2] Verify idempotency: running `SchemaBootstrap.ApplyAsync()` twice on the same database produces no errors (covered by `CREATE TABLE IF NOT EXISTS` semantics)
+- [X] T018 [US2] Create `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` — service with `ApplyAsync(string dbPath)` method that executes all `CREATE TABLE IF NOT EXISTS` DDL statements using `Microsoft.Data.Sqlite`
+- [X] T019 [US2] Implement the full DDL in `SchemaBootstrap.cs` for all 7 tables: `users`, `authors`, `books`, `highlights`, `excluded_books`, `excluded_authors`, `settings` (exact DDL from `data-model.md`)
+- [X] T020 [US2] Create `src/SunnySunday.Server/Program.cs` — minimal ASP.NET Core host; DB path hardcoded to `.data/sunny.db`; call `SchemaBootstrap.ApplyAsync()` before `app.Run()` (Serilog will be wired before this step in T023, so DB errors will be logged)
+- [X] T021 [US2] Verify idempotency: running `SchemaBootstrap.ApplyAsync()` twice on the same database produces no errors (covered by `CREATE TABLE IF NOT EXISTS` semantics)
 
 ---
 

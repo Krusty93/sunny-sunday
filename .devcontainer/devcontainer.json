@@ -14,7 +14,8 @@
 	},
   "postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git",
   "postStartCommand": {
-    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+    "dotnet-https-cert": "dotnet dev-certs https"
   },
 	"customizations": {
 		"vscode": {
@@ -31,7 +32,8 @@
         "yzhang.markdown-all-in-one",
         "DavidAnson.vscode-markdownlint",
         "ionutvmi.path-autocomplete",
-        "humao.rest-client"
+        "humao.rest-client",
+        "alexcvzz.vscode-sqlite"
       ]
     }
 	}

@@ -1,5 +1,12 @@
 ### VisualStudio ###
 
+# Docker build context exclusions
+.git/
+Dockerfile*
+.dockerignore
+.env*
+coverage/
+
 # Tool Runtime Dir
 **/.dotnet/
 **/.packages/

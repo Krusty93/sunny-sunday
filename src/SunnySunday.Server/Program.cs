@@ -1,6 +1,13 @@
+using SunnySunday.Server.Infrastructure.Database;
+
+var dbPath = ".data/sunny.db";
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+var schemaBootstrap = new SchemaBootstrap();
+await schemaBootstrap.ApplyAsync(dbPath);
 
-app.Run();
+app.MapGet("/", () => "Sunny Sunday server is running.");
+
+await app.RunAsync();
