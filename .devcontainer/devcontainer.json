@@ -12,7 +12,7 @@
 		},
     "ghcr.io/devcontainers-extra/features/uv:1": {}
 	},
-  "postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git",
+  "postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git"
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
     "dotnet-https-cert": "dotnet dev-certs https"
