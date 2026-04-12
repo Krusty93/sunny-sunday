@@ -1,0 +1,56 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "SunnySunday.Cli",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build: SunnySunday.Cli",
+            "program": "${workspaceFolder}/src/SunnySunday.Cli/bin/Debug/net10.0/SunnySunday.Cli.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/SunnySunday.Cli",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "SunnySunday.Server",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build: SunnySunday.Server",
+            "program": "${workspaceFolder}/src/SunnySunday.Server/bin/Debug/net10.0/SunnySunday.Server.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/SunnySunday.Server",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "${input:serverEnvironment}"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "SunnySunday: Server + Cli",
+            "configurations": [
+                "SunnySunday.Server",
+                "SunnySunday.Cli"
+            ],
+            "stopAll": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "serverEnvironment",
+            "type": "pickString",
+            "description": "Pick the environment for SunnySunday.Server",
+            "options": [
+                "Development",
+                "Production"
+            ],
+            "default": "Development"
+        }
+    ]
+}
