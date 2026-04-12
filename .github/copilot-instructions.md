@@ -78,6 +78,6 @@ Task descriptions must be self-contained: an agent must be able to implement a t
 1. `git checkout main && git pull && git checkout -b task/TXXX-short-description`
 2. Implement; mark `[X]` in `tasks.md`; commit both together
 3. If applicable, update living docs (`ARCHITECTURE.md`, etc.) in the same PR
-4. `gh pr create --title "[TXXX] ..." --body "... Closes #N" --label "..." --base main`
+4. `gh pr create --title "<descriptive title, no conventional commit prefix>" --body "... Closes #N" --label "..." --base main`
 5. Move kanban → `In review`
 6. After merge: `git pull main`, move kanban → `Done`
