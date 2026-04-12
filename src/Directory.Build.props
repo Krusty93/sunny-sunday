@@ -9,6 +9,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <AllEnabledByDefault>True</AllEnabledByDefault>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
 </Project>
