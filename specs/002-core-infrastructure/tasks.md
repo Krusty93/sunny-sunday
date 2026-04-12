@@ -70,8 +70,8 @@
 
 - [X] T018 [US2] Create `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` — service with `ApplyAsync(string dbPath)` method that executes all `CREATE TABLE IF NOT EXISTS` DDL statements using `Microsoft.Data.Sqlite`
 - [X] T019 [US2] Implement the full DDL in `SchemaBootstrap.cs` for all 7 tables: `users`, `authors`, `books`, `highlights`, `excluded_books`, `excluded_authors`, `settings` (exact DDL from `data-model.md`)
-- [ ] T020 [US2] Create `src/SunnySunday.Server/Program.cs` — minimal ASP.NET Core host; DB path hardcoded to `.data/sunny.db`; call `SchemaBootstrap.ApplyAsync()` before `app.Run()` (Serilog will be wired before this step in T023, so DB errors will be logged)
-- [ ] T021 [US2] Verify idempotency: running `SchemaBootstrap.ApplyAsync()` twice on the same database produces no errors (covered by `CREATE TABLE IF NOT EXISTS` semantics)
+- [X] T020 [US2] Create `src/SunnySunday.Server/Program.cs` — minimal ASP.NET Core host; DB path hardcoded to `.data/sunny.db`; call `SchemaBootstrap.ApplyAsync()` before `app.Run()` (Serilog will be wired before this step in T023, so DB errors will be logged)
+- [X] T021 [US2] Verify idempotency: running `SchemaBootstrap.ApplyAsync()` twice on the same database produces no errors (covered by `CREATE TABLE IF NOT EXISTS` semantics)
 
 ---
 
