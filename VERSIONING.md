@@ -1,6 +1,7 @@
 # Versioning guide
 
 This project uses independent semantic versioning for each component (`core`, `cli`, `server`).
+Version numbers follow the [Semantic Versioning](https://semver.org/) 2.0.0 specification.
 Tag creation, CHANGELOG generation, and GitHub Releases are fully automated.
 
 ## How to release a new version

@@ -20,6 +20,7 @@ jobs:
       tag:       ${{ steps.meta.outputs.tag }}
     steps:
       - id: meta
+        name: Get Tags
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           COMPONENT="${TAG%%/v*}"
@@ -42,9 +43,14 @@ jobs:
             ext: ""
           - rid: osx-x64
             ext: ""
+          - rid: osx-arm64
+            ext: ""
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
@@ -69,7 +75,8 @@ jobs:
              "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
           find "publish/${RID}" -maxdepth 1 -type f -not -name "*.pdb" -exec mv {} "publish/sunny-${V}-${RID}${EXT}" \;
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload CLI artifacts
+        uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.rid }}
           path: publish/sunny-*
@@ -80,9 +87,11 @@ jobs:
     if: always() && needs.metadata.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v4
+      - name: Download CLI artifacts
+        uses: actions/download-artifact@v8
         with:
           pattern: cli-*
           path: artifacts/
@@ -104,11 +113,12 @@ jobs:
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
-      - uses: softprops/action-gh-release@v2
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name:   ${{ needs.metadata.outputs.tag }}
-          name:       "${{ needs.metadata.outputs.component }} v${{ needs.metadata.outputs.version }}"
-          body:       ${{ steps.changelog.outputs.body }}
-          draft:      false
+          tag_name: ${{ needs.metadata.outputs.tag }}
+          name: "${{ needs.metadata.outputs.component }} v${{ needs.metadata.outputs.version }}"
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
           prerelease: false
-          files:      artifacts/*
+          files: artifacts/*
