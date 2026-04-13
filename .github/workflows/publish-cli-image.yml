@@ -49,7 +49,7 @@ jobs:
 
       - name: Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/krusty93/sunnysunday.cli
           tags: |
@@ -73,7 +73,7 @@ jobs:
           sbom: true
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ghcr.io/krusty93/sunnysunday.cli
           subject-digest: ${{ steps.build.outputs.digest }}
