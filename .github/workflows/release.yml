@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'core/v*'
+      - 'cli/v*'
+      - 'server/v*'
+
+permissions:
+  contents: write
+
+jobs:
+  metadata:
+    name: Parse tag
+    runs-on: ubuntu-latest
+    outputs:
+      component: ${{ steps.meta.outputs.component }}
+      version:   ${{ steps.meta.outputs.version }}
+      tag:       ${{ steps.meta.outputs.tag }}
+    steps:
+      - id: meta
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          COMPONENT="${TAG%%/v*}"
+          VERSION="${TAG#*/v}"
+          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
+          echo "version=$VERSION"     >> $GITHUB_OUTPUT
+          echo "tag=$TAG"             >> $GITHUB_OUTPUT
+
+  build-cli:
+    name: Build CLI (${{ matrix.rid }})
+    needs: metadata
+    if: startsWith(github.ref, 'refs/tags/cli/')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            ext: .exe
+          - rid: linux-x64
+            ext: ""
+          - rid: osx-x64
+            ext: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish
+        run: |
+          dotnet publish src/SunnySunday.Cli \
+            --configuration Release \
+            --runtime ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:PublishTrimmed=true \
+            --output publish/${{ matrix.rid }}
+
+      - name: Rename binary
+        run: |
+          V="${{ needs.metadata.outputs.version }}"
+          RID="${{ matrix.rid }}"
+          EXT="${{ matrix.ext }}"
+          mv "publish/${RID}/SunnySunday.Cli${EXT}" \
+             "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
+          mv "publish/${RID}/sunny${EXT}" \
+             "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
+          find "publish/${RID}" -maxdepth 1 -type f -not -name "*.pdb" -exec mv {} "publish/sunny-${V}-${RID}${EXT}" \;
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.rid }}
+          path: publish/sunny-*
+
+  create-release:
+    name: Create GitHub Release
+    needs: [metadata, build-cli]
+    if: always() && needs.metadata.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cli-*
+          path: artifacts/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Extract CHANGELOG section
+        id: changelog
+        run: |
+          COMPONENT="${{ needs.metadata.outputs.component }}"
+          VERSION="${{ needs.metadata.outputs.version }}"
+          CHANGELOG=$(find "src/SunnySunday.$(echo "$COMPONENT" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')" -name "CHANGELOG.md" 2>/dev/null | head -1)
+          BODY=""
+          [ -n "$CHANGELOG" ] && \
+            BODY=$(awk "/^## \[$VERSION\]/{flag=1;next} /^## \[/{flag=0} flag" "$CHANGELOG")
+          {
+            echo "body<<EOF"
+            echo "${BODY:-No changelog entry for v${VERSION}.}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name:   ${{ needs.metadata.outputs.tag }}
+          name:       "${{ needs.metadata.outputs.component }} v${{ needs.metadata.outputs.version }}"
+          body:       ${{ steps.changelog.outputs.body }}
+          draft:      false
+          prerelease: false
+          files:      artifacts/*

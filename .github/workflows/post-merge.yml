@@ -1,0 +1,70 @@
+name: Post-Merge - Tag & Changelog
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-components:
+    name: Tag changed components
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install versionize
+        run: dotnet tool install -g versionize
+
+      - name: Setup git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Tag any component whose version has no tag yet
+        run: |
+          set -e
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          TAGGED=0
+
+          while IFS= read -r component; do
+            NAME=$(echo "$component" | jq -r '.name')
+            COMP_PATH=$(echo "$component" | jq -r '.path')
+
+            CSPROJ=$(find "$COMP_PATH" -name "*.csproj" | head -1)
+            [ -z "$CSPROJ" ] && { echo "⚠️  $NAME: .csproj not found, skipping"; continue; }
+
+            VERSION=$(grep -oP '(?<=<Version>)[^<]+' "$CSPROJ" || echo "")
+            [ -z "$VERSION" ] && { echo "⚠️  $NAME: <Version> not found, skipping"; continue; }
+
+            TAG="${NAME}/v${VERSION}"
+
+            if git tag -l | grep -qx "$TAG"; then
+              echo "✓ $NAME v$VERSION - tag already exists, nothing to do"
+              continue
+            fi
+
+            echo "🚀 $NAME: creating tag $TAG"
+            versionize \
+              --proj-name "$NAME" \
+              --release-as "$VERSION" \
+              --skip-dirty
+            TAGGED=1
+            echo "  ✅ $TAG created"
+
+          done < <(jq -c '.projects[]' .versionize)
+
+          if [ $TAGGED -eq 1 ]; then
+            git push --follow-tags
+            echo "Tags pushed."
+          else
+            echo "No new tags to push."
+          fi
