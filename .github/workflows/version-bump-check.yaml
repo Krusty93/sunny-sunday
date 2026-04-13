@@ -1,0 +1,102 @@
+name: Version Bump Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/version-bump-check.yaml'
+      - '.versionize'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  version-bump-check:
+    name: Version Bump Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check bumps and post PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          COMPONENTS=$(jq -c '.projects[]' .versionize)
+
+          REPORT=""
+          FAILED=0
+          MISSING_BUMPS=""
+
+          while IFS= read -r component; do
+            NAME=$(echo "$component" | jq -r '.name')
+            COMP_PATH=$(echo "$component" | jq -r '.path')
+
+            if ! echo "$CHANGED" | grep -q "^${COMP_PATH}/"; then
+              REPORT="${REPORT}\n| \`${NAME}\` | - | - | ⏭️ Not modified |"
+              continue
+            fi
+
+            CSPROJ=$(find "$COMP_PATH" -name "*.csproj" | head -1)
+            if [ -z "$CSPROJ" ]; then
+              REPORT="${REPORT}\n| \`${NAME}\` | - | - | ❓ .csproj not found |"
+              FAILED=1; continue
+            fi
+
+            PR_VERSION=$(grep -oP '(?<=<Version>)[^<]+' "$CSPROJ" || echo "")
+            MAIN_VERSION=$(git show origin/main:"$CSPROJ" 2>/dev/null \
+              | grep -oP '(?<=<Version>)[^<]+' || echo "0.0.0")
+
+            if [ -z "$PR_VERSION" ]; then
+              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | - | ❌ \`<Version>\` tag missing |"
+              FAILED=1; continue
+            fi
+
+            LOWER=$(printf '%s\n' "$MAIN_VERSION" "$PR_VERSION" | sort -V | head -1)
+
+            if [ "$MAIN_VERSION" = "$PR_VERSION" ]; then
+              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ❌ Not bumped |"
+              MISSING_BUMPS="${MISSING_BUMPS}# bump ${NAME} before opening PR — edit <Version> in ${CSPROJ}\n"
+              FAILED=1
+            elif [ "$LOWER" = "$PR_VERSION" ]; then
+              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ❌ Version regressed |"
+              FAILED=1
+            else
+              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ✅ OK |"
+            fi
+          done <<< "$COMPONENTS"
+
+          if [ $FAILED -eq 0 ]; then
+            SUMMARY="✅ **All modified components have been version bumped.**"
+            HINT=""
+          else
+            SUMMARY="❌ **One or more modified components are missing a version bump.**"
+            HINT="\n\nFor each failing component, edit the \`<Version>\` tag in the relevant \`.csproj\` file to a higher semver value, then push again:\n\`\`\`bash\n${MISSING_BUMPS}\`\`\`"
+          fi
+
+          BODY="### 🔖 Version Bump Check\n\n${SUMMARY}${HINT}\n\n| Component | Version on \`main\` | Version in PR | Status |\n|---|---|---|---|\n${REPORT}\n\n---\n*Updated automatically on every push to this PR.*"
+
+          EXISTING_ID=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body | startswith("### 🔖 Version Bump Check")) | .id' \
+            | head -1)
+
+          BODY_REAL=$(printf "%b" "$BODY")
+
+          if [ -n "$EXISTING_ID" ]; then
+            gh api --method PATCH "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              --field body="$BODY_REAL"
+          else
+            gh api --method POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              --field body="$BODY_REAL"
+          fi
+
+          [ $FAILED -eq 0 ] || exit 1

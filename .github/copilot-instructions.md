@@ -81,3 +81,8 @@ Task descriptions must be self-contained: an agent must be able to implement a t
 4. `gh pr create --title "<descriptive title, no conventional commit prefix>" --body "... Closes #N" --label "..." --base main`
 5. Move kanban → `In review`
 6. After merge: `git pull main`, move kanban → `Done`
+
+## Versioning conventions
+
+Refer to the canonical versioning guide in [VERSIONING.md](../VERSIONING.md).
+
