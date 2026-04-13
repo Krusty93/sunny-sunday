@@ -1,0 +1,7 @@
+{
+  "projects": [
+    { "name": "core",   "path": "src/SunnySunday.Core"   },
+    { "name": "cli",    "path": "src/SunnySunday.Cli"     },
+    { "name": "server", "path": "src/SunnySunday.Server"  }
+  ]
+}
