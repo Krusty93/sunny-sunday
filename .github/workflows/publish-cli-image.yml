@@ -1,21 +1,37 @@
 name: Publish CLI Image
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  packages: write
-  id-token: write
-  attestations: write
+  release:
+    types: [published]
 
 jobs:
+  check-tag:
+    name: Check tag prefix
+    runs-on: ubuntu-latest
+    outputs:
+      is-cli:  ${{ steps.check.outputs.is-cli }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - id: check
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ "$TAG" == cli/v* ]]; then
+            echo "is-cli=true"           >> $GITHUB_OUTPUT
+            echo "version=${TAG#cli/v}"  >> $GITHUB_OUTPUT
+          else
+            echo "is-cli=false"          >> $GITHUB_OUTPUT
+          fi
+
   publish:
     name: Publish GHCR CLI Image
+    needs: check-tag
+    if: needs.check-tag.outputs.is-cli == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -37,8 +53,8 @@ jobs:
         with:
           images: ghcr.io/krusty93/sunnysunday.cli
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') }}
+            type=raw,value=${{ needs.check-tag.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push
         id: build
