@@ -34,6 +34,9 @@ jobs:
       attestations: write
     env:
       IMAGE_NAME: ghcr.io/krusty93/sunnysunday.server
+      DESCRIPTION: "Periodic notes recaps, on your Kindle"
+      AUTHORS: "Krusty93"
+      REPOSITORY: ${{ github.repository }}
 
     steps:
       - name: Checkout
@@ -61,6 +64,12 @@ jobs:
             type=semver,pattern={{major}},value=${{ needs.check-tag.outputs.version }}
             type=ref,event=branch,enable={{is_not_default_branch}}
             type=sha
+          labels: |
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.description=${{ env.DESCRIPTION }}
+            org.opencontainers.image.authors=${{ env.AUTHORS }}
+            org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
+            org.opencontainers.image.source=https://github.com/${{ env.REPOSITORY }}
 
       - name: Build and push
         id: build
@@ -83,11 +92,13 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v4
         with:
-          subject-name: ghcr.io/krusty93/sunnysunday.server
+          subject-name: ${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
       - name: Show verify command
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           echo "Verify with:"
-          echo "gh attestation verify oci://ghcr.io/krusty93/sunnysunday.server@${{ steps.build.outputs.digest }} --owner Krusty93"
+          echo "gh attestation verify oci://$IMAGE_NAME@$DIGEST --owner Krusty93"
