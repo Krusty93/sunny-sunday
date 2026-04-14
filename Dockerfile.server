@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY src/ ./
+RUN dotnet restore SunnySunday.Server/SunnySunday.Server.csproj
+RUN dotnet publish SunnySunday.Server/SunnySunday.Server.csproj \
+    --configuration Release \
+    --output /out \
+    --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+COPY --from=build /out/ ./
+
+ENV ASPNETCORE_URLS=http://+:8080
+
+RUN mkdir -p /data \
+    && ln -s /data /app/.data
+
+VOLUME ["/data"]
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "SunnySunday.Server.dll"]

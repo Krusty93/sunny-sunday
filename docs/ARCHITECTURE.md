@@ -42,6 +42,7 @@ Kindle / My Clippings.txt                              │
 ### Server (`sunny-server`)
 
 - Distributed as a Docker container
+- Published to GHCR as `ghcr.io/krusty93/sunnysunday.server`
 - Always-on, handles all automated operations
 - Responsibilities:
   - Store highlights, recap history, weights, exclusions, settings in SQLite

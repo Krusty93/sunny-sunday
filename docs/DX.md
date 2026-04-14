@@ -32,7 +32,7 @@ docker run -d \
   -e SMTP_PASSWORD=yourpassword \
   -p 8080:8080 \
   -v sunny-data:/data \
-  ghcr.io/krusty93/sunny-sunday:latest
+  ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
 That's it. The server is running and will start sending recaps on the default schedule (weekly, every Sunday at 18:00).
@@ -76,7 +76,7 @@ docker run -d \
   -e SUNNY_SERVER=http://192.168.1.10:8080 \
   -p 8080:8080 \
   -v sunny-data:/data \
-  ghcr.io/krusty93/sunny-sunday:latest
+  ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
 On the client side, set `SUNNY_SERVER` once in your shell profile:
