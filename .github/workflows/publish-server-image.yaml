@@ -1,6 +1,6 @@
 name: Publish Server Image
 
-'on':
+on:
   workflow_dispatch:
     inputs:
       version:
@@ -33,6 +33,11 @@ jobs:
     needs: check-tag
     if: needs.check-tag.outputs.is-server == 'true'
     uses: ./.github/workflows/publish-image-reusable.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
     with:
       image_name: ghcr.io/krusty93/sunnysunday.server
       dockerfile: Dockerfile.server
