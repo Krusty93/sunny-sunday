@@ -33,6 +33,7 @@ Kindle / My Clippings.txt                              │
 ### Client CLI (`sunny`)
 
 - Distributed as a self-contained binary (macOS/Linux/Windows) or runnable via Docker
+- Optional Docker image for no-install usage: `ghcr.io/krusty93/sunnysunday.cli`
 - Connects to the server via `SUNNY_SERVER` environment variable (no authentication — local network trusted)
 - Responsibilities:
   - Parse and sync highlights from `My Clippings.txt` to the server
