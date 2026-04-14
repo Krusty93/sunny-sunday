@@ -1,31 +1,26 @@
-name: Publish Server Image
+name: Publish Docker Image
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      dockerfile:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      description:
+        required: true
+        type: string
+      authors:
+        required: true
+        type: string
 
 jobs:
-  check-tag:
-    name: Check tag prefix
-    runs-on: ubuntu-latest
-    outputs:
-      is-server: ${{ steps.check.outputs.is-server }}
-      version:   ${{ steps.check.outputs.version }}
-    steps:
-      - id: check
-        run: |
-          TAG="${{ github.event.release.tag_name }}"
-          if [[ "$TAG" == server/v* ]]; then
-            echo "is-server=true"          >> $GITHUB_OUTPUT
-            echo "version=${TAG#server/v}" >> $GITHUB_OUTPUT
-          else
-            echo "is-server=false"         >> $GITHUB_OUTPUT
-          fi
-
   publish:
-    name: Publish GHCR Server Image
-    needs: check-tag
-    if: needs.check-tag.outputs.is-server == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,9 +28,9 @@ jobs:
       id-token: write
       attestations: write
     env:
-      IMAGE_NAME: ghcr.io/krusty93/sunnysunday.server
-      DESCRIPTION: "Periodic notes recaps, on your Kindle"
-      AUTHORS: "Krusty93"
+      IMAGE_NAME: ${{ inputs.image_name }}
+      DESCRIPTION: ${{ inputs.description }}
+      AUTHORS: ${{ inputs.authors }}
       REPOSITORY: ${{ github.repository }}
 
     steps:
@@ -59,9 +54,9 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}},value=${{ needs.check-tag.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.check-tag.outputs.version }}
-            type=semver,pattern={{major}},value=${{ needs.check-tag.outputs.version }}
+            type=semver,pattern={{version}},value=${{ inputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
+            type=semver,pattern={{major}},value=${{ inputs.version }}
             type=ref,event=branch,enable={{is_not_default_branch}}
             type=sha
           labels: |
@@ -75,10 +70,10 @@ jobs:
         id: build
         uses: docker/build-push-action@v7
         env:
-          SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
+          SOURCE_DATE_EPOCH: 0
         with:
           context: .
-          file: Dockerfile.server
+          file: ${{ inputs.dockerfile }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
