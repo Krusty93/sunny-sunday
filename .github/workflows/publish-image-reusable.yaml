@@ -65,12 +65,14 @@ jobs:
             org.opencontainers.image.authors=${{ env.AUTHORS }}
             org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
             org.opencontainers.image.source=https://github.com/${{ env.REPOSITORY }}
+          flavor: |
+            latest=false
 
       - name: Build and push
         id: build
         uses: docker/build-push-action@v7
         env:
-          SOURCE_DATE_EPOCH: 0
+          SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
         with:
           context: .
           file: ${{ inputs.dockerfile }}
@@ -81,15 +83,14 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: mode=max
-          sbom: true
+          provenance: false
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
+          push-to-registry: false
 
       - name: Show verify command
         env:
