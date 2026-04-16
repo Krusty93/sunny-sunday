@@ -1,6 +1,7 @@
-name: Post-Merge - Tag & Changelog
+name: Post-Merge
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
 
@@ -16,55 +17,51 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Install versionize
-        run: dotnet tool install -g versionize
-
-      - name: Setup git identity
+      - name: Setup git
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Tag any component whose version has no tag yet
+      - name: Discover Versioned Components
+        id: discover
+        uses: ./.github/actions/discover-versioned-components
+
+      - name: Tag Component Versions
+        env:
+          COMPONENTS_JSON: ${{ steps.discover.outputs.components_json }}
         run: |
           set -e
-          export PATH="$PATH:$HOME/.dotnet/tools"
           TAGGED=0
 
           while IFS= read -r component; do
             NAME=$(echo "$component" | jq -r '.name')
-            COMP_PATH=$(echo "$component" | jq -r '.path')
+            CSPROJ=$(echo "$component" | jq -r '.csprojPath')
 
-            CSPROJ=$(find "$COMP_PATH" -name "*.csproj" | head -1)
-            [ -z "$CSPROJ" ] && { echo "⚠️  $NAME: .csproj not found, skipping"; continue; }
+            [ -z "$NAME" ] && continue
+            [ -z "$CSPROJ" ] || [ "$CSPROJ" = "null" ] && { echo "⚠️  $NAME: .csproj not configured, skipping"; continue; }
+            [ ! -f "$CSPROJ" ] && { echo "⚠️  $NAME: $CSPROJ not found, skipping"; continue; }
 
             VERSION=$(grep -oP '(?<=<Version>)[^<]+' "$CSPROJ" || echo "")
             [ -z "$VERSION" ] && { echo "⚠️  $NAME: <Version> not found, skipping"; continue; }
 
             TAG="${NAME}/v${VERSION}"
 
-            if git tag -l | grep -qx "$TAG"; then
+            if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
               echo "✓ $NAME v$VERSION - tag already exists, nothing to do"
               continue
             fi
 
             echo "🚀 $NAME: creating tag $TAG"
-            versionize \
-              --proj-name "$NAME" \
-              --release-as "$VERSION" \
-              --skip-dirty
+            git tag -a "$TAG" -m "$NAME v$VERSION"
             TAGGED=1
             echo "  ✅ $TAG created"
 
-          done < <(jq -c '.projects[]' .versionize)
+          done < <(printf '%s' "$COMPONENTS_JSON" | jq -c '.[]')
 
           if [ $TAGGED -eq 1 ]; then
-            git push --follow-tags
+            git push origin --tags
             echo "Tags pushed."
           else
             echo "No new tags to push."

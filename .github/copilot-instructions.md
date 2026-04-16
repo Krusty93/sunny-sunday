@@ -85,4 +85,3 @@ Task descriptions must be self-contained: an agent must be able to implement a t
 ## Versioning conventions
 
 Refer to the canonical versioning guide in [VERSIONING.md](../VERSIONING.md).
-
