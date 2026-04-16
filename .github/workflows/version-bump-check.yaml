@@ -41,6 +41,16 @@ jobs:
           FAILED=0
           MISSING_BUMPS=""
 
+          append_report_row() {
+            local row="$1"
+
+            if [ -n "$REPORT" ]; then
+              REPORT="${REPORT}\n${row}"
+            else
+              REPORT="$row"
+            fi
+          }
+
           while IFS= read -r component; do
             NAME=$(echo "$component" | jq -r '.name')
             COMP_PATH=$(echo "$component" | jq -r '.projectPath')
@@ -49,12 +59,12 @@ jobs:
             [ -z "$NAME" ] && continue
 
             if ! echo "$CHANGED" | grep -q "^${COMP_PATH}/"; then
-              REPORT="${REPORT}\n| \`${NAME}\` | - | - | ⏭️ Not modified |"
+              append_report_row "| \`${NAME}\` | - | - | ⏭️ Not modified |"
               continue
             fi
 
             if [ -z "$CSPROJ" ] || [ "$CSPROJ" = "null" ] || [ ! -f "$CSPROJ" ]; then
-              REPORT="${REPORT}\n| \`${NAME}\` | - | - | ❓ ${CSPROJ} not found |"
+              append_report_row "| \`${NAME}\` | - | - | ❓ ${CSPROJ} not found |"
               FAILED=1; continue
             fi
 
@@ -63,21 +73,21 @@ jobs:
               | grep -oP '(?<=<Version>)[^<]+' || echo "0.0.0")
 
             if [ -z "$PR_VERSION" ]; then
-              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | - | ❌ \`<Version>\` tag missing |"
+              append_report_row "| \`${NAME}\` | \`${MAIN_VERSION}\` | - | ❌ \`<Version>\` tag missing |"
               FAILED=1; continue
             fi
 
             LOWER=$(printf '%s\n' "$MAIN_VERSION" "$PR_VERSION" | sort -V | head -1)
 
             if [ "$MAIN_VERSION" = "$PR_VERSION" ]; then
-              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ❌ Not bumped |"
+              append_report_row "| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ❌ Not bumped |"
               MISSING_BUMPS="${MISSING_BUMPS}# bump ${NAME} before opening PR — edit <Version> in ${CSPROJ}\n"
               FAILED=1
             elif [ "$LOWER" = "$PR_VERSION" ]; then
-              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ❌ Version regressed |"
+              append_report_row "| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ❌ Version regressed |"
               FAILED=1
             else
-              REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ✅ OK |"
+              append_report_row "| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ✅ OK |"
             fi
           done < <(printf '%s' "$COMPONENTS_JSON" | jq -c '.[]')
 
