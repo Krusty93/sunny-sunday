@@ -5,8 +5,8 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - '.github/actions/discover-versioned-components/**'
       - '.github/workflows/version-bump-check.yaml'
-      - '.versionize'
 
 permissions:
   contents: read
@@ -22,16 +22,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Discover Versioned Components
+        id: discover
+        uses: ./.github/actions/discover-versioned-components
+
       - name: Check bumps and post PR comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
+          COMPONENTS_JSON: ${{ steps.discover.outputs.components_json }}
         run: |
           set -e
 
           CHANGED=$(git diff --name-only origin/main...HEAD)
-          COMPONENTS=$(jq -c '.projects[]' .versionize)
 
           REPORT=""
           FAILED=0
@@ -39,16 +43,18 @@ jobs:
 
           while IFS= read -r component; do
             NAME=$(echo "$component" | jq -r '.name')
-            COMP_PATH=$(echo "$component" | jq -r '.path')
+            COMP_PATH=$(echo "$component" | jq -r '.projectPath')
+            CSPROJ=$(echo "$component" | jq -r '.csprojPath')
+
+            [ -z "$NAME" ] && continue
 
             if ! echo "$CHANGED" | grep -q "^${COMP_PATH}/"; then
               REPORT="${REPORT}\n| \`${NAME}\` | - | - | ⏭️ Not modified |"
               continue
             fi
 
-            CSPROJ=$(find "$COMP_PATH" -name "*.csproj" | head -1)
-            if [ -z "$CSPROJ" ]; then
-              REPORT="${REPORT}\n| \`${NAME}\` | - | - | ❓ .csproj not found |"
+            if [ -z "$CSPROJ" ] || [ "$CSPROJ" = "null" ] || [ ! -f "$CSPROJ" ]; then
+              REPORT="${REPORT}\n| \`${NAME}\` | - | - | ❓ ${CSPROJ} not found |"
               FAILED=1; continue
             fi
 
@@ -73,7 +79,7 @@ jobs:
             else
               REPORT="${REPORT}\n| \`${NAME}\` | \`${MAIN_VERSION}\` | \`${PR_VERSION}\` | ✅ OK |"
             fi
-          done <<< "$COMPONENTS"
+          done < <(printf '%s' "$COMPONENTS_JSON" | jq -c '.[]')
 
           if [ $FAILED -eq 0 ]; then
             SUMMARY="✅ **All modified components have been version bumped.**"

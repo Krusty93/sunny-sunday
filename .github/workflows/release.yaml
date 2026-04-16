@@ -3,7 +3,6 @@ name: Release
 on:
   push:
     tags:
-      - 'core/v*'
       - 'cli/v*'
       - 'server/v*'
 
@@ -49,6 +48,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Discover Versioned Components
+        id: discover
+        uses: ./.github/actions/discover-versioned-components
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
         with:
@@ -64,7 +67,7 @@ jobs:
             -p:PublishTrimmed=true \
             --output publish/${{ matrix.rid }}
 
-      - name: Rename binary
+      - name: Rename Binary
         run: |
           V="${{ needs.metadata.outputs.version }}"
           RID="${{ matrix.rid }}"
@@ -75,7 +78,7 @@ jobs:
              "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
           find "publish/${RID}" -maxdepth 1 -type f -not -name "*.pdb" -exec mv {} "publish/sunny-${V}-${RID}${EXT}" \;
 
-      - name: Upload CLI artifacts
+      - name: Upload CLI Artifacts
         uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.rid }}
@@ -89,8 +92,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
-      - name: Download CLI artifacts
+      - name: Discover Versioned Components
+        id: discover
+        uses: ./.github/actions/discover-versioned-components
+
+      - name: Download CLI Artifacts
         uses: actions/download-artifact@v8
         with:
           pattern: cli-*
@@ -98,27 +108,100 @@ jobs:
           merge-multiple: true
         continue-on-error: true
 
-      - name: Extract CHANGELOG section
-        id: changelog
+      - name: Generate Release Notes
+        id: notes
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          COMPONENTS_JSON: ${{ steps.discover.outputs.components_json }}
         run: |
+          set -euo pipefail
+
+          format_commit_entry() {
+            local sha="$1"
+            local subject pr_number short_sha ref
+
+            subject=$(git show -s --format=%s "$sha" | sed -E 's/ \(#[0-9]+\)$//; s/\r$//')
+            pr_number=$(git show -s --format=%s "$sha" | sed -nE 's/.* \(#([0-9]+)\)$/\1/p')
+            short_sha=$(git rev-parse --short "$sha")
+
+            if [ -n "$pr_number" ]; then
+              ref="[#${pr_number}](${REPO_URL}/pull/${pr_number})"
+            else
+              ref="[${short_sha}](${REPO_URL}/commit/${sha})"
+            fi
+
+            printf -- '- %s (%s)' "$subject" "$ref"
+          }
+
           COMPONENT="${{ needs.metadata.outputs.component }}"
           VERSION="${{ needs.metadata.outputs.version }}"
-          CHANGELOG=$(find "src/SunnySunday.$(echo "$COMPONENT" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')" -name "CHANGELOG.md" 2>/dev/null | head -1)
+          TAG="${{ needs.metadata.outputs.tag }}"
+
+          COMP_PATH=$(printf '%s' "$COMPONENTS_JSON" | jq -r --arg name "$COMPONENT" '.[] | select(.name == $name) | .projectPath')
+
+          if [ -z "$COMP_PATH" ] || [ "$COMP_PATH" = "null" ]; then
+            echo "Unsupported component: $COMPONENT" >&2
+            exit 1
+          fi
+
+          PREVIOUS_TAG=$(git tag -l "${COMPONENT}/v*" --sort=-version:refname | grep -Fxv "$TAG" | head -1 || true)
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            RANGE="${PREVIOUS_TAG}..${TAG}"
+          else
+            RANGE="$TAG"
+          fi
+
+          RELEASE_DATE=$(git for-each-ref --format='%(creatordate:short)' "refs/tags/$TAG" | head -1)
+          if [ -z "$RELEASE_DATE" ]; then
+            RELEASE_DATE=$(git log -1 --format=%cs "$TAG")
+          fi
+          COMMITS=$(git log --reverse --format='%H' "$RANGE" -- "$COMP_PATH")
           BODY=""
-          [ -n "$CHANGELOG" ] && \
-            BODY=$(awk "/^## \[$VERSION\]/{flag=1;next} /^## \[/{flag=0} flag" "$CHANGELOG")
+
+          while IFS= read -r sha; do
+            [ -z "$sha" ] && continue
+            ENTRY=$(format_commit_entry "$sha")
+
+            if [ -z "$ENTRY" ]; then
+              continue
+            fi
+
+            if [ -n "$BODY" ]; then
+              BODY=$(printf '%s\n\n%s' "$BODY" "$ENTRY")
+            else
+              BODY="$ENTRY"
+            fi
+          done <<< "$COMMITS"
+
+          if [ -z "$BODY" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "body<<EOF"
+              echo
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "publish=true" >> "$GITHUB_OUTPUT"
           {
             echo "body<<EOF"
-            echo "${BODY:-No changelog entry for v${VERSION}.}"
+            echo "## ${VERSION} (${RELEASE_DATE})"
+            echo
+            echo "### Changes"
+            echo
+            echo "$BODY"
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
+        if: steps.notes.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.metadata.outputs.tag }}
-          name: "${{ needs.metadata.outputs.component }} v${{ needs.metadata.outputs.version }}"
-          body: ${{ steps.changelog.outputs.body }}
+          name: "${{ needs.metadata.outputs.component }}/${{ needs.metadata.outputs.version }}"
+          body: ${{ steps.notes.outputs.body }}
           draft: false
           prerelease: false
           files: artifacts/*

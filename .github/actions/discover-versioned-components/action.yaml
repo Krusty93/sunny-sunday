@@ -1,0 +1,56 @@
+name: "Discover Versioned Components"
+description: "Discover versioned SunnySunday components from csproj files under src."
+
+outputs:
+  components_json:
+    description: "JSON array of discovered components with name, projectPath, and csprojPath."
+    value: ${{ steps.discover.outputs.components_json }}
+
+runs:
+  using: composite
+  steps:
+    - id: discover
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        mapfile -t csproj_files < <(find src -mindepth 2 -maxdepth 2 -name '*.csproj' -print | sort)
+
+        if [ ${#csproj_files[@]} -eq 0 ]; then
+          echo 'components_json=[]' >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        components_json='[]'
+
+        for csproj_path in "${csproj_files[@]}"; do
+          version=$(grep -oPm1 '(?<=<Version>)[^<]+' "$csproj_path" || true)
+          if [ -z "$version" ]; then
+            echo "Skipping non-versioned project: $csproj_path"
+            continue
+          fi
+
+          project_path=$(dirname "$csproj_path")
+          project_dir=$(basename "$project_path")
+          csproj_name=$(basename "$csproj_path" .csproj)
+
+          raw_name="${project_dir#SunnySunday.}"
+          if [ "$raw_name" = "$project_dir" ]; then
+            raw_name="${csproj_name#SunnySunday.}"
+          fi
+
+          component_name=$(printf '%s' "$raw_name" | tr '[:upper:]' '[:lower:]')
+
+          components_json=$(jq \
+            --arg name "$component_name" \
+            --arg projectPath "$project_path" \
+            --arg csprojPath "$csproj_path" \
+            '. + [{ name: $name, projectPath: $projectPath, csprojPath: $csprojPath }]' \
+            <<< "$components_json")
+        done
+
+        {
+          echo 'components_json<<EOF'
+          echo "$components_json"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
