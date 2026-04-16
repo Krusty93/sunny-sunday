@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-core-infrastructure`
 **Created**: 2026-04-07
-**Status**: Draft
+**Status**: Implemented
 **Input**: User description: "Self-contained .NET 10 solution scaffold for Sunny Sunday: four projects (Core, Server, Cli, Tests), shared domain models (Highlight, Book, Author, User, Settings), SQLite schema creation on server startup, Serilog logging with file and SQLite sinks. No business logic — infrastructure only."
 
 ## User Scenarios & Testing *(mandatory)*

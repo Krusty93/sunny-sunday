@@ -13,8 +13,8 @@
 
 **Purpose**: Ensure the devcontainer runs .NET 10 and the repository has the correct .NET-specific ignore rules before any source file is created.
 
-- [ ] T000a Switch `.devcontainer/devcontainer.json` base image from `mcr.microsoft.com/devcontainers/base:trixie` to `mcr.microsoft.com/devcontainers/dotnet:1-10.0` and set `name` to `Sunny Sunday`; keep all other features and extensions unchanged — rebuild the devcontainer after this change
-- [ ] T000b Generate the standard .NET `.gitignore` at repository root via `dotnet new gitignore` (covers `bin/`, `obj/`, `*.user`, `*.suo`, NuGet fallback folders, etc.)
+- [X] T000a Switch `.devcontainer/devcontainer.json` base image from `mcr.microsoft.com/devcontainers/base:trixie` to `mcr.microsoft.com/devcontainers/dotnet:1-10.0` and set `name` to `Sunny Sunday`; keep all other features and extensions unchanged — rebuild the devcontainer after this change
+- [X] T000b Generate the standard .NET `.gitignore` at repository root via `dotnet new gitignore` (covers `bin/`, `obj/`, `*.user`, `*.suo`, NuGet fallback folders, etc.)
 
 ---
 
@@ -89,9 +89,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T025 [P] Add `.data/` to `.gitignore` (local development data directory per `quickstart.md`)
-- [ ] T026 [P] Verify `dotnet test` exits 0 (no test content yet, but project must compile and runner must report 0 failures)
-- [ ] T027 Update `specs/002-core-infrastructure/spec.md` status from `Draft` to `Implemented`
+- [X] T025 [P] Add `.data/` to `.gitignore` (local development data directory per `quickstart.md`)
+- [X] T026 [P] Verify `dotnet test` exits 0 (no test content yet, but project must compile and runner must report 0 failures)
+- [X] T027 Update `specs/002-core-infrastructure/spec.md` status from `Draft` to `Implemented`
 
 ---
 

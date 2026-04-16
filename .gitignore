@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Custom
 *.db
+
+# Local development data directory
+.data/
