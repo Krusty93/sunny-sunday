@@ -81,9 +81,9 @@
 
 **Independent Test**: Start server, make one HTTP request, verify log file exists and `SELECT COUNT(*) FROM Logs` > 0.
 
-- [ ] T022 [US3] Create `src/SunnySunday.Server/Infrastructure/Logging/SerilogConfiguration.cs` — static helper `ConfigureLogging(WebApplicationBuilder builder, string dbPath)` that: (1) calls `Directory.CreateDirectory(".data/logs")` to ensure the log directory exists before Serilog initializes, (2) configures Serilog with file sink (`.data/logs/sunny-.log`, rolling interval daily, minimum level `Information`) and SQLite sink (`dbPath`, table `Logs`, minimum level `Warning`); both paths are hardcoded constants — no env var
-- [ ] T023 [US3] Wire `SerilogConfiguration.ConfigureLogging()` into `src/SunnySunday.Server/Program.cs` — call it as the **first operation** on the host builder, before `SchemaBootstrap.ApplyAsync()`, so that DB initialization errors are captured in both log sinks; use `UseSerilog()` on the host builder
-- [ ] T024 [US3] Emit a startup log entry (`Information` level) in `Program.cs` after schema bootstrap completes: `"Sunny Sunday server started. Database: {DbPath}"` — verifies both sinks are wired before any HTTP request
+- [X] T022 [US3] Create `src/SunnySunday.Server/Infrastructure/Logging/SerilogConfiguration.cs` — static helper `ConfigureLogging(WebApplicationBuilder builder, string dbPath)` that: (1) calls `Directory.CreateDirectory(".data/logs")` to ensure the log directory exists before Serilog initializes, (2) configures Serilog with file sink (`.data/logs/sunny-.log`, rolling interval daily, minimum level `Information`) and SQLite sink (`dbPath`, table `Logs`, minimum level `Warning`); both paths are hardcoded constants — no env var
+- [X] T023 [US3] Wire `SerilogConfiguration.ConfigureLogging()` into `src/SunnySunday.Server/Program.cs` — call it as the **first operation** on the host builder, before `SchemaBootstrap.ApplyAsync()`, so that DB initialization errors are captured in both log sinks; use `UseSerilog()` on the host builder
+- [X] T024 [US3] Emit a startup log entry (`Information` level) in `Program.cs` after schema bootstrap completes: `"Sunny Sunday server started. Database: {DbPath}"` — verifies both sinks are wired before any HTTP request
 
 ---
 
