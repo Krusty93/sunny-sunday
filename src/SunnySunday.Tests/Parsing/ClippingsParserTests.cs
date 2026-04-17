@@ -599,4 +599,103 @@ public class ClippingsParserTests
     }
 
     #endregion
+
+    #region T041 — Edge cases: BOM, Unicode, special characters
+
+    [Fact]
+    public async Task ParseAsync_FilePath_BomPrefixedFile_ParsesCorrectly()
+    {
+        // UTF-8 BOM = 0xEF 0xBB 0xBF prepended to file content
+        var content = """
+            Gatsby (Fitzgerald)
+            - Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            BOM test highlight.
+            ==========
+            """;
+
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            // Write with BOM
+            await File.WriteAllTextAsync(tempFile, content, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+            var result = await ClippingsParser.ParseAsync(tempFile);
+
+            Assert.Single(result.Books);
+            Assert.Equal("Gatsby", result.Books[0].Title);
+            Assert.Equal("BOM test highlight.", result.Books[0].Highlights[0].Text);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Theory]
+    [InlineData("三体 (刘慈欣)", "三体", "刘慈欣")]                          // CJK
+    [InlineData("Éloge de la fuite (Henri Laborit)", "Éloge de la fuite", "Henri Laborit")]  // diacritics
+    [InlineData("مئة عام من العزلة (ماركيز)", "مئة عام من العزلة", "ماركيز")]             // RTL Arabic
+    public async Task ParseAsync_UnicodeBookTitlesAndAuthors_ParsesCorrectly(
+        string titleLine, string expectedTitle, string expectedAuthor)
+    {
+        var input = $"{titleLine}\n" +
+                    "- Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM\n" +
+                    "\n" +
+                    "Unicode highlight text.\n" +
+                    "==========\n";
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Single(result.Books);
+        Assert.Equal(expectedTitle, result.Books[0].Title);
+        Assert.Equal(expectedAuthor, result.Books[0].Author);
+    }
+
+    [Fact]
+    public async Task ParseAsync_HighlightWithSpecialCharacters_PreservesVerbatim()
+    {
+        const string specialText = """He said "hello" & she replied <'world'>.""";
+
+        var input = "Book (Author)\n" +
+                    "- Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM\n" +
+                    "\n" +
+                    specialText + "\n" +
+                    "==========\n";
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Single(result.Books);
+        Assert.Equal(specialText, result.Books[0].Highlights[0].Text);
+    }
+
+    #endregion
+
+    #region T042 — Performance: 10,000 entries within 5 seconds
+
+    [Fact]
+    public async Task ParseAsync_TenThousandEntries_CompletesWithinFiveSeconds()
+    {
+        static string Entry(int i) =>
+            $"Book {i % 100} (Author {i % 20})\n" +
+            $"- Your Highlight on Location {i * 2}-{i * 2 + 5} | Added on Thursday, January 1, 2026 12:00:00 AM\n" +
+            $"\n" +
+            $"Highlight number {i} with some reasonable length text to simulate real data.\n" +
+            "==========\n";
+
+        var input = string.Concat(Enumerable.Range(1, 10_000).Select(Entry));
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+        sw.Stop();
+
+        Assert.True(sw.Elapsed.TotalSeconds < 5,
+            $"Parsing 10,000 entries took {sw.Elapsed.TotalSeconds:F2}s — exceeded 5s limit.");
+        Assert.NotEmpty(result.Books);
+    }
+
+    #endregion
 }

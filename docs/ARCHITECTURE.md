@@ -40,6 +40,23 @@ Kindle / My Clippings.txt                              │
   - Manage user settings via CLI commands (schedule, count, weights, exclusions)
   - Display server status
 
+#### Parsing subsystem (`SunnySunday.Cli/Parsing/`)
+
+Responsible for transforming raw Kindle export text into structured data before syncing to the server.
+
+- **Entry point**: `ClippingsParser.ParseAsync(string filePath, ILogger? logger = null)` — file-path overload; `ClippingsParser.ParseAsync(TextReader, ILogger? logger = null)` — streaming overload for testability
+- **Output types**:
+  - `ParseResult` — top-level result: list of `ParsedBook`, total entries processed, duplicates removed
+  - `ParsedBook` — `(Title, Author?, IReadOnlyList<ParsedHighlight> Highlights)`
+  - `ParsedHighlight` — `(Text, Location?, AddedOn?)`
+- **Design decisions**:
+  - Pure static class — no state, no DI, no side effects beyond optional `ILogger`
+  - Streaming: reads lines one-by-one via `ReadLineAsync()`; no full file in memory
+  - Skip-and-warn: malformed entries are skipped with an `ILogger.LogWarning`; never throws
+  - Deduplication: `HashSet<(Title, Author, Text)>` — exact case-sensitive match, first occurrence kept
+  - Notes as highlights: entries of type "Note" are emitted as highlights with `[my note] ` prefix on their text
+  - Bookmarks: entries of type "Bookmark" are silently dropped
+
 ### Server (`sunny-server`)
 
 - Distributed as a Docker container
