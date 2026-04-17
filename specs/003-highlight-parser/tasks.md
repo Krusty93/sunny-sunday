@@ -131,18 +131,18 @@
 
 ### Tests for User Story 4
 
-- [ ] T032 [P] [US4] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given 10 valid entries and 1 malformed entry (e.g., missing metadata line — only title line then separator), all 10 valid highlights are extracted. Use a mock `ILogger` to verify a warning was logged with the correct entry index and a descriptive reason.
-- [ ] T033 [P] [US4] Write test: given an empty input (empty string or no content), `ParseResult.Books` is empty and no exception is thrown.
-- [ ] T034 [P] [US4] Write test: given input containing only `==========` separators and no actual clipping content, the result is empty books (no valid entries, blank entries silently skipped).
-- [ ] T035 [P] [US4] Write test: given a clipping entry where the title line has no parentheses (missing author), the entry is parsed with best-effort: title is the full first line (trimmed) and author is `null`. The entry is NOT skipped — it appears in the result.
-- [ ] T036 [P] [US4] Write test: given a clipping entry with an unrecognized type on the metadata line (e.g., `- Your Clip on Location 50 | Added on ...`), the entry is skipped and a warning is logged. Valid surrounding entries are still parsed.
+- [X] T032 [P] [US4] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given 10 valid entries and 1 malformed entry (e.g., missing metadata line — only title line then separator), all 10 valid highlights are extracted. Use a mock `ILogger` to verify a warning was logged with the correct entry index and a descriptive reason.
+- [X] T033 [P] [US4] Write test: given an empty input (empty string or no content), `ParseResult.Books` is empty and no exception is thrown.
+- [X] T034 [P] [US4] Write test: given input containing only `==========` separators and no actual clipping content, the result is empty books (no valid entries, blank entries silently skipped).
+- [X] T035 [P] [US4] Write test: given a clipping entry where the title line has no parentheses (missing author), the entry is parsed with best-effort: title is the full first line (trimmed) and author is `null`. The entry is NOT skipped — it appears in the result.
+- [X] T036 [P] [US4] Write test: given a clipping entry with an unrecognized type on the metadata line (e.g., `- Your Clip on Location 50 | Added on ...`), the entry is skipped and a warning is logged. Valid surrounding entries are still parsed.
 
 ### Implementation for User Story 4
 
-- [ ] T037 [US4] Implement skip-and-log logic in `src/SunnySunday.Cli/Parsing/ClippingsParser.cs`: wrap per-entry parsing in a try-catch or validation gate. If an entry has fewer than 2 lines, or the metadata line does not match the expected regex, log a warning via `ILogger` with the 1-based entry index, a descriptive reason (e.g., "Missing metadata line", "Unrecognized clipping type"), and an excerpt of the raw entry text (first 200 characters). Continue to the next entry.
-- [ ] T038 [US4] Implement best-effort parsing for partial entries: if the title line has no author parentheses, still parse the entry with `Author = null` (do not skip). If the date cannot be parsed, still parse the entry with `AddedOn = null`. Only skip entries where the structure is completely unrecognizable (< 2 lines, or metadata regex fails entirely).
-- [ ] T039 [US4] Handle edge cases for empty and whitespace-only entries: blank lines between separators should be silently skipped (no warning logged for completely empty entries). Entries with only whitespace content (no title line) should also be silently skipped.
-- [ ] T040 [US4] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1, US2, US3, and US4 tests must pass.
+- [X] T037 [US4] Implement skip-and-log logic in `src/SunnySunday.Cli/Parsing/ClippingsParser.cs`: wrap per-entry parsing in a try-catch or validation gate. If an entry has fewer than 2 lines, or the metadata line does not match the expected regex, log a warning via `ILogger` with the 1-based entry index, a descriptive reason (e.g., "Missing metadata line", "Unrecognized clipping type"), and an excerpt of the raw entry text (first 200 characters). Continue to the next entry.
+- [X] T038 [US4] Implement best-effort parsing for partial entries: if the title line has no author parentheses, still parse the entry with `Author = null` (do not skip). If the date cannot be parsed, still parse the entry with `AddedOn = null`. Only skip entries where the structure is completely unrecognizable (< 2 lines, or metadata regex fails entirely).
+- [X] T039 [US4] Handle edge cases for empty and whitespace-only entries: blank lines between separators should be silently skipped (no warning logged for completely empty entries). Entries with only whitespace content (no title line) should also be silently skipped.
+- [X] T040 [US4] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1, US2, US3, and US4 tests must pass.
 
 **Checkpoint**: Parser is robust against malformed input. All previous stories still pass.
 
