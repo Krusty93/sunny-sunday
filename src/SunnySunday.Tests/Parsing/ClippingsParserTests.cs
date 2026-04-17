@@ -1,4 +1,5 @@
-﻿using SunnySunday.Cli.Parsing;
+﻿using Microsoft.Extensions.Logging;
+using SunnySunday.Cli.Parsing;
 
 namespace SunnySunday.Tests.Parsing;
 
@@ -466,6 +467,135 @@ public class ClippingsParserTests
 
         Assert.Single(result.Books);
         Assert.Equal("Real Book", result.Books[0].Title);
+    }
+
+    #endregion
+
+    #region T032-T036 — Malformed entry handling (US4)
+
+    // Minimal ILogger that captures log messages for assertion.
+    private sealed class CapturingLogger : ILogger
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+        public void Log<TState>(
+            LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter)
+            => Entries.Add((logLevel, formatter(state, exception)));
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+    }
+
+    [Fact]
+    public async Task ParseAsync_MalformedEntryMissingMetadata_SkipsItAndLogsWarning()
+    {
+        // Arrange — build 10 valid entries + 1 malformed (title only, no metadata line)
+        static string ValidEntry(int i) =>
+            $"Book {i} (Author {i})\n" +
+            $"- Your Highlight on Location {i * 10}-{i * 10 + 5} | Added on Thursday, January 1, 2026 12:00:00 AM\n" +
+            $"\n" +
+            $"Highlight text {i}.\n" +
+            "==========\n";
+
+        var malformed = "Orphaned Title Only\n==========\n";
+
+        var input = string.Concat(Enumerable.Range(1, 5).Select(ValidEntry))
+                  + malformed
+                  + string.Concat(Enumerable.Range(6, 5).Select(ValidEntry));
+
+        using var reader = new StringReader(input);
+        var logger = new CapturingLogger();
+
+        // Act
+        var result = await ClippingsParser.ParseAsync(reader, logger);
+
+        // Assert — 10 valid highlights extracted
+        var totalHighlights = result.Books.Sum(b => b.Highlights.Count);
+        Assert.Equal(10, totalHighlights);
+
+        // At least one warning logged about the malformed entry
+        Assert.Contains(logger.Entries, e => e.Level == LogLevel.Warning);
+    }
+
+    [Fact]
+    public async Task ParseAsync_EmptyInput_ReturnsEmptyResultWithoutException()
+    {
+        using var reader = new StringReader(string.Empty);
+
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Books);
+        Assert.Equal(0, result.TotalEntriesProcessed);
+        Assert.Equal(0, result.DuplicatesRemoved);
+    }
+
+    [Fact]
+    public async Task ParseAsync_OnlySeparators_ReturnsEmptyResult()
+    {
+        var input = "==========\n==========\n==========\n";
+
+        using var reader = new StringReader(input);
+
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Empty(result.Books);
+        Assert.Equal(0, result.TotalEntriesProcessed);
+    }
+
+    [Fact]
+    public async Task ParseAsync_MissingAuthorParens_ParsesWithNullAuthorAndIsNotSkipped()
+    {
+        var input = """
+            My Untitled Journal
+            - Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            Some highlighted passage.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Single(result.Books);
+        Assert.Equal("My Untitled Journal", result.Books[0].Title);
+        Assert.Null(result.Books[0].Author);
+        Assert.Single(result.Books[0].Highlights);
+    }
+
+    [Fact]
+    public async Task ParseAsync_UnrecognizedMetadataType_SkipsEntryAndLogsWarning()
+    {
+        // "Clip" is not a known type — regex won't match
+        var input = """
+            Some Book (Some Author)
+            - Your Clip on Location 50 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            Content that should be skipped.
+            ==========
+            Valid Book (Valid Author)
+            - Your Highlight on Location 100-105 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            Valid highlight text.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var logger = new CapturingLogger();
+
+        var result = await ClippingsParser.ParseAsync(reader, logger);
+
+        // Only the valid entry is returned
+        Assert.Single(result.Books);
+        Assert.Equal("Valid Book", result.Books[0].Title);
+        Assert.Single(result.Books[0].Highlights);
+        Assert.Equal("Valid highlight text.", result.Books[0].Highlights[0].Text);
+
+        // Warning logged for the unrecognized type entry
+        Assert.Contains(logger.Entries, e => e.Level == LogLevel.Warning);
     }
 
     #endregion
