@@ -359,4 +359,114 @@ public class ClippingsParserTests
     }
 
     #endregion
+
+    #region T027-T029 — Grouping by book (US3)
+
+    [Fact]
+    public async Task ParseAsync_SixHighlightsThreeBooks_ProducesThreeParsedBooks()
+    {
+        var input = """
+            Dune (Frank Herbert)
+            - Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            I must not fear.
+            ==========
+            Dune (Frank Herbert)
+            - Your Highlight on Location 20-25 | Added on Thursday, January 1, 2026 1:00:00 AM
+
+            Fear is the mind-killer.
+            ==========
+            Foundation (Isaac Asimov)
+            - Your Highlight on Location 30-35 | Added on Thursday, January 1, 2026 2:00:00 AM
+
+            Violence is the last refuge of the incompetent.
+            ==========
+            Foundation (Isaac Asimov)
+            - Your Highlight on Location 40-45 | Added on Thursday, January 1, 2026 3:00:00 AM
+
+            It pays to be obvious, especially if you have a reputation for subtlety.
+            ==========
+            Neuromancer (William Gibson)
+            - Your Highlight on Location 50-55 | Added on Thursday, January 1, 2026 4:00:00 AM
+
+            The sky above the port was the color of television.
+            ==========
+            Neuromancer (William Gibson)
+            - Your Highlight on Location 60-65 | Added on Thursday, January 1, 2026 5:00:00 AM
+
+            Cyberspace. A consensual hallucination.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Equal(3, result.Books.Count);
+
+        var dune = result.Books.Single(b => b.Title == "Dune");
+        Assert.Equal("Frank Herbert", dune.Author);
+        Assert.Equal(2, dune.Highlights.Count);
+
+        var foundation = result.Books.Single(b => b.Title == "Foundation");
+        Assert.Equal("Isaac Asimov", foundation.Author);
+        Assert.Equal(2, foundation.Highlights.Count);
+
+        var neuromancer = result.Books.Single(b => b.Title == "Neuromancer");
+        Assert.Equal("William Gibson", neuromancer.Author);
+        Assert.Equal(2, neuromancer.Highlights.Count);
+    }
+
+    [Fact]
+    public async Task ParseAsync_TwoBooksSameAuthor_ProducesTwoSeparateBooks()
+    {
+        var input = """
+            Foundation (Isaac Asimov)
+            - Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            First highlight.
+            ==========
+            I Robot (Isaac Asimov)
+            - Your Highlight on Location 20-25 | Added on Thursday, January 1, 2026 1:00:00 AM
+
+            Second highlight.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Equal(2, result.Books.Count);
+        Assert.Single(result.Books, b => b.Title == "Foundation" && b.Author == "Isaac Asimov");
+        Assert.Single(result.Books, b => b.Title == "I Robot" && b.Author == "Isaac Asimov");
+    }
+
+    [Fact]
+    public async Task ParseAsync_BookWithOnlyBookmarks_DoesNotAppearInResult()
+    {
+        var input = """
+            Bookmarks Only (Some Author)
+            - Your Bookmark on Location 10 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            
+            ==========
+            Bookmarks Only (Some Author)
+            - Your Bookmark on Location 20 | Added on Thursday, January 1, 2026 1:00:00 AM
+
+            
+            ==========
+            Real Book (Real Author)
+            - Your Highlight on Location 30-35 | Added on Thursday, January 1, 2026 2:00:00 AM
+
+            Actual content.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Single(result.Books);
+        Assert.Equal("Real Book", result.Books[0].Title);
+    }
+
+    #endregion
 }
