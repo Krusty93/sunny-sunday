@@ -81,6 +81,13 @@ Some Kindle models prepend a UTF-8 BOM (`0xEF 0xBB 0xBF`) to the file. `StreamRe
 
 **Pattern**: `^- Your (?<type>Highlight|Note|Bookmark) on (?<location>.+?) \| Added on (?<date>.+)$`
 
+The `type` capture is used internally during parsing to:
+- **Bookmark**: skip the entry entirely (no text content)
+- **Note**: prepend `[my note]` to the extracted text, then treat as a highlight
+- **Highlight**: use text as-is
+
+No `ClippingType` enum or type field is exposed in the output — notes and highlights are unified in `ParsedHighlight.Text`.
+
 ### Date parsing
 
 The Kindle date format is: `Thursday, January 1, 2026 12:00:00 AM`

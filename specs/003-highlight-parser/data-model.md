@@ -15,14 +15,13 @@ ParseResult
 │   ├── string? Author
 │   └── List<ParsedHighlight>
 │       ├── string Text
-│       ├── ClippingType Type
 │       ├── string? Location
 │       └── DateTimeOffset? AddedOn
-└── List<ParseWarning>
-    ├── int EntryIndex
-    ├── string Reason
-    └── string RawExcerpt
+├── int TotalEntriesProcessed
+└── int DuplicatesRemoved
 ```
+
+Parse warnings (malformed entries) are logged to the console via Serilog — not collected in the result.
 
 ---
 
@@ -36,38 +35,25 @@ An intermediate representation of a single entry from `My Clippings.txt`, before
 |----------|------|-------------|-------|
 | `Title` | `string` | Non-empty | Book title extracted from line 1 |
 | `Author` | `string?` | Nullable | Author from last `(...)` on line 1; null if absent |
-| `Type` | `ClippingType` | Required | Highlight, Note, or Bookmark |
+| `IsNote` | `bool` | Required | True if the metadata line says "Note"; used to prepend `[my note]` prefix |
 | `Location` | `string?` | Nullable | Raw location string (e.g., `Location 100-105`) |
 | `AddedOn` | `DateTimeOffset?` | Nullable | Parsed date; null if date parsing fails |
 | `Text` | `string` | May be empty | Highlight/note text; empty for bookmarks |
 
 **Validation rules**:
 - `Title` must be non-empty after trimming
-- `Type` must be a recognized value; unrecognized types cause the entry to be skipped with a warning
-- Bookmarks (`Type = Bookmark`) are filtered out during grouping (they have no text)
-
----
-
-### ClippingType
-
-Enum representing the type of clipping entry.
-
-| Value | Description |
-|-------|-------------|
-| `Highlight` | Text highlighted by the user |
-| `Note` | User-written annotation attached to a location |
-| `Bookmark` | Position-only marker with no text content |
+- Bookmarks (detected from metadata line) are filtered out during grouping (they have no text)
+- Notes have `[my note]` prepended to their text before output
 
 ---
 
 ### ParsedHighlight
 
-A single highlight or note in the final output, after deduplication. Immutable.
+A single highlight in the final output, after deduplication. Notes are included as highlights with a `[my note]` prefix on their text. Immutable.
 
 | Property | Type | Constraints | Notes |
 |----------|------|-------------|-------|
-| `Text` | `string` | Non-empty | The highlight or note text |
-| `Type` | `ClippingType` | `Highlight` or `Note` | Never `Bookmark` (filtered) |
+| `Text` | `string` | Non-empty | The highlight text. Notes have `[my note]` prefix. |
 | `Location` | `string?` | Nullable | Raw location string for informational use |
 | `AddedOn` | `DateTimeOffset?` | Nullable | When the clipping was created on the Kindle |
 
@@ -89,18 +75,6 @@ A book with its associated highlights, after deduplication and grouping. Immutab
 
 ---
 
-### ParseWarning
-
-A warning generated when a clipping entry cannot be parsed.
-
-| Property | Type | Constraints | Notes |
-|----------|------|-------------|-------|
-| `EntryIndex` | `int` | >= 1 | 1-based ordinal position in the file |
-| `Reason` | `string` | Non-empty | Human-readable description of why parsing failed |
-| `RawExcerpt` | `string` | Truncated | First 200 characters of the raw entry text |
-
----
-
 ### ParseResult
 
 The top-level output of the parser. Immutable.
@@ -108,9 +82,10 @@ The top-level output of the parser. Immutable.
 | Property | Type | Constraints | Notes |
 |----------|------|-------------|-------|
 | `Books` | `IReadOnlyList<ParsedBook>` | Non-null | May be empty if no valid highlights found |
-| `Warnings` | `IReadOnlyList<ParseWarning>` | Non-null | May be empty if all entries parsed successfully |
 | `TotalEntriesProcessed` | `int` | >= 0 | Total entries encountered (including skipped) |
 | `DuplicatesRemoved` | `int` | >= 0 | Number of duplicate entries removed |
+
+Parse warnings for malformed entries are logged to the console (via `ILogger` / Serilog) during parsing — they are not part of the result structure.
 
 ---
 
@@ -122,8 +97,7 @@ The parser types are **separate from** the persistence models in `SunnySunday.Co
 |-------------|-------------------|-------------------------------|
 | `ParsedBook.Title` | `Book.Title` | Direct copy |
 | `ParsedBook.Author` | `Author.Name` | Direct copy; create Author if not exists |
-| `ParsedHighlight.Text` | `Highlight.Text` | Direct copy |
-| `ParsedHighlight.Type` | — | Not stored (all are treated as highlights in DB) |
+| `ParsedHighlight.Text` | `Highlight.Text` | Direct copy (includes `[my note]` prefix for notes) |
 | `ParsedHighlight.Location` | — | Not stored in MVP |
 | `ParsedHighlight.AddedOn` | `Highlight.CreatedAt` | Maps to CreatedAt |
 
@@ -136,11 +110,9 @@ The sync feature (future) will be responsible for mapping `ParseResult` → pers
 ```
 src/SunnySunday.Core/
 └── Parsing/
-    ├── ClippingType.cs        # Enum
     ├── RawClipping.cs         # Internal intermediate type
     ├── ParsedHighlight.cs     # Public output type
     ├── ParsedBook.cs          # Public output type
-    ├── ParseWarning.cs        # Public output type
     ├── ParseResult.cs         # Public top-level result
     └── ClippingsParser.cs     # Static parser class
 ```

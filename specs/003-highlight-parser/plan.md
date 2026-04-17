@@ -5,12 +5,12 @@
 
 ## Summary
 
-Parse Kindle `My Clippings.txt` files into structured highlight data. The parser is a pure function in `SunnySunday.Core/Parsing/` that reads the file line-by-line, extracts book/author/highlight/metadata, deduplicates by exact `(title, author, text)` match, groups highlights by book, and returns an immutable `ParseResult` with warnings for any skipped entries. No database, no HTTP, no side effects.
+Parse Kindle `My Clippings.txt` files into structured highlight data. The parser is a pure function in `SunnySunday.Core/Parsing/` that reads the file line-by-line, extracts book/author/highlight/metadata, deduplicates by exact `(title, author, text)` match, groups highlights by book, and returns an immutable `ParseResult`. Notes are treated as highlights with a `[my note]` prefix. Malformed entries are logged as warnings. No database, no HTTP, no side effects.
 
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (`net10.0` TFM)
-**Primary Dependencies**: None (pure .NET BCL only — `System.IO`, `System.Globalization`, `System.Text.RegularExpressions`)
+**Primary Dependencies**: Microsoft.Extensions.Logging (for `ILogger<T>` — warning logs for malformed entries)
 **Storage**: N/A — parser is a pure function with no persistence
 **Testing**: xUnit (via `SunnySunday.Tests`)
 **Target Platform**: Cross-platform (.NET 10 runtime)
@@ -61,11 +61,9 @@ src/SunnySunday.Core/
 │   ├── Settings.cs
 │   └── User.cs
 └── Parsing/                   # NEW — parser types and logic
-    ├── ClippingType.cs        # Enum: Highlight, Note, Bookmark
     ├── RawClipping.cs         # Internal intermediate parse result
     ├── ParsedHighlight.cs     # Public: single highlight in output
     ├── ParsedBook.cs          # Public: book with grouped highlights
-    ├── ParseWarning.cs        # Public: warning for skipped entry
     ├── ParseResult.cs         # Public: top-level result container
     └── ClippingsParser.cs     # Public: static parser entry point
 

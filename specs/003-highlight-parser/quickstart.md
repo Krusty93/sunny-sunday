@@ -18,11 +18,9 @@ All parser code lives in `SunnySunday.Core`:
 src/SunnySunday.Core/
 ├── Models/           # Existing persistence models (DO NOT MODIFY)
 └── Parsing/          # NEW — parser types and logic
-    ├── ClippingType.cs
     ├── RawClipping.cs
     ├── ParsedHighlight.cs
     ├── ParsedBook.cs
-    ├── ParseWarning.cs
     ├── ParseResult.cs
     └── ClippingsParser.cs
 
@@ -62,14 +60,9 @@ foreach (var book in result.Books)
     Console.WriteLine($"{book.Title} by {book.Author ?? "Unknown"}");
     foreach (var highlight in book.Highlights)
     {
+        // Notes will have text starting with "[my note] "
         Console.WriteLine($"  - {highlight.Text}");
     }
-}
-
-// Check for warnings
-foreach (var warning in result.Warnings)
-{
-    Console.WriteLine($"Warning at entry {warning.EntryIndex}: {warning.Reason}");
 }
 ```
 
@@ -101,8 +94,9 @@ var result = await ClippingsParser.ParseAsync(reader);
 2. **TextReader input** — accepts `TextReader` for testability; file-path overload is a convenience wrapper
 3. **Async API** — `ParseAsync` uses `ReadLineAsync()` for I/O-bound file reading
 4. **Immutable output** — all result types are immutable records or have read-only collections
-5. **Skip-and-warn** — malformed entries are skipped, never throw; warnings are collected in `ParseResult.Warnings`
+5. **Skip-and-warn** — malformed entries are skipped, never throw; warnings are logged to the console
 6. **Dedup by exact match** — `(Title, Author, Text)` tuple, case-sensitive, using `HashSet`
+7. **Notes as highlights** — notes get a `[my note]` prefix on their text; no separate type
 
 ## What This Feature Does NOT Do
 

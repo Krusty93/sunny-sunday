@@ -19,7 +19,7 @@ A Kindle user connects their device via USB and runs the `sunny sync` command, p
 
 1. **Given** a standard `My Clippings.txt` file with 50 highlights across 5 books, **When** the parser processes the file, **Then** all 50 highlights are extracted with correct book title, author, and highlight text.
 2. **Given** a clipping entry with a multi-line highlight (text spanning multiple lines), **When** the parser processes the entry, **Then** the full multi-line text is captured as a single highlight.
-3. **Given** a `My Clippings.txt` file containing highlights, notes, and bookmarks, **When** the parser processes the file, **Then** highlights and notes are extracted, and bookmarks (position-only entries with no text) are skipped.
+3. **Given** a `My Clippings.txt` file containing highlights, notes, and bookmarks, **When** the parser processes the file, **Then** highlights are extracted as-is, notes are extracted with a `[my note]` prefix prepended to their text, and bookmarks (position-only entries with no text) are skipped.
 4. **Given** a clipping entry with metadata containing location range and timestamp, **When** the parser processes the entry, **Then** the location and date information are extracted alongside the highlight text.
 
 ---
@@ -59,7 +59,7 @@ After parsing and deduplication, highlights are organized by book. Each book is 
 
 ### User Story 4 — Handle Malformed Entries Gracefully (Priority: P4)
 
-Real-world `My Clippings.txt` files may contain malformed or incomplete entries due to Kindle firmware bugs, file corruption, or manual editing. The parser skips these entries without crashing and reports them as warnings so the user can investigate if needed.
+Real-world `My Clippings.txt` files may contain malformed or incomplete entries due to Kindle firmware bugs, file corruption, or manual editing. The parser skips these entries without crashing and logs a warning so the user can investigate if needed.
 
 **Why this priority**: Robustness is important for user trust, but only after core parsing works correctly. A parser that crashes on unexpected input would be unusable in practice.
 
@@ -67,7 +67,7 @@ Real-world `My Clippings.txt` files may contain malformed or incomplete entries 
 
 **Acceptance Scenarios**:
 
-1. **Given** a file with one malformed entry (missing separator, truncated text) among 10 valid entries, **When** the parser processes the file, **Then** 10 valid highlights are extracted and the malformed entry is skipped with a warning.
+1. **Given** a file with one malformed entry (missing separator, truncated text) among 10 valid entries, **When** the parser processes the file, **Then** 10 valid highlights are extracted and the malformed entry is skipped with a warning logged to the console.
 2. **Given** an empty `My Clippings.txt` file, **When** the parser processes the file, **Then** the result is an empty collection with no errors.
 3. **Given** a file containing only separators and no actual clipping content, **When** the parser processes the file, **Then** the result is an empty collection with no errors.
 4. **Given** a file where a clipping entry is missing the author on the title line, **When** the parser processes the entry, **Then** the entry is parsed with best-effort extraction (title without author), not skipped entirely.
@@ -91,22 +91,22 @@ Real-world `My Clippings.txt` files may contain malformed or incomplete entries 
 - **FR-001**: System MUST parse standard `My Clippings.txt` files using the `==========` separator to split individual clipping entries.
 - **FR-002**: System MUST extract the book title and author from the first line of each clipping entry.
 - **FR-003**: System MUST extract the full highlight or note text, including multi-line content, from each clipping entry.
-- **FR-004**: System MUST extract metadata (clipping type, location range, and date) from the second line of each clipping entry.
-- **FR-005**: System MUST distinguish between highlights, notes, and bookmarks, and extract highlights and notes while skipping bookmarks.
+- **FR-004**: System MUST extract metadata (location range and date) from the second line of each clipping entry. The metadata line is also used internally to detect the entry type (highlight, note, or bookmark) but no type field is exposed in the output.
+- **FR-005**: System MUST skip bookmarks (position-only entries with no text). Notes MUST be treated as highlights with a `[my note]` prefix prepended to their text. There is no separate type or special handling for notes anywhere in CLI or server.
 - **FR-006**: System MUST deduplicate highlights by matching on the combination of book title, author, and highlight text (exact match, case-sensitive).
 - **FR-007**: System MUST group deduplicated highlights by book, where a book is identified by the pair of title and author name.
 - **FR-008**: System MUST skip malformed clipping entries that cannot be parsed and continue processing the remainder of the file.
-- **FR-009**: System MUST report skipped entries as warnings, including the approximate position in the file and the reason for skipping.
-- **FR-010**: System MUST produce an output structure organized by book, where each book contains its title, author name, and list of highlights, suitable for the sync API payload.
+- **FR-009**: System MUST log skipped entries as warnings to the console, including the approximate position in the file and the reason for skipping.
+- **FR-010**: System MUST produce an output structure organized by book, where each book contains its title, author name, and list of highlight texts (notes included with `[my note]` prefix), suitable for the sync API payload.
 - **FR-011**: System MUST handle empty files and files with no valid clippings by returning an empty result without errors.
 
 ### Key Entities
 
 - **Clipping**: A single raw entry from `My Clippings.txt`, containing a title/author line, a metadata line, and content text. Represents the unprocessed input before deduplication.
-- **Highlight**: A parsed, deduplicated piece of text that was highlighted or annotated by the user in a book. Associated with exactly one book.
+- **Highlight**: A parsed, deduplicated piece of text from the user's Kindle. Notes are stored as highlights with a `[my note]` prefix — there is no type distinction. Associated with exactly one book.
 - **Book**: A publication identified by its title and author name. Contains one or more highlights after grouping.
 - **Author**: A person identified by name who wrote one or more books.
-- **Parse Result**: The complete output of the parsing process — a collection of books with their associated highlights, plus any warnings generated during parsing.
+- **Parse Result**: The complete output of the parsing process — a collection of books with their associated highlights.
 
 ## Success Criteria *(mandatory)*
 
@@ -127,7 +127,7 @@ Real-world `My Clippings.txt` files may contain malformed or incomplete entries 
 - Author name appears in parentheses at the end of the title line (e.g., `Book Title (Author Name)`). If parentheses are absent, the entire line is treated as the title with an unknown author.
 - Deduplication uses exact text matching (case-sensitive). Fuzzy matching or near-duplicate detection is out of scope for MVP.
 - Bookmarks (entries with no highlight text, only a position marker) are skipped since they carry no textual content useful for recaps.
-- Notes (user-written annotations) are treated as a type of highlight for parsing purposes — they follow the same extraction and deduplication logic.
+- Notes (user-written annotations) are treated as highlights with a `[my note]` prefix prepended to their text. There is no separate type enum or special handling for notes in CLI or server — they are simply highlights whose text starts with `[my note]`.
 - The parser is a pure function with no side effects: it reads a file or text stream and produces a structured result. It has no dependencies on the server, database, or network.
 - Location and date metadata are extracted for informational purposes but are not used for deduplication or grouping in MVP.
 - Single-user context: the parser does not associate highlights with a specific user ID (user association happens at the sync level).

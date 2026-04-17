@@ -29,13 +29,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until all types are defined and the solution builds.
 
-- [ ] T002 [P] Create `ClippingType` enum in `src/SunnySunday.Core/Parsing/ClippingType.cs` with values `Highlight`, `Note`, `Bookmark`. Use `namespace SunnySunday.Core.Parsing;` file-scoped namespace.
-- [ ] T003 [P] Create `RawClipping` internal record in `src/SunnySunday.Core/Parsing/RawClipping.cs` with properties: `string Title`, `string? Author`, `ClippingType Type`, `string? Location`, `DateTimeOffset? AddedOn`, `string Text`. This is an intermediate type not exposed publicly. Mark the class `internal`.
-- [ ] T004 [P] Create `ParsedHighlight` public record in `src/SunnySunday.Core/Parsing/ParsedHighlight.cs` with properties: `string Text`, `ClippingType Type` (only Highlight or Note, never Bookmark), `string? Location`, `DateTimeOffset? AddedOn`. Immutable.
-- [ ] T005 [P] Create `ParsedBook` public record in `src/SunnySunday.Core/Parsing/ParsedBook.cs` with properties: `string Title`, `string? Author`, `IReadOnlyList<ParsedHighlight> Highlights`. A ParsedBook is never emitted with zero highlights.
-- [ ] T006 [P] Create `ParseWarning` public record in `src/SunnySunday.Core/Parsing/ParseWarning.cs` with properties: `int EntryIndex` (1-based), `string Reason`, `string RawExcerpt` (first 200 chars of raw entry).
-- [ ] T007 [P] Create `ParseResult` public record in `src/SunnySunday.Core/Parsing/ParseResult.cs` with properties: `IReadOnlyList<ParsedBook> Books`, `IReadOnlyList<ParseWarning> Warnings`, `int TotalEntriesProcessed`, `int DuplicatesRemoved`.
-- [ ] T008 Verify `dotnet build src/SunnySunday.slnx` succeeds with all six new types. Fix any compilation errors.
+- [ ] T002 [P] Create `RawClipping` internal record in `src/SunnySunday.Core/Parsing/RawClipping.cs` with properties: `string Title`, `string? Author`, `bool IsNote`, `string? Location`, `DateTimeOffset? AddedOn`, `string Text`. This is an intermediate type not exposed publicly. Mark the class `internal`. `IsNote` is true when the metadata line says "Note" — used to prepend `[my note]` prefix.
+- [ ] T003 [P] Create `ParsedHighlight` public record in `src/SunnySunday.Core/Parsing/ParsedHighlight.cs` with properties: `string Text`, `string? Location`, `DateTimeOffset? AddedOn`. Immutable. Notes are stored here with `[my note]` already prepended to `Text` — no type field.
+- [ ] T004 [P] Create `ParsedBook` public record in `src/SunnySunday.Core/Parsing/ParsedBook.cs` with properties: `string Title`, `string? Author`, `IReadOnlyList<ParsedHighlight> Highlights`. A ParsedBook is never emitted with zero highlights.
+- [ ] T005 [P] Create `ParseResult` public record in `src/SunnySunday.Core/Parsing/ParseResult.cs` with properties: `IReadOnlyList<ParsedBook> Books`, `int TotalEntriesProcessed`, `int DuplicatesRemoved`. No warnings collection — malformed entries are logged via `ILogger`.
+- [ ] T006 Verify `dotnet build src/SunnySunday.slnx` succeeds with all four new types. Fix any compilation errors.
 
 **Checkpoint**: All parser types compile. User story implementation can begin.
 
@@ -43,7 +41,7 @@
 
 ## Phase 3: User Story 1 — Parse Highlights from My Clippings.txt (Priority: P1) 🎯 MVP
 
-**Goal**: Parse a standard `My Clippings.txt` file and extract structured highlight data including book title, author, highlight text, clipping type, location, and date. Bookmarks are skipped. Notes are treated as highlights.
+**Goal**: Parse a standard `My Clippings.txt` file and extract structured highlight data including book title, author, highlight text, location, and date. Bookmarks are skipped. Notes are treated as highlights with a `[my note]` prefix on their text.
 
 **Independent Test**: Provide a sample `My Clippings.txt` string via `StringReader` and verify all valid highlights are extracted with correct book/author/text associations.
 
@@ -59,17 +57,17 @@
 - [ ] T009 [P] [US1] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given a standard `My Clippings.txt` input with 3 highlights across 2 books, `ClippingsParser.ParseAsync(TextReader)` returns a `ParseResult` with correct total entry count and highlights extractable from the books list. Use the exact Kindle format: title/author line, metadata line, blank line, content, `==========` separator. See `specs/003-highlight-parser/quickstart.md` for format examples.
 - [ ] T010 [P] [US1] Write test: given a clipping entry with multi-line highlight text (content spanning 3+ lines between blank line and separator), the full text is captured as a single highlight with newlines preserved.
 - [ ] T011 [P] [US1] Write tests for title/author extraction edge cases: (a) standard `Book Title (Author Name)` → title=`Book Title`, author=`Author Name`; (b) author as `Last, First` in parens → author=`Last, First`; (c) title with nested parentheses like `The Art of War (Annotated) (Sun Tzu)` → title=`The Art of War (Annotated)`, author=`Sun Tzu`; (d) no parentheses at all → title=full line, author=`null`; (e) empty parens `Some Book ()` → title=`Some Book`, author=`null`. See `specs/003-highlight-parser/research.md` section 2 for the full edge case table.
-- [ ] T012 [P] [US1] Write tests for metadata line parsing: (a) `- Your Highlight on Location 100-105 | Added on Thursday, January 1, 2026 12:00:00 AM` → type=Highlight, location=`Location 100-105`, date parsed; (b) `- Your Note on ...` → type=Note; (c) `- Your Bookmark on ...` → type=Bookmark. Verify bookmarks are excluded from the final ParseResult.Books highlights (no text content). See `specs/003-highlight-parser/research.md` section 3 for the regex pattern.
+- [ ] T012 [P] [US1] Write tests for metadata line parsing and entry type handling: (a) `- Your Highlight on Location 100-105 | Added on Thursday, January 1, 2026 12:00:00 AM` → location=`Location 100-105`, date parsed, text used as-is; (b) `- Your Note on ...` → text gets `[my note]` prefix prepended; (c) `- Your Bookmark on ...` → entry is excluded from ParseResult.Books entirely. See `specs/003-highlight-parser/research.md` section 3.
 - [ ] T013 [P] [US1] Write test for `ClippingsParser.ParseAsync(string filePath)` overload: create a temp file with valid Kindle content, parse via file path, verify same result as TextReader overload. Clean up temp file after test.
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Create `ClippingsParser` static class in `src/SunnySunday.Core/Parsing/ClippingsParser.cs` with two public static methods: `Task<ParseResult> ParseAsync(TextReader reader)` and `Task<ParseResult> ParseAsync(string filePath)`. The file-path overload creates a `StreamReader` (UTF-8, BOM-detected) and delegates to the TextReader overload. Initial implementation can return an empty `ParseResult`.
+- [ ] T014 [US1] Create `ClippingsParser` static class in `src/SunnySunday.Core/Parsing/ClippingsParser.cs` with two public static methods: `Task<ParseResult> ParseAsync(TextReader reader, ILogger? logger = null)` and `Task<ParseResult> ParseAsync(string filePath, ILogger? logger = null)`. The file-path overload creates a `StreamReader` (UTF-8, BOM-detected) and delegates to the TextReader overload. The optional `ILogger` is used to log warnings for malformed entries. Initial implementation can return an empty `ParseResult`.
 - [ ] T015 [US1] Implement entry splitting in `ParseAsync(TextReader)`: read lines via `ReadLineAsync()`, accumulate lines into a buffer, and split entries on the `==========` separator line. Track a 1-based entry index counter. Each accumulated block of lines between separators is one raw clipping entry.
 - [ ] T016 [US1] Implement title/author extraction: given the first line of an entry, extract the title and author. Author is the content of the **last** parenthesized group `(...)` on the line. If no parentheses are found, the entire line (trimmed) is the title and author is `null`. Empty parentheses `()` should also yield `null` author. Trim both title and author. See `specs/003-highlight-parser/research.md` section 2.
-- [ ] T017 [US1] Implement metadata line parsing: given the second line of an entry, use regex `^- Your (?<type>Highlight|Note|Bookmark) on (?<location>.+?) \| Added on (?<date>.+)$` to extract clipping type, location string, and date string. Parse the date with format `dddd, MMMM d, yyyy h:mm:ss tt` using `CultureInfo.InvariantCulture` into `DateTimeOffset?`; if date parsing fails, store `null` (do not skip the entry). See `specs/003-highlight-parser/research.md` section 3.
+- [ ] T017 [US1] Implement metadata line parsing: given the second line of an entry, use regex `^- Your (?<type>Highlight|Note|Bookmark) on (?<location>.+?) \| Added on (?<date>.+)$` to extract the entry type (internal use only), location string, and date string. Parse the date with format `dddd, MMMM d, yyyy h:mm:ss tt` using `CultureInfo.InvariantCulture` into `DateTimeOffset?`; if date parsing fails, store `null` (do not skip the entry). Set `IsNote = true` when type is "Note". See `specs/003-highlight-parser/research.md` section 3.
 - [ ] T018 [US1] Implement content text extraction: the content starts at line index 3 of the entry (after title, metadata, blank line) and continues until the end of the entry block. Join all content lines with `\n`. Trim the final result. Empty content (bookmarks) yields an empty string.
-- [ ] T019 [US1] Assemble the full parse pipeline: for each entry, build a `RawClipping` from the extracted fields. Filter out entries where `Type == Bookmark`. Convert remaining entries to `ParsedHighlight` objects. For now (before US2/US3), return a `ParseResult` with all highlights grouped into books by `(Title, Author)` pair using a dictionary, populate `TotalEntriesProcessed`, set `DuplicatesRemoved = 0`, and `Warnings` as empty list.
+- [ ] T019 [US1] Assemble the full parse pipeline: for each entry, build a `RawClipping` from the extracted fields. Filter out bookmarks (detected from metadata type). For notes (`IsNote == true`), prepend `[my note] ` to the text. Convert remaining entries to `ParsedHighlight` objects. For now (before US2/US3), return a `ParseResult` with all highlights grouped into books by `(Title, Author)` pair using a dictionary, populate `TotalEntriesProcessed`, and set `DuplicatesRemoved = 0`.
 - [ ] T020 [US1] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1 tests must pass.
 
 **Checkpoint**: Parser can extract highlights from valid `My Clippings.txt` input. This is the MVP — a usable parser even without dedup/error handling.
@@ -125,25 +123,25 @@
 
 ## Phase 6: User Story 4 — Handle Malformed Entries Gracefully (Priority: P4)
 
-**Goal**: Skip malformed or incomplete clipping entries without crashing. Report skipped entries as `ParseWarning` objects with entry index, reason, and a raw excerpt. Valid entries surrounding malformed ones are still parsed correctly.
+**Goal**: Skip malformed or incomplete clipping entries without crashing. Log skipped entries as warnings via `ILogger`. Valid entries surrounding malformed ones are still parsed correctly.
 
-**Independent Test**: Provide input with intentionally malformed entries mixed with valid ones and verify valid highlights are extracted and warnings are generated.
+**Independent Test**: Provide input with intentionally malformed entries mixed with valid ones and verify valid highlights are extracted and warnings are logged.
 
 **Functional Requirements**: FR-008, FR-009, FR-011
 
 ### Tests for User Story 4
 
-- [ ] T032 [P] [US4] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given 10 valid entries and 1 malformed entry (e.g., missing metadata line — only title line then separator), all 10 valid highlights are extracted and `ParseResult.Warnings` contains exactly 1 warning with the correct `EntryIndex` and a descriptive `Reason`.
-- [ ] T033 [P] [US4] Write test: given an empty input (empty string or no content), `ParseResult.Books` is empty, `ParseResult.Warnings` is empty, and no exception is thrown.
-- [ ] T034 [P] [US4] Write test: given input containing only `==========` separators and no actual clipping content, the result is empty books and empty warnings (no valid entries, blank entries silently skipped).
+- [ ] T032 [P] [US4] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given 10 valid entries and 1 malformed entry (e.g., missing metadata line — only title line then separator), all 10 valid highlights are extracted. Use a mock `ILogger` to verify a warning was logged with the correct entry index and a descriptive reason.
+- [ ] T033 [P] [US4] Write test: given an empty input (empty string or no content), `ParseResult.Books` is empty and no exception is thrown.
+- [ ] T034 [P] [US4] Write test: given input containing only `==========` separators and no actual clipping content, the result is empty books (no valid entries, blank entries silently skipped).
 - [ ] T035 [P] [US4] Write test: given a clipping entry where the title line has no parentheses (missing author), the entry is parsed with best-effort: title is the full first line (trimmed) and author is `null`. The entry is NOT skipped — it appears in the result.
-- [ ] T036 [P] [US4] Write test: given a clipping entry with an unrecognized type on the metadata line (e.g., `- Your Clip on Location 50 | Added on ...`), the entry is skipped with a warning. Valid surrounding entries are still parsed.
+- [ ] T036 [P] [US4] Write test: given a clipping entry with an unrecognized type on the metadata line (e.g., `- Your Clip on Location 50 | Added on ...`), the entry is skipped and a warning is logged. Valid surrounding entries are still parsed.
 
 ### Implementation for User Story 4
 
-- [ ] T037 [US4] Implement skip-and-warn logic in `src/SunnySunday.Core/Parsing/ClippingsParser.cs`: wrap per-entry parsing in a try-catch or validation gate. If an entry has fewer than 2 lines, or the metadata line does not match the expected regex, create a `ParseWarning` with the 1-based `EntryIndex`, a descriptive `Reason` (e.g., "Missing metadata line", "Unrecognized clipping type"), and `RawExcerpt` (first 200 characters of the raw entry text, or full text if shorter). Add the warning to the warnings list and continue to the next entry.
+- [ ] T037 [US4] Implement skip-and-log logic in `src/SunnySunday.Core/Parsing/ClippingsParser.cs`: wrap per-entry parsing in a try-catch or validation gate. If an entry has fewer than 2 lines, or the metadata line does not match the expected regex, log a warning via `ILogger` with the 1-based entry index, a descriptive reason (e.g., "Missing metadata line", "Unrecognized clipping type"), and an excerpt of the raw entry text (first 200 characters). Continue to the next entry.
 - [ ] T038 [US4] Implement best-effort parsing for partial entries: if the title line has no author parentheses, still parse the entry with `Author = null` (do not skip). If the date cannot be parsed, still parse the entry with `AddedOn = null`. Only skip entries where the structure is completely unrecognizable (< 2 lines, or metadata regex fails entirely).
-- [ ] T039 [US4] Handle edge cases for empty and whitespace-only entries: blank lines between separators should be silently skipped (no warning generated for completely empty entries). Entries with only whitespace content (no title line) should also be silently skipped.
+- [ ] T039 [US4] Handle edge cases for empty and whitespace-only entries: blank lines between separators should be silently skipped (no warning logged for completely empty entries). Entries with only whitespace content (no title line) should also be silently skipped.
 - [ ] T040 [US4] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1, US2, US3, and US4 tests must pass.
 
 **Checkpoint**: Parser is robust against malformed input. All previous stories still pass.
@@ -156,7 +154,7 @@
 
 - [ ] T041 [P] Write edge case tests in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: (a) input with UTF-8 BOM prefix parses correctly (StreamReader handles BOM automatically, but verify via file-path overload with a BOM-prefixed temp file); (b) book titles and authors with Unicode characters (CJK, diacritics, RTL) parse correctly; (c) highlight text with special characters (quotes, angle brackets, ampersands) is preserved verbatim.
 - [ ] T042 [P] Write performance test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: programmatically generate a `My Clippings.txt` string with 10,000 clipping entries, parse via `StringReader`, and assert completion within 5 seconds (SC-005). Use `[Fact]` with a `Stopwatch` or `[Fact(Timeout = 5000)]`.
-- [ ] T043 [P] Update `docs/ARCHITECTURE.md` to document the `SunnySunday.Core/Parsing/` component: its purpose (pure function parser for My Clippings.txt), public API surface (`ClippingsParser.ParseAsync`), key types (`ParseResult`, `ParsedBook`, `ParsedHighlight`), and design decisions (no dependencies, streaming, skip-and-warn).
+- [ ] T043 [P] Update `docs/ARCHITECTURE.md` to document the `SunnySunday.Core/Parsing/` component: its purpose (pure function parser for My Clippings.txt), public API surface (`ClippingsParser.ParseAsync`), key types (`ParseResult`, `ParsedBook`, `ParsedHighlight`), and design decisions (no dependencies, streaming, skip-and-log, notes as `[my note]`-prefixed highlights).
 - [ ] T044 Run full `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj` — all tests (including existing SchemaBootstrapTests) must pass. Run `dotnet build src/SunnySunday.slnx` clean. Validate that the quickstart.md code examples in `specs/003-highlight-parser/quickstart.md` are consistent with the implemented API.
 
 ---
