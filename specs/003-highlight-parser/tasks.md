@@ -19,7 +19,7 @@
 
 **Purpose**: Create directory structure for parser code and tests
 
-- [ ] T001 Create directories `src/SunnySunday.Core/Parsing/` and `src/SunnySunday.Tests/Parsing/`, verify `dotnet build src/SunnySunday.slnx` still succeeds
+- [X] T001 Create directories `src/SunnySunday.Core/Parsing/` and `src/SunnySunday.Tests/Parsing/`, verify `dotnet build src/SunnySunday.slnx` still succeeds
 
 ---
 
@@ -29,11 +29,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until all types are defined and the solution builds.
 
-- [ ] T002 [P] Create `RawClipping` internal record in `src/SunnySunday.Core/Parsing/RawClipping.cs` with properties: `string Title`, `string? Author`, `bool IsNote`, `string? Location`, `DateTimeOffset? AddedOn`, `string Text`. This is an intermediate type not exposed publicly. Mark the class `internal`. `IsNote` is true when the metadata line says "Note" — used to prepend `[my note]` prefix.
-- [ ] T003 [P] Create `ParsedHighlight` public record in `src/SunnySunday.Core/Parsing/ParsedHighlight.cs` with properties: `string Text`, `string? Location`, `DateTimeOffset? AddedOn`. Immutable. Notes are stored here with `[my note]` already prepended to `Text` — no type field.
-- [ ] T004 [P] Create `ParsedBook` public record in `src/SunnySunday.Core/Parsing/ParsedBook.cs` with properties: `string Title`, `string? Author`, `IReadOnlyList<ParsedHighlight> Highlights`. A ParsedBook is never emitted with zero highlights.
-- [ ] T005 [P] Create `ParseResult` public record in `src/SunnySunday.Core/Parsing/ParseResult.cs` with properties: `IReadOnlyList<ParsedBook> Books`, `int TotalEntriesProcessed`, `int DuplicatesRemoved`. No warnings collection — malformed entries are logged via `ILogger`.
-- [ ] T006 Verify `dotnet build src/SunnySunday.slnx` succeeds with all four new types. Fix any compilation errors.
+- [X] T002 [P] Create `RawClipping` internal record in `src/SunnySunday.Core/Parsing/RawClipping.cs` with properties: `string Title`, `string? Author`, `bool IsNote`, `string? Location`, `DateTimeOffset? AddedOn`, `string Text`. This is an intermediate type not exposed publicly. Mark the class `internal`. `IsNote` is true when the metadata line says "Note" — used to prepend `[my note]` prefix.
+- [X] T003 [P] Create `ParsedHighlight` public record in `src/SunnySunday.Core/Parsing/ParsedHighlight.cs` with properties: `string Text`, `string? Location`, `DateTimeOffset? AddedOn`. Immutable. Notes are stored here with `[my note]` already prepended to `Text` — no type field.
+- [X] T004 [P] Create `ParsedBook` public record in `src/SunnySunday.Core/Parsing/ParsedBook.cs` with properties: `string Title`, `string? Author`, `IReadOnlyList<ParsedHighlight> Highlights`. A ParsedBook is never emitted with zero highlights.
+- [X] T005 [P] Create `ParseResult` public record in `src/SunnySunday.Core/Parsing/ParseResult.cs` with properties: `IReadOnlyList<ParsedBook> Books`, `int TotalEntriesProcessed`, `int DuplicatesRemoved`. No warnings collection — malformed entries are logged via `ILogger`.
+- [X] T006 Verify `dotnet build src/SunnySunday.slnx` succeeds with all four new types. Fix any compilation errors.
 
 **Checkpoint**: All parser types compile. User story implementation can begin.
 
