@@ -54,11 +54,28 @@ public static partial class ClippingsParser
         // Filter bookmarks (empty text after trimming means bookmark)
         var highlights = clippings.Where(c => !string.IsNullOrEmpty(c.Text)).ToList();
 
+        // Deduplicate by (Title, Author, Text) — keep first occurrence, count removals
+        var seen = new HashSet<(string, string?, string)>();
+        var duplicatesRemoved = 0;
+        var deduped = new List<RawClipping>(highlights.Count);
+
+        foreach (var clip in highlights)
+        {
+            var key = (clip.Title, clip.Author, clip.IsNote ? NotePrefix + clip.Text : clip.Text);
+            if (!seen.Add(key))
+            {
+                duplicatesRemoved++;
+                continue;
+            }
+
+            deduped.Add(clip);
+        }
+
         // Group by (Title, Author) — preserve first-seen order
         var bookDict = new Dictionary<(string Title, string? Author), List<ParsedHighlight>>();
         var bookOrder = new List<(string Title, string? Author)>();
 
-        foreach (var clip in highlights)
+        foreach (var clip in deduped)
         {
             var key = (clip.Title, clip.Author);
             var text = clip.IsNote ? NotePrefix + clip.Text : clip.Text;
@@ -79,7 +96,7 @@ public static partial class ClippingsParser
             .Where(b => b.Highlights.Count > 0)
             .ToList();
 
-        return new ParseResult(books, entryIndex, DuplicatesRemoved: 0);
+        return new ParseResult(books, entryIndex, duplicatesRemoved);
     }
 
     private static async Task<List<List<string>>> SplitEntriesAsync(TextReader reader)
