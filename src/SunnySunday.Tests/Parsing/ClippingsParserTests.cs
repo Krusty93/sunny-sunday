@@ -1,4 +1,4 @@
-using SunnySunday.Core.Parsing;
+using SunnySunday.Cli.Parsing;
 
 namespace SunnySunday.Tests.Parsing;
 
