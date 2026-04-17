@@ -108,14 +108,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T027 [P] [US3] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given 6 highlights across 3 books by different authors, `ParseResult.Books` contains exactly 3 `ParsedBook` entries, each with the correct title, author, and highlight count.
-- [ ] T028 [P] [US3] Write test: given highlights from two different books by the same author, the result contains 2 separate `ParsedBook` entries (grouped by title + author pair, not author alone).
-- [ ] T029 [P] [US3] Write test: given a book whose only entries are bookmarks (no highlights or notes), that book does not appear in `ParseResult.Books` (no empty books).
+- [X] T027 [P] [US3] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given 6 highlights across 3 books by different authors, `ParseResult.Books` contains exactly 3 `ParsedBook` entries, each with the correct title, author, and highlight count.
+- [X] T028 [P] [US3] Write test: given highlights from two different books by the same author, the result contains 2 separate `ParsedBook` entries (grouped by title + author pair, not author alone).
+- [X] T029 [P] [US3] Write test: given a book whose only entries are bookmarks (no highlights or notes), that book does not appear in `ParseResult.Books` (no empty books).
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Verify grouping logic in `src/SunnySunday.Cli/Parsing/ClippingsParser.cs`: the grouping by `(Title, Author)` should already be implemented from T019. Ensure that: (a) books are emitted in first-seen order; (b) highlights within each book are in file order; (c) books with zero highlights after filtering are excluded. Adjust implementation if needed.
-- [ ] T031 [US3] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1, US2, and US3 tests must pass.
+- [X] T030 [US3] Verify grouping logic in `src/SunnySunday.Cli/Parsing/ClippingsParser.cs`: the grouping by `(Title, Author)` should already be implemented from T019. Ensure that: (a) books are emitted in first-seen order; (b) highlights within each book are in file order; (c) books with zero highlights after filtering are excluded. Adjust implementation if needed.
+- [X] T031 [US3] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1, US2, and US3 tests must pass.
 
 **Checkpoint**: Parser produces correctly grouped output. All previous stories still pass.
 
