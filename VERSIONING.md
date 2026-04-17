@@ -23,6 +23,7 @@ Relevant files:
 | `server`  | `src/SunnySunday.Server/SunnySunday.Server.csproj` |
 
 Decide the bump level yourself (patch / minor / major) — no commit message format is required.
+Bump the version whenever you modify a component, even if the change is not user-facing (e.g. refactor, bug fix, internal API change) — this ensures accurate version tracking and release notes.
 
 ### 2. Commit and open a PR
 
