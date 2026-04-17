@@ -1,0 +1,3 @@
+[*.{cs,vb}]
+# Async methods should have "Async" suffix
+dotnet_naming_rule.async_methods_end_in_async.severity = none

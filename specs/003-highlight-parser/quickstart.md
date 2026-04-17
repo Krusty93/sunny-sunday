@@ -12,12 +12,11 @@
 
 ## Project Structure
 
-All parser code lives in `SunnySunday.Core`:
+All parser code lives in `SunnySunday.Cli`:
 
 ```
-src/SunnySunday.Core/
-├── Models/           # Existing persistence models (DO NOT MODIFY)
-└── Parsing/          # NEW — parser types and logic
+src/SunnySunday.Cli/
+└── Parsing/          # Parser types and logic
     ├── RawClipping.cs
     ├── ParsedHighlight.cs
     ├── ParsedBook.cs
@@ -45,7 +44,7 @@ dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --verbosity normal
 ## Usage Example
 
 ```csharp
-using SunnySunday.Core.Parsing;
+using SunnySunday.Cli.Parsing;
 
 // From a file path
 var result = await ClippingsParser.ParseAsync("/path/to/My Clippings.txt");

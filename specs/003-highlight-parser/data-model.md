@@ -6,7 +6,7 @@
 
 ## Entity Overview
 
-This feature introduces **parser-specific types** that live in `SunnySunday.Core/Parsing/`. These are distinct from the persistence models in `SunnySunday.Core/Models/` — they represent the raw parsed output before any database interaction.
+This feature introduces **parser-specific types** that live in `SunnySunday.Cli/Parsing/`. The parser is CLI-exclusive logic and does not need to be shared with the server.
 
 ```
 ParseResult
