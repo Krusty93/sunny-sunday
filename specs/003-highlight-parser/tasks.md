@@ -84,15 +84,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T021 [P] [US2] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given input where the same highlight text appears twice for the same book and author, the result contains only one instance of that highlight and `DuplicatesRemoved == 1`.
-- [ ] T022 [P] [US2] Write test: given two highlights with identical text but from different books (different title or author), both highlights are retained — they are not considered duplicates.
-- [ ] T023 [P] [US2] Write test: given two highlights from the same book where one is a substring of the other (e.g., "War is peace" vs "War is peace. Freedom is slavery."), both are retained as distinct highlights. Only exact text matches are duplicates.
-- [ ] T024 [P] [US2] Write test: given 10 clippings where 3 are duplicates, `ParseResult.DuplicatesRemoved == 3` and the total unique highlights across all books equals 7.
+- [X] T021 [P] [US2] Write test in `src/SunnySunday.Tests/Parsing/ClippingsParserTests.cs`: given input where the same highlight text appears twice for the same book and author, the result contains only one instance of that highlight and `DuplicatesRemoved == 1`.
+- [X] T022 [P] [US2] Write test: given two highlights with identical text but from different books (different title or author), both highlights are retained — they are not considered duplicates.
+- [X] T023 [P] [US2] Write test: given two highlights from the same book where one is a substring of the other (e.g., "War is peace" vs "War is peace. Freedom is slavery."), both are retained as distinct highlights. Only exact text matches are duplicates.
+- [X] T024 [P] [US2] Write test: given 10 clippings where 3 are duplicates, `ParseResult.DuplicatesRemoved == 3` and the total unique highlights across all books equals 7.
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Implement deduplication in `src/SunnySunday.Cli/Parsing/ClippingsParser.cs`: after building `RawClipping` list and filtering bookmarks, use a `HashSet<(string, string?, string)>` keyed on `(Title, Author, Text)` with `StringComparison.Ordinal` semantics to deduplicate. Keep the first occurrence (file order). Increment a duplicates counter. Wire `DuplicatesRemoved` into the returned `ParseResult`.
-- [ ] T026 [US2] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1 and US2 tests must pass.
+- [X] T025 [US2] Implement deduplication in `src/SunnySunday.Cli/Parsing/ClippingsParser.cs`: after building `RawClipping` list and filtering bookmarks, use a `HashSet<(string, string?, string)>` keyed on `(Title, Author, Text)` with `StringComparison.Ordinal` semantics to deduplicate. Keep the first occurrence (file order). Increment a duplicates counter. Wire `DuplicatesRemoved` into the returned `ParseResult`.
+- [X] T026 [US2] Run `dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --filter "FullyQualifiedName~Parsing"` — all US1 and US2 tests must pass.
 
 **Checkpoint**: Parser now deduplicates highlights. Existing US1 tests still pass (dedup with zero duplicates is a no-op).
 

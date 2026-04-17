@@ -262,4 +262,101 @@ public class ClippingsParserTests
     }
 
     #endregion
+
+    #region T021-T024 — Deduplication (US2)
+
+    [Fact]
+    public async Task ParseAsync_DuplicateHighlightSameBook_KeepsOneAndCountsOne()
+    {
+        var input = """
+            1984 (Orwell, George)
+            - Your Highlight on Location 200-210 | Added on Friday, January 2, 2026 1:30:00 PM
+
+            War is peace. Freedom is slavery. Ignorance is strength.
+            ==========
+            1984 (Orwell, George)
+            - Your Highlight on Location 200-210 | Added on Friday, January 2, 2026 1:30:00 PM
+
+            War is peace. Freedom is slavery. Ignorance is strength.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Single(result.Books);
+        Assert.Single(result.Books[0].Highlights);
+        Assert.Equal(1, result.DuplicatesRemoved);
+    }
+
+    [Fact]
+    public async Task ParseAsync_SameTextDifferentBooks_BothRetained()
+    {
+        var input = """
+            Book One (Author A)
+            - Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            Identical text.
+            ==========
+            Book Two (Author B)
+            - Your Highlight on Location 10-15 | Added on Thursday, January 1, 2026 12:00:00 AM
+
+            Identical text.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Equal(2, result.Books.Count);
+        Assert.Equal(0, result.DuplicatesRemoved);
+    }
+
+    [Fact]
+    public async Task ParseAsync_SubstringHighlights_BothRetained()
+    {
+        var input = """
+            1984 (Orwell, George)
+            - Your Highlight on Location 200-205 | Added on Friday, January 2, 2026 1:00:00 PM
+
+            War is peace.
+            ==========
+            1984 (Orwell, George)
+            - Your Highlight on Location 200-210 | Added on Friday, January 2, 2026 1:30:00 PM
+
+            War is peace. Freedom is slavery. Ignorance is strength.
+            ==========
+            """;
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        Assert.Single(result.Books);
+        Assert.Equal(2, result.Books[0].Highlights.Count);
+        Assert.Equal(0, result.DuplicatesRemoved);
+    }
+
+    [Fact]
+    public async Task ParseAsync_TenClippingsThreeDuplicates_ReportsCorrectCounts()
+    {
+        // Build 10 entries: 7 unique + 3 duplicates (entries 8-10 repeat entries 1-3)
+        static string Entry(int i) =>
+            $"Book {i} (Author {i})\n" +
+            $"- Your Highlight on Location {i * 10}-{i * 10 + 5} | Added on Thursday, January 1, 2026 12:00:00 AM\n" +
+            $"\n" +
+            $"Unique highlight number {i}.\n" +
+            "==========\n";
+
+        var input = string.Concat(Enumerable.Range(1, 7).Select(Entry))
+                  + string.Concat(Enumerable.Range(1, 3).Select(Entry));
+
+        using var reader = new StringReader(input);
+        var result = await ClippingsParser.ParseAsync(reader);
+
+        var totalHighlights = result.Books.Sum(b => b.Highlights.Count);
+        Assert.Equal(7, totalHighlights);
+        Assert.Equal(3, result.DuplicatesRemoved);
+    }
+
+    #endregion
 }
