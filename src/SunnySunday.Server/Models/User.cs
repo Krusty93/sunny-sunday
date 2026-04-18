@@ -1,4 +1,4 @@
-namespace SunnySunday.Core.Models;
+namespace SunnySunday.Server.Models;
 
 public class User
 {

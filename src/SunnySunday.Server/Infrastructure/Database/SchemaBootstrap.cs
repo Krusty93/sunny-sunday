@@ -58,6 +58,15 @@ public sealed class SchemaBootstrap
         );
         """;
 
+    public void Apply(SqliteConnection connection)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = SchemaSql;
+        command.ExecuteNonQuery();
+    }
+
     public async Task ApplyAsync(string dbPath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dbPath);
