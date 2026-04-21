@@ -50,6 +50,7 @@ builder.Services.AddScoped<IDbConnection>(_ =>
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<SyncRepository>();
 builder.Services.AddScoped<SettingsRepository>();
+builder.Services.AddScoped<StatusRepository>();
 
 var app = builder.Build();
 
@@ -66,6 +67,7 @@ app.MapGet("/", () => "Sunny Sunday server is running.");
 
 app.MapSyncEndpoints();
 app.MapSettingsEndpoints();
+app.MapStatusEndpoints();
 
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);
