@@ -56,6 +56,15 @@ public sealed class SchemaBootstrap
             delivery_time TEXT    NOT NULL DEFAULT '18:00',
             count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15)
         );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_authors_name
+            ON authors(name);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_books_user_author_title
+            ON books(user_id, author_id, title);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_highlights_user_book_text
+            ON highlights(user_id, book_id, text);
         """;
 
     public void Apply(SqliteConnection connection)

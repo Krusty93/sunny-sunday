@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using SunnySunday.Core.Contracts;
 
@@ -16,49 +16,29 @@ public sealed class SyncRepository(IDbConnection connection)
         {
             var authorName = string.IsNullOrWhiteSpace(book.Author) ? "Unknown Author" : book.Author;
 
-            var authorId = await connection.QuerySingleOrDefaultAsync<int?>(
+            var newAuthors = await connection.ExecuteAsync(
+                "INSERT OR IGNORE INTO authors (name) VALUES (@Name)",
+                new { Name = authorName }, transaction);
+            response.NewAuthors += newAuthors;
+
+            var authorId = await connection.QuerySingleAsync<int>(
                 "SELECT id FROM authors WHERE name = @Name",
                 new { Name = authorName }, transaction);
 
-            if (authorId is null)
-            {
-                await connection.ExecuteAsync(
-                    "INSERT INTO authors (name) VALUES (@Name)",
-                    new { Name = authorName }, transaction);
-                authorId = (int)await connection.ExecuteScalarAsync<long>(
-                    "SELECT last_insert_rowid()", transaction: transaction);
-                response.NewAuthors++;
-            }
+            var newBooks = await connection.ExecuteAsync(
+                "INSERT OR IGNORE INTO books (user_id, author_id, title) VALUES (@UserId, @AuthorId, @Title)",
+                new { UserId = userId, AuthorId = authorId, Title = book.Title }, transaction);
+            response.NewBooks += newBooks;
 
-            var bookId = await connection.QuerySingleOrDefaultAsync<int?>(
+            var bookId = await connection.QuerySingleAsync<int>(
                 "SELECT id FROM books WHERE user_id = @UserId AND author_id = @AuthorId AND title = @Title",
                 new { UserId = userId, AuthorId = authorId, Title = book.Title }, transaction);
 
-            if (bookId is null)
-            {
-                await connection.ExecuteAsync(
-                    "INSERT INTO books (user_id, author_id, title) VALUES (@UserId, @AuthorId, @Title)",
-                    new { UserId = userId, AuthorId = authorId, Title = book.Title }, transaction);
-                bookId = (int)await connection.ExecuteScalarAsync<long>(
-                    "SELECT last_insert_rowid()", transaction: transaction);
-                response.NewBooks++;
-            }
-
             foreach (var highlight in book.Highlights)
             {
-                var exists = await connection.QuerySingleOrDefaultAsync<int?>(
-                    "SELECT 1 FROM highlights WHERE user_id = @UserId AND book_id = @BookId AND text = @Text",
-                    new { UserId = userId, BookId = bookId, Text = highlight.Text }, transaction);
-
-                if (exists.HasValue)
-                {
-                    response.DuplicateHighlights++;
-                    continue;
-                }
-
-                await connection.ExecuteAsync(
+                var inserted = await connection.ExecuteAsync(
                     """
-                    INSERT INTO highlights (user_id, book_id, text, weight, excluded, delivery_count, created_at)
+                    INSERT OR IGNORE INTO highlights (user_id, book_id, text, weight, excluded, delivery_count, created_at)
                     VALUES (@UserId, @BookId, @Text, 3, 0, 0, @CreatedAt)
                     """,
                     new
@@ -68,7 +48,11 @@ public sealed class SyncRepository(IDbConnection connection)
                         Text = highlight.Text,
                         CreatedAt = (highlight.AddedOn ?? DateTimeOffset.UtcNow).ToString("o")
                     }, transaction);
-                response.NewHighlights++;
+
+                if (inserted > 0)
+                    response.NewHighlights++;
+                else
+                    response.DuplicateHighlights++;
             }
         }
 

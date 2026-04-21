@@ -41,6 +41,9 @@ builder.Services.AddScoped<IDbConnection>(_ =>
 {
     var conn = new SqliteConnection(connectionString);
     conn.Open();
+    using var pragma = conn.CreateCommand();
+    pragma.CommandText = "PRAGMA foreign_keys = ON;";
+    pragma.ExecuteNonQuery();
     return conn;
 });
 

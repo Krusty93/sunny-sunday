@@ -15,6 +15,9 @@ public sealed class SunnyTestApplicationFactory : WebApplicationFactory<Program>
     {
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
+        using var pragma = _connection.CreateCommand();
+        pragma.CommandText = "PRAGMA foreign_keys = ON;";
+        pragma.ExecuteNonQuery();
         var bootstrap = new SchemaBootstrap();
         bootstrap.Apply(_connection);
     }
