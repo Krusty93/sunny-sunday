@@ -4,31 +4,36 @@
 /// Represents a partial update for the implicit user's recap settings.
 /// Only provided properties are changed.
 /// </summary>
-public sealed class UpdateSettingsRequest
+public sealed record UpdateSettingsRequest
 {
     /// <summary>
-    /// Gets or sets the recap cadence.
-    /// Allowed values are <c>daily</c> and <c>weekly</c>.
+    /// Recap cadence to apply.
+    /// Allowed values: <c>daily</c> or <c>weekly</c>.
+    /// Omit to keep the current value.
     /// </summary>
     public string? Schedule { get; set; }
 
     /// <summary>
-    /// Gets or sets the delivery day used when the schedule is weekly.
+    /// Delivery day to use when <c>schedule</c> is <c>weekly</c>.
+    /// Omit to keep the current value.
     /// </summary>
     public string? DeliveryDay { get; set; }
 
     /// <summary>
-    /// Gets or sets the delivery time in <c>HH:mm</c> format.
+    /// Delivery time in <c>HH:mm</c> format.
+    /// Omit to keep the current value.
     /// </summary>
     public string? DeliveryTime { get; set; }
 
     /// <summary>
-    /// Gets or sets the number of highlights to include in each recap.
+    /// Number of highlights to include in each recap.
+    /// Omit to keep the current value.
     /// </summary>
     public int? Count { get; set; }
 
     /// <summary>
-    /// Gets or sets the Send-to-Kindle email address used for recap delivery.
+    /// Send-to-Kindle email address for recap delivery.
+    /// Omit to keep the current value.
     /// </summary>
     public string? KindleEmail { get; set; }
 }
