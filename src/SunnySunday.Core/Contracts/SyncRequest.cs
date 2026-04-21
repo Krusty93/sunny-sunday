@@ -3,10 +3,10 @@
 /// <summary>
 /// Represents a bulk import request containing parsed Kindle books and highlights.
 /// </summary>
-public sealed class SyncRequest
+public sealed record SyncRequest
 {
     /// <summary>
-    /// Gets or sets the collection of parsed books to import.
+    /// Books to import in the current sync operation.
     /// </summary>
     public List<SyncBookRequest> Books { get; set; } = [];
 }
@@ -14,20 +14,20 @@ public sealed class SyncRequest
 /// <summary>
 /// Represents a parsed book and its highlights in a bulk sync request.
 /// </summary>
-public sealed class SyncBookRequest
+public sealed record SyncBookRequest
 {
     /// <summary>
-    /// Gets or sets the book title.
+    /// Book title exactly as parsed from the source.
     /// </summary>
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the author name.
+    /// Author name as parsed from the source, or <c>null</c> when unavailable.
     /// </summary>
     public string? Author { get; set; }
 
     /// <summary>
-    /// Gets or sets the highlights parsed for the book.
+    /// Highlights parsed for this book.
     /// </summary>
     public List<SyncHighlightRequest> Highlights { get; set; } = [];
 }
@@ -35,15 +35,15 @@ public sealed class SyncBookRequest
 /// <summary>
 /// Represents a single parsed Kindle highlight in a bulk sync request.
 /// </summary>
-public sealed class SyncHighlightRequest
+public sealed record SyncHighlightRequest
 {
     /// <summary>
-    /// Gets or sets the highlight text.
+    /// Highlight text content.
     /// </summary>
     public string Text { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the original clipping timestamp, when available.
+    /// Original clipping timestamp from the source, when available.
     /// </summary>
     public DateTimeOffset? AddedOn { get; set; }
 }

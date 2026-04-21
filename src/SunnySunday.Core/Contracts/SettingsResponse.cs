@@ -1,33 +1,33 @@
 ﻿namespace SunnySunday.Core.Contracts;
 
 /// <summary>
-/// Describes the effective recap settings currently stored for the implicit Sunny Sunday user.
+/// Effective recap settings currently configured for the implicit Sunny Sunday user.
 /// </summary>
-public sealed class SettingsResponse
+public sealed record SettingsResponse
 {
     /// <summary>
-    /// Gets or sets the recap cadence.
-    /// Allowed values are <c>daily</c> and <c>weekly</c>.
+    /// Recap cadence currently applied.
+    /// Allowed values: <c>daily</c> or <c>weekly</c>.
     /// </summary>
     public string Schedule { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the delivery day when the schedule is weekly.
+    /// Day of delivery when <c>schedule</c> is <c>weekly</c>; otherwise <c>null</c>.
     /// </summary>
     public string? DeliveryDay { get; set; }
 
     /// <summary>
-    /// Gets or sets the recap delivery time in <c>HH:mm</c> format.
+    /// Recap delivery time in <c>HH:mm</c> format.
     /// </summary>
     public string DeliveryTime { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the number of highlights included in each recap.
+    /// Number of highlights included in each recap.
     /// </summary>
     public int Count { get; set; }
 
     /// <summary>
-    /// Gets or sets the Send-to-Kindle email address used for recap delivery.
+    /// Send-to-Kindle email address currently used for recap delivery.
     /// </summary>
     public string KindleEmail { get; set; } = string.Empty;
 }
