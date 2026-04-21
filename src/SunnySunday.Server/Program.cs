@@ -68,5 +68,3 @@ await schemaBootstrap.ApplyAsync(dbPath);
 Log.Information("Sunny Sunday server started. Database: {DbPath}", dbPath);
 
 await app.RunAsync();
-
-public partial class Program { }
