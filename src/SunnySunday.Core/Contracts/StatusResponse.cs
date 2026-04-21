@@ -1,4 +1,4 @@
-namespace SunnySunday.Core.Contracts;
+﻿namespace SunnySunday.Core.Contracts;
 
 /// <summary>
 /// Aggregate status of the Sunny Sunday server for the implicit MVP user.

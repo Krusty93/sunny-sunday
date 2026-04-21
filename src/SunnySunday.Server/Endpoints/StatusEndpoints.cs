@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SunnySunday.Core.Contracts;
 using SunnySunday.Server.Data;
 
