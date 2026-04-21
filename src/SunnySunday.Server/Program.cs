@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.Data.Sqlite;
 using Microsoft.OpenApi;
 using Serilog;
+using SunnySunday.Core.Contracts;
 using SunnySunday.Server.Data;
 using SunnySunday.Server.Endpoints;
 using SunnySunday.Server.Infrastructure.Database;
@@ -32,9 +33,8 @@ builder.Services.AddSwaggerGen(options =>
         }
     );
 
-    string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
+    IncludeXmlCommentsIfPresent(options, Assembly.GetExecutingAssembly());
+    IncludeXmlCommentsIfPresent(options, typeof(SettingsResponse).Assembly);
 });
 
 builder.Services.AddScoped<IDbConnection>(_ =>
@@ -49,6 +49,7 @@ builder.Services.AddScoped<IDbConnection>(_ =>
 
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<SyncRepository>();
+builder.Services.AddScoped<SettingsRepository>();
 
 var app = builder.Build();
 
@@ -64,6 +65,7 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/", () => "Sunny Sunday server is running.");
 
 app.MapSyncEndpoints();
+app.MapSettingsEndpoints();
 
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);
@@ -71,3 +73,12 @@ await schemaBootstrap.ApplyAsync(dbPath);
 Log.Information("Sunny Sunday server started. Database: {DbPath}", dbPath);
 
 await app.RunAsync();
+
+static void IncludeXmlCommentsIfPresent(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options, Assembly assembly)
+{
+    var xmlFile = $"{assembly.GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+}
