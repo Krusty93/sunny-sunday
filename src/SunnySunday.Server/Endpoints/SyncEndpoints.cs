@@ -44,7 +44,12 @@ public static class SyncEndpoints
             var userId = await userRepo.EnsureUserAsync();
             var response = await syncRepo.ImportAsync(userId, request);
             return Results.Ok(response);
-        });
+        })
+        .WithSummary("Import parsed Kindle highlights.")
+        .WithDescription("Accepts a parsed clippings payload, persists authors, books, and highlights, deduplicates existing highlights, and returns an import summary for the implicit MVP user.")
+        .Accepts<SyncRequest>("application/json")
+        .Produces<SyncResponse>(StatusCodes.Status200OK)
+        .ProducesValidationProblem(StatusCodes.Status422UnprocessableEntity);
 
         return app;
     }
