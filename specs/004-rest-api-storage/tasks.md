@@ -138,9 +138,9 @@
 
 **Purpose**: Documentation, validation, and final verification
 
-- [ ] T035 [P] Update docs/ARCHITECTURE.md with REST API layer documentation: endpoint groups, data access pattern (Dapper repositories), error handling (ProblemDetails), and project structure additions (Contracts/, Data/, Endpoints/, Tests/Api/)
-- [ ] T036 Run quickstart.md validation: build solution, start server, execute all curl examples from specs/004-rest-api-storage/quickstart.md, verify expected responses
-- [ ] T037 Verify all tests pass with `dotnet test src/SunnySunday.slnx` and confirm no regressions in existing infrastructure and parser tests
+- [X] T035 [P] Update docs/ARCHITECTURE.md with REST API layer documentation: endpoint groups, data access pattern (Dapper repositories), error handling (ProblemDetails), and project structure additions (Contracts/, Data/, Endpoints/, Tests/Api/)
+- [X] T036 Run quickstart.md validation: build solution, start server, execute all curl examples from specs/004-rest-api-storage/quickstart.md, verify expected responses
+- [X] T037 Verify all tests pass with `dotnet test src/SunnySunday.slnx` and confirm no regressions in existing infrastructure and parser tests
 
 ---
 
