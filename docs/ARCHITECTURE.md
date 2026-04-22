@@ -69,6 +69,26 @@ Responsible for transforming raw Kindle export text into structured data before 
   - Compose recap document and send via SMTP to Kindle email address
   - Expose REST HTTP API consumed by the client CLI
 
+#### REST API layer (`SunnySunday.Server/`)
+
+The server currently exposes the MVP storage API as ASP.NET Minimal APIs.
+
+- Composition root: `Program.cs`
+- Endpoint modules: `Endpoints/`
+- Data access: `Data/`
+- Shared request/response contracts: `SunnySunday.Core/Contracts/`
+- OpenAPI: Swagger UI is enabled only in Development
+
+The application registers a scoped `IDbConnection` backed by `Microsoft.Data.Sqlite`, opens the connection per request, enables SQLite foreign keys via `PRAGMA foreign_keys = ON`, and resolves thin repository classes over that connection.
+
+Endpoint groups currently implemented:
+
+- Sync: bulk import via `POST /sync`
+- Settings: `GET /settings`, `PUT /settings`
+- Status: `GET /status`
+- Exclusions: highlight/book/author include-exclude operations plus `GET /exclusions`
+- Weights: `PUT /highlights/{id}/weight`, `GET /highlights/weights`
+
 ---
 
 ## Technology Stack
@@ -92,14 +112,20 @@ Responsible for transforming raw Kindle export text into structured data before 
 ```
 users            (id, kindle_email, created_at)
 authors          (id, name)
-books            (id, title, author_id)
+books            (id, user_id, author_id, title)
 highlights       (id, user_id, book_id, text, weight[1-5], excluded, last_seen, delivery_count, created_at)
-excluded_books   (user_id, book_id)
-excluded_authors (user_id, author_id)
-settings         (user_id, schedule['daily'|'weekly'], delivery_time[default:'18:00'], count[1-15, default:3])
+excluded_books   (id, user_id, book_id, excluded_at)
+excluded_authors (id, user_id, author_id, excluded_at)
+settings         (user_id, schedule['daily'|'weekly'], delivery_day, delivery_time[default:'18:00'], count[1-15, default:3])
 ```
 
-> **MVP note:** Single-user only. No indexes for MVP. To be added post-MVP when multi-user support is introduced: `highlights(user_id)` and `highlights(user_id, last_seen)`.
+> **MVP note:** Single-user only. The server auto-creates or reuses user `id = 1` on demand for every API request.
+
+Current uniqueness constraints used by the REST layer:
+
+- `authors(name)`
+- `books(user_id, author_id, title)`
+- `highlights(user_id, book_id, text)`
 
 ---
 
@@ -135,6 +161,54 @@ LIMIT @count
 | `GET` | `/exclusions` | List all exclusions |
 | `PUT` | `/highlights/{id}/weight` | Set highlight weight |
 | `GET` | `/highlights/weights` | List weighted highlights |
+
+### Data access pattern
+
+The REST layer uses Dapper with explicit SQL rather than EF Core.
+
+- Each repository encapsulates one domain slice and receives `IDbConnection` via DI
+- Queries stay close to the endpoint behavior they support
+- Sync import uses a database transaction to keep author, book, and highlight insertion consistent
+- Read models returned by list endpoints are projected directly into DTOs rather than materializing richer domain aggregates
+
+Current repository split:
+
+- `UserRepository`: implicit MVP user bootstrap and user email persistence
+- `SyncRepository`: bulk import and deduplication
+- `SettingsRepository`: settings read/upsert
+- `StatusRepository`: aggregate counters
+- `ExclusionRepository`: inclusion/exclusion mutations and exclusion listings
+- `WeightRepository`: weight updates and weighted highlight listings
+
+### Error handling
+
+The API returns JSON-only responses.
+
+- Validation failures use `Results.ValidationProblem(...)` and return HTTP `422`
+- Missing entities use `Results.Problem(...)` and return HTTP `404`
+- Successful mutations that do not need a body return HTTP `204`
+- Successful reads return HTTP `200` with DTO payloads from `SunnySunday.Core/Contracts/`
+
+This keeps the client protocol small, explicit, and aligned with the quickstart `curl` flows.
+
+## Project structure
+
+```
+src/SunnySunday.Core/
+└── Contracts/          # Shared request/response DTOs for CLI and server
+
+src/SunnySunday.Server/
+├── Data/               # Dapper repositories over SQLite
+├── Endpoints/          # Minimal API endpoint modules
+├── Infrastructure/     # Database bootstrap and logging
+├── Models/             # Server-side domain models
+└── Program.cs          # Composition root and DI wiring
+
+src/SunnySunday.Tests/
+├── Api/                # End-to-end HTTP integration tests via WebApplicationFactory
+├── Infrastructure/     # Database/bootstrap tests
+└── Parsing/            # CLI parser tests
+```
 
 ---
 
