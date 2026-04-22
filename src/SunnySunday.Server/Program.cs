@@ -52,6 +52,7 @@ builder.Services.AddScoped<SyncRepository>();
 builder.Services.AddScoped<SettingsRepository>();
 builder.Services.AddScoped<StatusRepository>();
 builder.Services.AddScoped<ExclusionRepository>();
+builder.Services.AddScoped<WeightRepository>();
 
 var app = builder.Build();
 
@@ -70,6 +71,7 @@ app.MapSyncEndpoints();
 app.MapSettingsEndpoints();
 app.MapStatusEndpoints();
 app.MapExclusionEndpoints();
+app.MapWeightEndpoints();
 
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);
