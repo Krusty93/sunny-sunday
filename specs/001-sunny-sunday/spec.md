@@ -21,7 +21,7 @@ Readers who highlight and annotate texts on Kindle and want to review those high
 2. The user installs the client CLI on their laptop.
 3. The user runs a single setup command, providing only their Kindle email address. All other settings use sensible defaults.
 4. The user connects their Kindle via USB, runs the sync command pointing at `My Clippings.txt`.
-5. The server starts sending recap documents on the default schedule (weekly).
+5. The server starts sending recap documents on the default schedule (daily at 18:00 client's local time).
 
 ### Ongoing usage
 - The user connects their Kindle via USB periodically and runs the sync command to import new highlights.

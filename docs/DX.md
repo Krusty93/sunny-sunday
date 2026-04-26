@@ -35,7 +35,7 @@ docker run -d \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
-That's it. The server is running and will start sending recaps on the default schedule (weekly, every Sunday at 18:00).
+That's it. The server is running and will start sending recaps on the default schedule (daily at 18:00 client's local time).
 
 ### Client CLI
 
@@ -152,7 +152,7 @@ sunny sync <path>   # Explicit path to My Clippings.txt
 ```sh
 sunny config schedule daily          # Send recap every day at 18:00 (default time)
 sunny config schedule daily 08:00    # Send recap every day at 08:00
-sunny config schedule weekly         # Send recap every Sunday at 18:00 (default)
+sunny config schedule weekly         # Send recap every Sunday at 18:00
 sunny config schedule weekly 20:00   # Send recap every Sunday at 20:00
 sunny config schedule show           # Print current schedule
 ```

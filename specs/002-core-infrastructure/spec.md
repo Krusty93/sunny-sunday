@@ -78,7 +78,7 @@ When the server is running, all log entries are written to both a rolling log fi
 - **Book**: A Kindle book. Key fields: id, title, author_id
 - **Author**: A book author. Key fields: id, name
 - **User**: A Sunny Sunday user. Key fields: id, kindle_email, created_at
-- **Settings**: Per-user configuration. Key fields: user_id, schedule (daily/weekly), delivery_time (default 18:00), count (1–15, default 3)
+- **Settings**: Per-user configuration. Key fields: user_id, schedule (daily/weekly, default: daily), delivery_time (default 18:00), count (1–15, default 3)
 
 ### SQLite Schema
 
