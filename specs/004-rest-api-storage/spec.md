@@ -159,9 +159,10 @@ A user assigns weights (1–5) to individual highlights to influence how often t
 - The server database (SQLite) and schema bootstrap are already implemented in feature 002; this feature builds on that foundation.
 - Domain models (Highlight, Book, Author, User, Settings) are already defined in `SunnySunday.Server/Models/`.
 - No authentication is required for MVP — the server trusts all requests on the local network (per ADR-004).
-- Delivery time is expressed in the server's local timezone; timezone-aware scheduling is deferred to post-MVP.
+- Delivery time is expressed in the client's local timezone.
 - The sync endpoint receives data in the same structure as the parser output (`ParseResult` with `ParsedBook` and `ParsedHighlight` records).
 - The "next scheduled recap" shown in the status endpoint is informational and may be approximate; exact scheduling logic is implemented in a later feature (recap generation).
+
 # Feature Specification: [FEATURE NAME]
 
 **Feature Branch**: `[###-feature-name]`  

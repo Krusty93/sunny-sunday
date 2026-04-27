@@ -104,7 +104,7 @@ Per-user delivery configuration.
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
 | `user_id` | INTEGER | PRIMARY KEY, FK → users.id | 1:1 with users |
-| `schedule` | TEXT | NOT NULL DEFAULT 'weekly' | 'daily' or 'weekly' |
+| `schedule` | TEXT | NOT NULL DEFAULT 'daily' | 'daily' or 'weekly' |
 | `delivery_day` | TEXT | NULL | Day of week: 'monday'…'sunday'. NULL when schedule='daily' |
 | `delivery_time` | TEXT | NOT NULL DEFAULT '18:00' | HH:MM local time |
 | `count` | INTEGER | NOT NULL DEFAULT 3, CHECK(count BETWEEN 1 AND 15) | Highlights per recap |
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS excluded_authors (
 
 CREATE TABLE IF NOT EXISTS settings (
     user_id       INTEGER PRIMARY KEY REFERENCES users(id),
-    schedule      TEXT    NOT NULL DEFAULT 'weekly',
+    schedule      TEXT    NOT NULL DEFAULT 'daily',
     delivery_day  TEXT    NULL,
     delivery_time TEXT    NOT NULL DEFAULT '18:00',
     count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15)
