@@ -91,25 +91,6 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
-      - name: Wait for draft release
-        run: |
-          TAG="${{ needs.metadata.outputs.tag }}"
-          echo "Waiting for draft release $TAG ..."
-          for i in $(seq 1 30); do
-            DRAFT=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft -q '.isDraft' 2>/dev/null || echo "missing")
-            if [ "$DRAFT" = "true" ]; then
-              echo "Draft release found."
-              exit 0
-            elif [ "$DRAFT" = "false" ]; then
-              echo "::error::Release $TAG exists but is already published."
-              exit 1
-            fi
-            echo "  attempt $i/30 — draft not found yet, retrying in 10s ..."
-            sleep 10
-          done
-          echo "::error::Draft release $TAG not found after 5 minutes."
-          exit 1
-
       - name: Upload assets to draft release
         run: |
           TAG="${{ needs.metadata.outputs.tag }}"
