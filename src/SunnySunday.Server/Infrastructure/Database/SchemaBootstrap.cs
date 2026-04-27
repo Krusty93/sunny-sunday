@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 
 namespace SunnySunday.Server.Infrastructure.Database;
 
@@ -57,6 +57,17 @@ public sealed class SchemaBootstrap
             count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15)
         );
 
+        CREATE TABLE IF NOT EXISTS recap_jobs (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id       INTEGER NOT NULL REFERENCES users(id),
+            scheduled_for TEXT    NOT NULL,
+            status        TEXT    NOT NULL DEFAULT 'pending',
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            error_message TEXT    NULL,
+            created_at    TEXT    NOT NULL,
+            delivered_at  TEXT    NULL
+        );
+
         CREATE UNIQUE INDEX IF NOT EXISTS uq_authors_name
             ON authors(name);
 
@@ -65,6 +76,9 @@ public sealed class SchemaBootstrap
 
         CREATE UNIQUE INDEX IF NOT EXISTS uq_highlights_user_book_text
             ON highlights(user_id, book_id, text);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_recap_jobs_user_slot
+            ON recap_jobs(user_id, scheduled_for);
         """;
 
     public void Apply(SqliteConnection connection)
@@ -74,6 +88,8 @@ public sealed class SchemaBootstrap
         using var command = connection.CreateCommand();
         command.CommandText = SchemaSql;
         command.ExecuteNonQuery();
+
+        Migrate(connection);
     }
 
     public async Task ApplyAsync(string dbPath, CancellationToken cancellationToken = default)
@@ -97,5 +113,36 @@ public sealed class SchemaBootstrap
         await using var command = connection.CreateCommand();
         command.CommandText = SchemaSql;
         await command.ExecuteNonQueryAsync(cancellationToken);
+
+        await MigrateAsync(connection, cancellationToken);
+    }
+
+    private static void Migrate(SqliteConnection connection)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('settings') WHERE name = 'timezone'";
+        var exists = Convert.ToInt64(check.ExecuteScalar()) > 0;
+
+        if (!exists)
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE settings ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'";
+            alter.ExecuteNonQuery();
+        }
+    }
+
+    private static async Task MigrateAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using var check = connection.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('settings') WHERE name = 'timezone'";
+        var result = await check.ExecuteScalarAsync(cancellationToken);
+        var exists = Convert.ToInt64(result) > 0;
+
+        if (!exists)
+        {
+            await using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE settings ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'";
+            await alter.ExecuteNonQueryAsync(cancellationToken);
+        }
     }
 }

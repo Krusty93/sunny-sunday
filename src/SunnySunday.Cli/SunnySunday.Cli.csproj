@@ -1,11 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\PackageVersions.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\SunnySunday.Core\SunnySunday.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.6" />
+    <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="Spectre.Console" Version="0.55.0" />
   </ItemGroup>
 

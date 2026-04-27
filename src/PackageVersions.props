@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup>
+    <PollyVersion>8.6.6</PollyVersion>
+  </PropertyGroup>
+
+</Project>

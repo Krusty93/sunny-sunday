@@ -8,6 +8,7 @@ using SunnySunday.Server.Data;
 using SunnySunday.Server.Endpoints;
 using SunnySunday.Server.Infrastructure.Database;
 using SunnySunday.Server.Infrastructure.Logging;
+using SunnySunday.Server.Infrastructure.Smtp;
 
 var dbPath = ".data/sunny.db";
 var connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
@@ -15,6 +16,18 @@ var connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }
 var builder = WebApplication.CreateBuilder(args);
 
 SerilogConfiguration.ConfigureLogging(builder, dbPath);
+
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    ["Smtp:Host"] = Environment.GetEnvironmentVariable("SMTP_HOST"),
+    ["Smtp:Port"] = Environment.GetEnvironmentVariable("SMTP_PORT"),
+    ["Smtp:Username"] = Environment.GetEnvironmentVariable("SMTP_USER"),
+    ["Smtp:Password"] = Environment.GetEnvironmentVariable("SMTP_PASSWORD"),
+    ["Smtp:FromAddress"] = Environment.GetEnvironmentVariable("SMTP_FROM_ADDRESS"),
+    ["Smtp:UseSsl"] = Environment.GetEnvironmentVariable("SMTP_USE_SSL"),
+});
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -53,6 +66,7 @@ builder.Services.AddScoped<SettingsRepository>();
 builder.Services.AddScoped<StatusRepository>();
 builder.Services.AddScoped<ExclusionRepository>();
 builder.Services.AddScoped<WeightRepository>();
+builder.Services.AddScoped<RecapRepository>();
 
 var app = builder.Build();
 

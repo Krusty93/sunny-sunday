@@ -15,7 +15,8 @@ public sealed class SettingsRepository(IDbConnection connection)
                 schedule AS Schedule,
                 delivery_day AS DeliveryDay,
                 delivery_time AS DeliveryTime,
-                count AS Count
+                count AS Count,
+                timezone AS Timezone
             FROM settings
             WHERE user_id = @UserId
             """,
@@ -31,13 +32,14 @@ public sealed class SettingsRepository(IDbConnection connection)
     {
         return connection.ExecuteAsync(
             """
-            INSERT INTO settings (user_id, schedule, delivery_day, delivery_time, count)
-            VALUES (@UserId, @Schedule, @DeliveryDay, @DeliveryTime, @Count)
+            INSERT INTO settings (user_id, schedule, delivery_day, delivery_time, count, timezone)
+            VALUES (@UserId, @Schedule, @DeliveryDay, @DeliveryTime, @Count, @Timezone)
             ON CONFLICT(user_id) DO UPDATE SET
                 schedule = excluded.schedule,
                 delivery_day = excluded.delivery_day,
                 delivery_time = excluded.delivery_time,
-                count = excluded.count
+                count = excluded.count,
+                timezone = excluded.timezone
             """,
             settings);
     }
