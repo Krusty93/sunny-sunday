@@ -32,6 +32,16 @@ public sealed class StatusRepository(IDbConnection connection)
             "SELECT COUNT(*) FROM excluded_authors WHERE user_id = @UserId",
             new { UserId = userId });
 
+        var lastJob = await connection.QuerySingleOrDefaultAsync<(string? Status, string? ErrorMessage)>(
+            """
+            SELECT status, error_message
+            FROM recap_jobs
+            WHERE user_id = @UserId
+            ORDER BY created_at DESC
+            LIMIT 1
+            """,
+            new { UserId = userId });
+
         return new StatusResponse
         {
             TotalHighlights = totalHighlights,
@@ -40,7 +50,9 @@ public sealed class StatusRepository(IDbConnection connection)
             ExcludedHighlights = excludedHighlights,
             ExcludedBooks = excludedBooks,
             ExcludedAuthors = excludedAuthors,
-            NextRecap = null
+            NextRecap = null,
+            LastRecapStatus = lastJob.Status,
+            LastRecapError = lastJob.ErrorMessage
         };
     }
 }

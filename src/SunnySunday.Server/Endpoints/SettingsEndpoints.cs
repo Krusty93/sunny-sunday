@@ -48,6 +48,9 @@ public static partial class SettingsEndpoints
             if (request.KindleEmail is not null && !IsValidEmail(request.KindleEmail, out normalizedKindleEmail))
                 errors["kindleEmail"] = ["Invalid email format."];
 
+            if (request.Timezone is not null && !IsValidTimezone(request.Timezone))
+                errors["timezone"] = ["Invalid IANA timezone identifier."];
+
             if (errors.Count > 0)
                 return Results.ValidationProblem(errors, statusCode: StatusCodes.Status422UnprocessableEntity);
 
@@ -83,6 +86,7 @@ public static partial class SettingsEndpoints
         settings.DeliveryDay = request.DeliveryDay is null ? settings.DeliveryDay : NormalizeDeliveryDay(request.DeliveryDay);
         settings.DeliveryTime = normalizedDeliveryTime ?? settings.DeliveryTime;
         settings.Count = request.Count ?? settings.Count;
+        settings.Timezone = request.Timezone?.Trim() ?? settings.Timezone;
         user.KindleEmail = normalizedKindleEmail ?? user.KindleEmail;
     }
 
@@ -94,7 +98,8 @@ public static partial class SettingsEndpoints
             DeliveryDay = settings.DeliveryDay,
             DeliveryTime = settings.DeliveryTime,
             Count = settings.Count,
-            KindleEmail = user.KindleEmail
+            KindleEmail = user.KindleEmail,
+            Timezone = settings.Timezone
         };
     }
 
@@ -129,5 +134,18 @@ public static partial class SettingsEndpoints
         return string.IsNullOrWhiteSpace(normalized)
             ? null
             : normalized.ToLowerInvariant();
+    }
+
+    private static bool IsValidTimezone(string value)
+    {
+        try
+        {
+            TimeZoneInfo.FindSystemTimeZoneById(value.Trim());
+            return true;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return false;
+        }
     }
 }

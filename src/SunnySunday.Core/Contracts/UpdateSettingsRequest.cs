@@ -36,4 +36,7 @@ public sealed record UpdateSettingsRequest
     /// Omit to keep the current value.
     /// </summary>
     public string? KindleEmail { get; set; }
+
+    /// <summary>IANA timezone identifier. Validated via TimeZoneInfo.FindSystemTimeZoneById.</summary>
+    public string? Timezone { get; set; }
 }
