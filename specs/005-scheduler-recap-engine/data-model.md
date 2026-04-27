@@ -188,12 +188,12 @@ public sealed class SmtpSettings
 
 **Docker environment variable format**:
 ```
-Smtp__Host=smtp.gmail.com
-Smtp__Port=587
-Smtp__Username=sender@gmail.com
-Smtp__Password=app-specific-password
-Smtp__FromAddress=sender@gmail.com
-Smtp__UseSsl=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=sender@gmail.com
+SMTP_PASSWORD=app-specific-password
+SMTP_FROM_ADDRESS=sender@gmail.com
+SMTP_USE_SSL=true
 ```
 
 ---

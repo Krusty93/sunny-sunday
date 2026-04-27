@@ -37,9 +37,7 @@ SMTP credentials are **not** stored in the database. Configure them via `appsett
     "Host": "smtp.gmail.com",
     "Port": 587,
     "Username": "your-email@gmail.com",
-    "Password": "your-app-specific-password",
-    "FromAddress": "your-email@gmail.com",
-    "UseSsl": true
+    "Password": "your-app-specific-password"
   }
 }
 ```
@@ -51,12 +49,10 @@ SMTP credentials are **not** stored in the database. Configure them via `appsett
 ```yaml
 # docker-compose.yml excerpt
 environment:
-  - Smtp__Host=smtp.gmail.com
-  - Smtp__Port=587
-  - Smtp__Username=your-email@gmail.com
-  - Smtp__Password=your-app-specific-password
-  - Smtp__FromAddress=your-email@gmail.com
-  - Smtp__UseSsl=true
+  - SMTP_HOST=smtp.gmail.com
+  - SMTP_PORT=587
+  - SMTP_USER=your-email@gmail.com
+  - SMTP_PASSWORD=your-app-specific-password
 ```
 
 ---
@@ -216,8 +212,8 @@ When a recap fires:
 If delivery fails:
 
 ```
-[WRN] Delivery attempt 1 failed: Connection refused. Retrying in 1 minute.
-[WRN] Delivery attempt 2 failed: Authentication failed. Retrying in 5 minutes.
+[WRN] Delivery attempt 1 failed: Connection refused. Polly scheduled retry 2/3 with exponential backoff.
+[WRN] Delivery attempt 2 failed: Authentication failed. Polly scheduled retry 3/3 with exponential backoff.
 [ERR] All 3 delivery attempts exhausted. recap_job_id=7, error: Authentication failed.
 ```
 

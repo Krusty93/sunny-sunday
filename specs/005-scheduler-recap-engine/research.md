@@ -71,7 +71,7 @@ Each highlight item in `highlights.xhtml` renders as:
 - MailKit is explicitly listed in the project stack (`docs/ARCHITECTURE.md`). It provides full SMTP support including STARTTLS, OAUTH2, and modern authentication — significantly more reliable than the deprecated .NET BCL `SmtpClient`.
 - SMTP credentials (host, port, username, password, from address) are **server-side operational configuration**, not user preferences. They must **not** be stored in the SQLite DB. They belong in `appsettings.json` with environment variable overrides.
 - The Kindle recipient email (`users.kindle_email`) is stored in SQLite — it is user data, not server config.
-- `IOptions<SmtpSettings>` is the standard .NET options pattern; environment variables override with double-underscore separator (`Smtp__Host`) — standard Docker-compose pattern.
+- `IOptions<SmtpSettings>` remains the binding target, while startup code maps variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`, `SMTP_USE_SSL`) into the options model.
 - `IMailDeliveryService` abstracts MailKit for testability. Tests inject a fake implementation; production registers `MailDeliveryService`.
 
 **SmtpSettings configuration keys** (in `appsettings.json` / env vars):
@@ -84,6 +84,16 @@ Smtp:FromAddress  (required)
 Smtp:UseSsl       (default: true)
 ```
 
+**Compatible environment variable names**:
+```
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASSWORD
+SMTP_FROM_ADDRESS
+SMTP_USE_SSL
+```
+
 **Alternatives considered**:
 - **.NET BCL `SmtpClient`**: deprecated since .NET Core 2.0; lacks modern auth support; documented as not recommended by Microsoft.
 - **SendGrid / Mailgun SDK**: external cloud services — violates constitution principle IV (local processing only, no third-party data transmission).
@@ -92,26 +102,23 @@ Smtp:UseSsl       (default: true)
 
 ### 4. Retry Policy: Polly vs Manual Loop
 
-**Decision**: Manual retry loop with `await Task.Delay(...)` — no new NuGet package
+**Decision**: Polly retry policy with exponential backoff and a maximum of 3 attempts total
 
 **Rationale**:
-- The retry spec is fixed and simple: 3 total attempts, wait 1 minute between attempt 1 and 2, wait 5 minutes between attempt 2 and 3.
-- A manual loop with `Task.Delay` is approximately 20 lines and carries no library dependency.
-- Polly (or `Microsoft.Extensions.Resilience`) is appropriate when retry rules are configurable, need circuit-breaking, or must be shared across many call sites. None apply here.
-- Constitution principle VI: do not add a library for something achievable in 20 lines.
+- The retry requirement explicitly calls for exponential behavior without hardcoded wait values in application code.
+- Polly expresses retry concerns declaratively, computes exponential delays inside the policy, and keeps the orchestration flow focused on delivery success/failure handling.
+- A single local retry policy is still small in scope and avoids open-coded delay math scattered through the recap service.
+- This keeps room for logging the computed delay per attempt without coupling the implementation to fixed literal schedules in the spec.
 
-**Retry schedule**:
-1. Attempt 1 — immediate
-2. Wait 1 minute (`TimeSpan.FromMinutes(1)`)
-3. Attempt 2
-4. Wait 5 minutes (`TimeSpan.FromMinutes(5)`)
-5. Attempt 3
-6. All attempts exhausted → log error, leave `recap_jobs` status as `'failed'`, leave `last_seen`/`delivery_count` unchanged
+**Retry behavior**:
+1. Attempt 1 starts immediately.
+2. Attempts 2 and 3 are governed by Polly exponential backoff.
+3. After the third failed attempt, log error, leave `recap_jobs` status as `'failed'`, and leave `last_seen`/`delivery_count` unchanged.
 
 **Success**: At any attempt, on confirmed SMTP success → set `recap_jobs.status = 'delivered'`, update `last_seen` and `delivery_count` on each delivered highlight.
 
 **Alternatives considered**:
-- **Polly / `Microsoft.Extensions.Resilience`**: excellent libraries, but unjustified for a fixed 3-attempt sequential retry with known delays.
+- **Manual retry loop with `Task.Delay`**: would require the service to own delay calculation and pushes exponential timing details into application code.
 - **Quartz retry trigger**: reschedule the failed job as a new Quartz trigger. Unnecessarily complex; blurs the line between scheduling and delivery retry.
 
 ---

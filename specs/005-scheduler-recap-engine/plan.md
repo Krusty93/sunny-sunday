@@ -5,12 +5,12 @@
 
 ## Summary
 
-Implement the automated recap pipeline for Sunny Sunday: a Quartz.NET-based scheduler fires daily (or weekly) at the user's configured local time, selects highlights by `score = age_in_days + weight` (tiebreak: most recently added), composes a Kindle-friendly EPUB 2 flat-list document, and delivers it via MailKit SMTP with a 3-attempt exponential retry (1 min, 5 min). Successful delivery updates `last_seen` and `delivery_count` per highlight; permanent failure leaves history unchanged and exposes the error via `GET /status`. All existing endpoints (`PUT /settings`, `GET /status`) are extended in-place — no new routes are added.
+Implement the automated recap pipeline for Sunny Sunday: a Quartz.NET-based scheduler fires daily (or weekly) at the user's configured local time, selects highlights by `score = age_in_days + weight` (tiebreak: most recently added), composes a Kindle-friendly EPUB 2 flat-list document, and delivers it via MailKit SMTP with Polly-based exponential retry capped at 3 attempts. Successful delivery updates `last_seen` and `delivery_count` per highlight; permanent failure leaves history unchanged and exposes the error via `GET /status`. All existing endpoints (`PUT /settings`, `GET /status`) are extended in-place — no new routes are added.
 
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (`net10.0` TFM)
-**New Dependencies**: `Quartz.Extensions.Hosting` (Quartz.NET), `MailKit`
+**New Dependencies**: `Quartz.Extensions.Hosting` (Quartz.NET), `MailKit`, `Polly`
 **Existing Dependencies**: Dapper, Microsoft.Data.Sqlite, Serilog, Swashbuckle.AspNetCore (all in `SunnySunday.Server.csproj`)
 **Storage**: SQLite at `.data/sunny.db` — existing schema via `SchemaBootstrap`; this feature adds `recap_jobs` table and `timezone` column to `settings`
 **Testing**: xUnit + `WebApplicationFactory` (in-memory SQLite) — existing test infrastructure; `IMailDeliveryService` interface for SMTP substitution
@@ -30,7 +30,7 @@ Implement the automated recap pipeline for Sunny Sunday: a Quartz.NET-based sche
 | III. Zero-Config Onboarding | **PASS** | Default timezone `"UTC"`, default schedule `daily 18:00` — no setup beyond Kindle email required |
 | IV. Local Processing Only | **PASS** | SMTP is direct server→Amazon; no third-party cloud APIs |
 | V. Tests Ship with Code | **PASS** | Selection, EPUB, retry, and endpoint tests included in same PR |
-| VI. Simplicity / YAGNI | **PASS** | In-memory Quartz store (not persistent), manual retry (not Polly), manual EPUB (not library) |
+| VI. Simplicity / YAGNI | **PASS** | In-memory Quartz store (not persistent), single Polly retry policy, manual EPUB (not library) |
 | Tech: C# / .NET 10 only | **PASS** | All new code is C# |
 | Tech: SQLite only | **PASS** | `recap_jobs` table in same SQLite file; Quartz uses in-memory store |
 | Tech: Serilog logging | **PASS** | Serilog used for delivery events and error logging |
@@ -41,7 +41,7 @@ Implement the automated recap pipeline for Sunny Sunday: a Quartz.NET-based sche
 | Exclusion: No web UI | **PASS** | No new UI components |
 | Exclusion: No auth for MVP | **PASS** | No authentication changes |
 
-**Post-design re-check**: All gates pass. Two new NuGet packages (`Quartz.Extensions.Hosting`, `MailKit`) are both in the prescribed stack. No new projects introduced. No EF Core, no Polly, no EPUB library dependencies added.
+**Post-design re-check**: All gates pass. Three new NuGet packages (`Quartz.Extensions.Hosting`, `MailKit`, `Polly`) remain within the prescribed stack. No new projects introduced. No EF Core or EPUB library dependencies added.
 
 ## Project Structure
 
@@ -113,7 +113,7 @@ No constitution violations. No complexity justification needed.
 **Purpose**: Add new NuGet packages required by this feature.
 
 - [ ] T000 Add `Quartz.Extensions.Hosting` NuGet package to `src/SunnySunday.Server/SunnySunday.Server.csproj`: `dotnet add src/SunnySunday.Server package Quartz.Extensions.Hosting`. This package includes Quartz core, the `ISchedulerFactory` / `IScheduler` abstractions, and the `IHostedService` integration that starts and stops the scheduler with the application host.
-- [ ] T001 [P] Add `MailKit` NuGet package to `src/SunnySunday.Server/SunnySunday.Server.csproj`: `dotnet add src/SunnySunday.Server package MailKit`. Verify solution builds: `dotnet build src/SunnySunday.slnx`.
+- [ ] T001 [P] Add `MailKit` and `Polly` NuGet packages to `src/SunnySunday.Server/SunnySunday.Server.csproj`: `dotnet add src/SunnySunday.Server package MailKit` and `dotnet add src/SunnySunday.Server package Polly`. Verify solution builds: `dotnet build src/SunnySunday.slnx`.
 
 ---
 
@@ -138,7 +138,7 @@ No constitution violations. No complexity justification needed.
 
 **Purpose**: SMTP configuration binding, `SettingsRepository` extension, `RecapRepository`, and Quartz DI stub. These are the data-access and configuration foundations that services depend on.
 
-- [ ] T008 Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` with properties: `Host` (string, default `"smtp.gmail.com"`), `Port` (int, default `587`), `Username` (string, empty), `Password` (string, empty), `FromAddress` (string, empty), `UseSsl` (bool, default `true`). Namespace `SunnySunday.Server.Infrastructure.Smtp`.
+- [ ] T008 Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` with properties: `Host` (string, default `"smtp.gmail.com"`), `Port` (int, default `587`), `Username` (string, empty), `Password` (string, empty), `FromAddress` (string, empty), `UseSsl` (bool, default `true`). Namespace `SunnySunday.Server.Infrastructure.Smtp`. Add configuration mapping so env vars (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`, `SMTP_USE_SSL`) populate this options object.
 - [ ] T009 [P] Update `src/SunnySunday.Server/Data/SettingsRepository.cs`. In `GetByUserIdAsync`, add `timezone AS Timezone` to the SELECT column list. In `UpsertAsync`, add `timezone = excluded.timezone` to the ON CONFLICT DO UPDATE SET clause and add `@Timezone` to the INSERT VALUES list. The default (`"UTC"`) is handled by the C# model default, not by a NULL check.
 - [ ] T010 [P] Create `src/SunnySunday.Server/Data/RecapRepository.cs`. Constructor takes `IDbConnection`. Methods:
   - `SelectCandidatesAsync(int userId)` — executes the candidate selection query (see data-model.md); returns `IReadOnlyList<SelectionCandidate>` where score and ranking are computed in C# by `HighlightSelectionService`, not in SQL. This method returns raw rows before scoring.
@@ -204,7 +204,7 @@ No constitution violations. No complexity justification needed.
 
 ## Phase 6: Email Delivery with Retry (US-3)
 
-**Purpose**: Implement the MailKit SMTP delivery service and the retry loop. The interface decouples the orchestrator from the transport for testability.
+**Purpose**: Implement the MailKit SMTP delivery service and a Polly-based retry policy. The interface decouples the orchestrator from the transport for testability.
 
 - [ ] T015 Create `src/SunnySunday.Server/Services/IMailDeliveryService.cs`. Define:
   ```csharp
@@ -244,10 +244,11 @@ No constitution violations. No complexity justification needed.
   4. Call `HighlightSelectionService.SelectAsync(userId, settings.Count)`.
   5. If empty → `UpdateJobFailedAsync(jobId, "No eligible highlights.", 0)`, return.
   6. Call `EpubComposer.Compose(candidates, scheduledFor)`.
-  7. Retry loop (max 3 attempts, waits: 1 min, 5 min between attempts):
-     - Call `IMailDeliveryService.SendAsync(payload, ct)`.
-     - On success: call `RecapRepository.UpdateHighlightSeenAsync` for each delivered highlight, call `UpdateJobDeliveredAsync`, return.
-     - On failure: increment attempt count; if attempts < 3, `await Task.Delay(backoff, ct)`; else `UpdateJobFailedAsync(jobId, ex.Message, 3)`, log error.
+    7. Polly retry policy (max 3 attempts total, exponential backoff computed by the policy):
+      - Execute `IMailDeliveryService.SendAsync(payload, ct)` through the Polly policy.
+      - On each retry callback, log the attempt number and computed delay.
+      - On success: call `RecapRepository.UpdateHighlightSeenAsync` for each delivered highlight, call `UpdateJobDeliveredAsync`, return.
+      - On final failure after the third attempt: `UpdateJobFailedAsync(jobId, ex.Message, 3)`, log error.
   Namespace `SunnySunday.Server.Services`.
 - [ ] T019 Create `src/SunnySunday.Server/Jobs/RecapJob.cs`. Implements Quartz `IJob`. Constructor takes `IRecapService`, `RecapRepository`, `UserRepository`, `ILogger<RecapJob>`. `Execute(IJobExecutionContext context)`:
   1. Extract `scheduledFor = context.ScheduledFireTimeUtc?.ToDateTimeOffset() ?? DateTimeOffset.UtcNow`.
