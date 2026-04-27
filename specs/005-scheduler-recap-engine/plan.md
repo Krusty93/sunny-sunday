@@ -10,7 +10,7 @@ Implement the automated recap pipeline for Sunny Sunday: a Quartz.NET-based sche
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (`net10.0` TFM)
-**New Dependencies**: `Quartz.Extensions.Hosting` (Quartz.NET), `MailKit`, `Polly`
+**New Dependencies**: `Quartz.Extensions.Hosting` (Quartz.NET), `MailKit`, `Polly` (shared by server and CLI via `src/PackageVersions.props`)
 **Existing Dependencies**: Dapper, Microsoft.Data.Sqlite, Serilog, Swashbuckle.AspNetCore (all in `SunnySunday.Server.csproj`)
 **Storage**: SQLite at `.data/sunny.db` — existing schema via `SchemaBootstrap`; this feature adds `recap_jobs` table and `timezone` column to `settings`
 **Testing**: xUnit + `WebApplicationFactory` (in-memory SQLite) — existing test infrastructure; `IMailDeliveryService` interface for SMTP substitution
@@ -92,6 +92,9 @@ src/SunnySunday.Core/Contracts/
 ├── UpdateSettingsRequest.cs                  ← Updated: +Timezone
 └── StatusResponse.cs                         ← Updated: +LastRecapStatus, +LastRecapError
 
+src/
+├── PackageVersions.props                     ← NEW: shared NuGet version properties
+
 src/SunnySunday.Tests/
 ├── Api/
 │   ├── SettingsEndpointTests.cs              ← Updated: new timezone test cases
@@ -113,7 +116,7 @@ No constitution violations. No complexity justification needed.
 **Purpose**: Add new NuGet packages required by this feature.
 
 - [ ] T000 Add `Quartz.Extensions.Hosting` NuGet package to `src/SunnySunday.Server/SunnySunday.Server.csproj`: `dotnet add src/SunnySunday.Server package Quartz.Extensions.Hosting`. This package includes Quartz core, the `ISchedulerFactory` / `IScheduler` abstractions, and the `IHostedService` integration that starts and stops the scheduler with the application host.
-- [ ] T001 [P] Add `MailKit` and `Polly` NuGet packages to `src/SunnySunday.Server/SunnySunday.Server.csproj`: `dotnet add src/SunnySunday.Server package MailKit` and `dotnet add src/SunnySunday.Server package Polly`. Verify solution builds: `dotnet build src/SunnySunday.slnx`.
+- [ ] T001 [P] Add `MailKit` to `src/SunnySunday.Server/SunnySunday.Server.csproj`, add `Polly` package references to both `src/SunnySunday.Server/SunnySunday.Server.csproj` and `src/SunnySunday.Cli/SunnySunday.Cli.csproj`, and create `src/PackageVersions.props` so the `Polly` version is declared once for both projects. Verify solution builds: `dotnet build src/SunnySunday.slnx`.
 
 ---
 
