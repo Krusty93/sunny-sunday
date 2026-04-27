@@ -1,0 +1,169 @@
+name: Build CLI Binaries
+
+on:
+  push:
+    tags:
+      - 'cli/v*'
+
+permissions:
+  contents: write
+
+jobs:
+  metadata:
+    name: Parse tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag:     ${{ steps.meta.outputs.tag }}
+    steps:
+      - id: meta
+        name: Extract version from tag
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#cli/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG"         >> $GITHUB_OUTPUT
+
+  build:
+    name: Build (${{ matrix.rid }})
+    needs: metadata
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            ext: .exe
+          - rid: linux-x64
+            ext: ""
+          - rid: osx-x64
+            ext: ""
+          - rid: osx-arm64
+            ext: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish
+        run: |
+          dotnet publish src/SunnySunday.Cli \
+            --configuration Release \
+            --runtime ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:PublishTrimmed=true \
+            --output publish/${{ matrix.rid }}
+
+      - name: Rename binary
+        run: |
+          V="${{ needs.metadata.outputs.version }}"
+          RID="${{ matrix.rid }}"
+          EXT="${{ matrix.ext }}"
+          mv "publish/${RID}/SunnySunday.Cli${EXT}" \
+             "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
+          mv "publish/${RID}/sunny${EXT}" \
+             "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
+          find "publish/${RID}" -maxdepth 1 -type f -not -name "*.pdb" \
+            -exec mv {} "publish/sunny-${V}-${RID}${EXT}" \;
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: cli-${{ matrix.rid }}
+          path: publish/sunny-*
+          if-no-files-found: error
+
+  publish-release:
+    name: Upload assets & publish release
+    needs: [metadata, build]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cli-*
+          path: artifacts/
+          merge-multiple: true
+
+      - name: Wait for draft release
+        run: |
+          TAG="${{ needs.metadata.outputs.tag }}"
+          echo "Waiting for draft release $TAG ..."
+          for i in $(seq 1 30); do
+            DRAFT=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft -q '.isDraft' 2>/dev/null || echo "missing")
+            if [ "$DRAFT" = "true" ]; then
+              echo "Draft release found."
+              exit 0
+            elif [ "$DRAFT" = "false" ]; then
+              echo "::error::Release $TAG exists but is already published."
+              exit 1
+            fi
+            echo "  attempt $i/30 — draft not found yet, retrying in 10s ..."
+            sleep 10
+          done
+          echo "::error::Draft release $TAG not found after 5 minutes."
+          exit 1
+
+      - name: Upload assets to draft release
+        run: |
+          TAG="${{ needs.metadata.outputs.tag }}"
+          gh release upload "$TAG" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Publish release
+        run: |
+          TAG="${{ needs.metadata.outputs.tag }}"
+          gh release edit "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft=false
+
+  winget:
+    name: Publish to WinGet
+    needs: [metadata, publish-release]
+    runs-on: windows-latest
+    env:
+      WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_PAT }}
+    steps:
+      - name: Get installer URL
+        id: asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          TAG="${{ needs.metadata.outputs.tag }}"
+          VERSION="${{ needs.metadata.outputs.version }}"
+          EXPECTED="sunny-${VERSION}-win-x64.exe"
+
+          URL=$(gh release view "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json assets \
+            -q ".assets[] | select(.name == \"${EXPECTED}\") | .url")
+
+          if [ -z "$URL" ]; then
+            echo "::error::Asset $EXPECTED not found in release $TAG"
+            exit 1
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Download wingetcreate
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe
+
+      - name: Update WinGet manifest
+        shell: pwsh
+        run: |
+          $version = "${{ needs.metadata.outputs.version }}"
+          $url     = "${{ steps.asset.outputs.url }}"
+
+          .\wingetcreate.exe update Krusty93.SunnySunday `
+            --submit `
+            --version $version `
+            --urls $url
