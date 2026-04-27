@@ -91,7 +91,7 @@ A user receives a Kindle-friendly EPUB recap rendered as a flat list of highligh
 - **FR-005-08**: System MUST render recap as a flat list where each item contains highlight text and source metadata.
 - **FR-005-09**: System MUST send recap via configured SMTP pipeline.
 - **FR-005-10**: System MUST apply automatic retries on failed delivery attempts.
-- **FR-005-11**: System MUST use retry policy: maximum 3 attempts total, exponential backoff (1m, 5m).
+- **FR-005-11**: System MUST use Polly retry policy with a maximum of 3 attempts total and exponential backoff computed by the policy rather than fixed delay values in application code.
 - **FR-005-12**: System MUST update `last_seen` and `delivery_count` only after confirmed successful delivery.
 - **FR-005-13**: System MUST NOT update recap history when delivery fails permanently.
 - **FR-005-14**: System MUST expose actionable failure reasons for exhausted retries (US-08 alignment).
