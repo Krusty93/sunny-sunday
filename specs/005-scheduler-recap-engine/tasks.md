@@ -29,12 +29,12 @@
 
 **⚠️ CRITICAL**: No user story work should start until this phase is complete.
 
-- [X] T002 Update `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` to add the `recap_jobs` table and unique slot index, plus an idempotent `timezone` migration for the `settings` table in both sync and async bootstrap paths.
+- [X] T002 Update `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` to add the `recap_jobs` table and unique slot index, plus an idempotent `timezone` for the `settings` table in async bootstrap paths.
 - [X] T003 [P] Update `src/SunnySunday.Server/Models/Settings.cs` and `src/SunnySunday.Server/Data/SettingsRepository.cs` to persist `Timezone` with a default of `UTC` alongside the existing schedule fields.
 - [X] T004 [P] Create `src/SunnySunday.Server/Models/RecapJobRecord.cs`, `src/SunnySunday.Server/Services/SelectionCandidate.cs`, and `src/SunnySunday.Server/Data/RecapRepository.cs` for recap slot persistence, last-job lookup, candidate reads, and post-delivery highlight history updates.
 - [X] T005 [P] Update `src/SunnySunday.Core/Contracts/SettingsResponse.cs`, `src/SunnySunday.Core/Contracts/UpdateSettingsRequest.cs`, and `src/SunnySunday.Core/Contracts/StatusResponse.cs` to add `Timezone`, `LastRecapStatus`, and `LastRecapError` contract fields.
-- [X] T006 [P] Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` and update `src/SunnySunday.Server/appsettings.json` plus `src/SunnySunday.Server/appsettings.Development.json` with `Smtp` settings for `Host`, `Port`, `Username`, `Password`, `FromAddress`, and `UseSsl` so `FromAddress` remains explicit in server configuration.
-- [X] T007 Update `src/SunnySunday.Server/Program.cs` to bind `SmtpSettings` from configuration and map the README-source environment variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`, and `SMTP_USE_SSL` onto that options model before feature service registration.
+- [X] T006 [P] Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` and update `src/SunnySunday.Server/appsettings.Development.json` with `Smtp` settings for `Host`, `Port`, `Username`, `Password`, `FromAddress` and `FromAddress`.
+- [X] T007 Update `src/SunnySunday.Server/Program.cs` to bind `SmtpSettings` from configuration and map the README-source environment variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM_ADDRESS` onto that options model before feature service registration.
 - [X] T008 Update `src/SunnySunday.Tests/Api/SunnyTestApplicationFactory.cs` to apply the new schema shape in-memory and support replacing recap pipeline services during scheduler and delivery integration tests.
 
 **Checkpoint**: Schema, contracts, SMTP config binding, and shared test plumbing are ready. User stories can now proceed in dependency order.
@@ -124,7 +124,7 @@
 
 **Purpose**: Align repo docs with the implemented behavior and verify the full feature set.
 
-- [ ] T024 [P] Update `README.md`, `docs/DX.md`, and `docs/ARCHITECTURE.md` to document the recap pipeline, `recap_jobs`, timezone-aware scheduling, and the authoritative SMTP variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`, and `SMTP_USE_SSL`.
+- [ ] T024 [P] Update `README.md`, `docs/DX.md`, and `docs/ARCHITECTURE.md` to document the recap pipeline, `recap_jobs`, timezone-aware scheduling, and the authoritative SMTP variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM_ADDRESS`.
 - [ ] T025 [P] Reconcile `specs/005-scheduler-recap-engine/quickstart.md` with the shipped configuration shape so local-development and Docker examples include the final SMTP settings and UTC scheduling expectations.
 - [ ] T026 Validate the feature against `specs/005-scheduler-recap-engine/quickstart.md` and run the regression suite from `src/SunnySunday.slnx`.
 
