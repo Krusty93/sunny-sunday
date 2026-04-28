@@ -1,4 +1,4 @@
-namespace SunnySunday.Server.Services;
+﻿namespace SunnySunday.Server.Services;
 
 public interface IRecapService
 {

@@ -70,7 +70,17 @@ builder.Services.AddScoped<ExclusionRepository>();
 builder.Services.AddScoped<WeightRepository>();
 builder.Services.AddScoped<RecapRepository>();
 
-builder.Services.AddQuartz();
+builder.Services.AddQuartz(q =>
+{
+    q.UsePersistentStore(store =>
+    {
+        store.UseNewtonsoftJsonSerializer();
+        store.UseMicrosoftSQLite(db =>
+        {
+            db.ConnectionString = connectionString;
+        });
+    });
+});
 builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
 builder.Services.AddSingleton<ISchedulerService, SchedulerService>();
@@ -98,16 +108,20 @@ app.MapWeightEndpoints();
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);
 
-// Schedule initial recap trigger from persisted settings
+// Schedule recap trigger only on first run (persistent store preserves it across restarts)
 {
     await using var scope = app.Services.CreateAsyncScope();
-    var userRepo = scope.ServiceProvider.GetRequiredService<UserRepository>();
-    var settingsRepo = scope.ServiceProvider.GetRequiredService<SettingsRepository>();
     var schedulerService = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
 
-    var userId = await userRepo.EnsureUserAsync();
-    var settings = await settingsRepo.GetByUserIdAsync(userId);
-    await schedulerService.ScheduleAsync(settings);
+    if (schedulerService.GetNextFireTimeUtc() is null)
+    {
+        var userRepo = scope.ServiceProvider.GetRequiredService<UserRepository>();
+        var settingsRepo = scope.ServiceProvider.GetRequiredService<SettingsRepository>();
+
+        var userId = await userRepo.EnsureUserAsync();
+        var settings = await settingsRepo.GetByUserIdAsync(userId);
+        await schedulerService.ScheduleAsync(settings);
+    }
 }
 
 Log.Information("Sunny Sunday server started. Database: {DbPath}", dbPath);

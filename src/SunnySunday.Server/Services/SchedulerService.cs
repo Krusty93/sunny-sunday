@@ -15,12 +15,6 @@ public sealed class SchedulerService(
     {
         var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
 
-        if (await scheduler.CheckExists(RecapTriggerKey, cancellationToken))
-        {
-            await scheduler.UnscheduleJob(RecapTriggerKey, cancellationToken);
-            logger.LogInformation("Unscheduled existing recap trigger");
-        }
-
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(settings.Timezone);
         var cronExpression = BuildCronExpression(settings);
 
@@ -36,7 +30,16 @@ public sealed class SchedulerService(
             .Build();
 
         await scheduler.AddJob(job, replace: true, cancellationToken);
-        await scheduler.ScheduleJob(trigger, cancellationToken);
+
+        if (await scheduler.CheckExists(RecapTriggerKey, cancellationToken))
+        {
+            await scheduler.RescheduleJob(RecapTriggerKey, trigger, cancellationToken);
+            logger.LogInformation("Rescheduled existing recap trigger");
+        }
+        else
+        {
+            await scheduler.ScheduleJob(trigger, cancellationToken);
+        }
 
         var nextFire = trigger.GetNextFireTimeUtc();
         logger.LogInformation(
