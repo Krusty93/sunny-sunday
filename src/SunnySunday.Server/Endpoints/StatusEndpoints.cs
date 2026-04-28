@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SunnySunday.Core.Contracts;
 using SunnySunday.Server.Data;
+using SunnySunday.Server.Services;
 
 namespace SunnySunday.Server.Endpoints;
 
@@ -8,10 +9,14 @@ public static class StatusEndpoints
 {
     public static WebApplication MapStatusEndpoints(this WebApplication app)
     {
-        app.MapGet("/status", async ([FromServices] UserRepository userRepo, [FromServices] StatusRepository statusRepo) =>
+        app.MapGet("/status", async ([FromServices] UserRepository userRepo, [FromServices] StatusRepository statusRepo, [FromServices] ISchedulerService schedulerService) =>
         {
             var userId = await userRepo.EnsureUserAsync();
             var status = await statusRepo.GetStatusAsync(userId);
+
+            var nextFire = schedulerService.GetNextFireTimeUtc();
+            status.NextRecap = nextFire?.ToString("O");
+
             return Results.Ok(status);
         })
         .WithSummary("Get server status.")

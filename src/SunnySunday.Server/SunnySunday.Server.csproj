@@ -27,4 +27,8 @@
     <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="SunnySunday.Tests" />
+  </ItemGroup>
+
 </Project>

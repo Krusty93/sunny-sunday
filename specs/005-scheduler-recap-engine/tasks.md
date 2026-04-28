@@ -49,15 +49,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Extend `src/SunnySunday.Tests/Api/SettingsEndpointTests.cs` and `src/SunnySunday.Tests/Api/StatusEndpointTests.cs` to cover timezone persistence, timezone validation failures, and UTC `nextRecap` serialization.
-- [ ] T010 [P] [US1] Create `src/SunnySunday.Tests/Recap/SchedulerServiceTests.cs` to verify daily and weekly next-fire calculations, rescheduling after settings changes, and duplicate-slot behavior with deterministic inputs.
+- [X] T009 [P] [US1] Extend `src/SunnySunday.Tests/Api/SettingsEndpointTests.cs` and `src/SunnySunday.Tests/Api/StatusEndpointTests.cs` to cover timezone persistence, timezone validation failures, and UTC `nextRecap` serialization.
+- [X] T010 [P] [US1] Create `src/SunnySunday.Tests/Recap/SchedulerServiceTests.cs` to verify daily and weekly next-fire calculations, rescheduling after settings changes, and duplicate-slot behavior with deterministic inputs.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [P] [US1] Create `src/SunnySunday.Server/Services/IRecapService.cs` and `src/SunnySunday.Server/Jobs/RecapJob.cs` so Quartz can invoke the recap pipeline and skip slots already marked delivered in `recap_jobs`.
-- [ ] T012 [P] [US1] Create `src/SunnySunday.Server/Services/ISchedulerService.cs` and `src/SunnySunday.Server/Services/SchedulerService.cs` to translate `Settings` cadence, delivery time, and timezone into Quartz UTC triggers and expose the next fire time.
-- [ ] T013 [US1] Update `src/SunnySunday.Server/Endpoints/SettingsEndpoints.cs` and `src/SunnySunday.Server/Endpoints/StatusEndpoints.cs` to validate `Timezone`, reschedule on `PUT /settings`, and serialize `NextRecap` in UTC.
-- [ ] T014 [US1] Update `src/SunnySunday.Server/Program.cs` to register Quartz, `SchedulerService`, and `RecapJob`, and to schedule the initial trigger from persisted settings during server startup.
+- [X] T011 [P] [US1] Create `src/SunnySunday.Server/Services/IRecapService.cs` and `src/SunnySunday.Server/Jobs/RecapJob.cs` so Quartz can invoke the recap pipeline and skip slots already marked delivered in `recap_jobs`.
+- [X] T012 [P] [US1] Create `src/SunnySunday.Server/Services/ISchedulerService.cs` and `src/SunnySunday.Server/Services/SchedulerService.cs` to translate `Settings` cadence, delivery time, and timezone into Quartz UTC triggers and expose the next fire time.
+- [X] T013 [US1] Update `src/SunnySunday.Server/Endpoints/SettingsEndpoints.cs` and `src/SunnySunday.Server/Endpoints/StatusEndpoints.cs` to validate `Timezone`, reschedule on `PUT /settings`, and serialize `NextRecap` in UTC.
+- [X] T014 [US1] Update `src/SunnySunday.Server/Program.cs` to register Quartz, `SchedulerService`, and `RecapJob`, and to schedule the initial trigger from persisted settings during server startup.
 
 **Checkpoint**: Scheduling is functional and independently testable with a fake recap pipeline.
 

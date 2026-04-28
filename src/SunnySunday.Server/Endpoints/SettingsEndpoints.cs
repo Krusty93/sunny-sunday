@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SunnySunday.Core.Contracts;
 using SunnySunday.Server.Data;
 using SunnySunday.Server.Models;
+using SunnySunday.Server.Services;
 
 namespace SunnySunday.Server.Endpoints;
 
@@ -22,7 +23,7 @@ public static partial class SettingsEndpoints
         .WithDescription("Returns stored settings for the implicit MVP user, or default values when no settings row exists yet.")
         .Produces<SettingsResponse>(StatusCodes.Status200OK);
 
-        app.MapPut("/settings", async (UpdateSettingsRequest? request, [FromServices] UserRepository userRepo, [FromServices] SettingsRepository settingsRepo) =>
+        app.MapPut("/settings", async (UpdateSettingsRequest? request, [FromServices] UserRepository userRepo, [FromServices] SettingsRepository settingsRepo, [FromServices] ISchedulerService schedulerService) =>
         {
             if (request is null)
             {
@@ -62,6 +63,8 @@ public static partial class SettingsEndpoints
 
             await userRepo.UpdateKindleEmailAsync(user.Id, user.KindleEmail);
             await settingsRepo.UpsertAsync(settings);
+
+            await schedulerService.ScheduleAsync(settings);
 
             return Results.Ok(ToSettingsResponse(user, settings));
         })

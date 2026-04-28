@@ -37,7 +37,7 @@ public sealed class StatusEndpointTests : IDisposable
         Assert.Equal(10, result.TotalBooks);
         Assert.Equal(5, result.TotalAuthors);
         Assert.Equal(0, result.ExcludedHighlights);
-        Assert.Null(result.NextRecap);
+        Assert.NotNull(result.NextRecap);
     }
 
     [Fact]
@@ -54,7 +54,9 @@ public sealed class StatusEndpointTests : IDisposable
         Assert.Equal(0, result.ExcludedHighlights);
         Assert.Equal(0, result.ExcludedBooks);
         Assert.Equal(0, result.ExcludedAuthors);
-        Assert.Null(result.NextRecap);
+        Assert.NotNull(result.NextRecap);
+        Assert.Null(result.LastRecapStatus);
+        Assert.Null(result.LastRecapError);
     }
 
     private static SyncRequest BuildRequest(int bookCount, int highlightsPerBook, int authorCount) =>
@@ -69,4 +71,35 @@ public sealed class StatusEndpointTests : IDisposable
                     .ToList()
             }).ToList()
         };
+
+    [Fact]
+    public async Task GetStatus_NextRecap_IsUtcIso8601()
+    {
+        var response = await _client.GetAsync("/status");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<StatusResponse>();
+        Assert.NotNull(result);
+        Assert.NotNull(result.NextRecap);
+
+        var parsed = DateTimeOffset.Parse(result.NextRecap);
+        Assert.Equal(TimeSpan.Zero, parsed.Offset);
+    }
+
+    [Fact]
+    public async Task GetStatus_AfterTimezoneChange_NextRecapReflectsNewTimezone()
+    {
+        // Set timezone to UTC first
+        await _client.PutAsJsonAsync("/settings", new UpdateSettingsRequest { Timezone = "UTC" });
+        var statusUtc = await _client.GetFromJsonAsync<StatusResponse>("/status");
+        Assert.NotNull(statusUtc?.NextRecap);
+
+        // Change timezone
+        await _client.PutAsJsonAsync("/settings", new UpdateSettingsRequest { Timezone = "Asia/Tokyo" });
+        var statusTokyo = await _client.GetFromJsonAsync<StatusResponse>("/status");
+        Assert.NotNull(statusTokyo?.NextRecap);
+
+        // The UTC fire times should differ because delivery time is expressed in local timezone
+        Assert.NotEqual(statusUtc.NextRecap, statusTokyo.NextRecap);
+    }
 }
