@@ -71,11 +71,11 @@
 
 ### Tests for User Story 2
 
-- [ ] T015 [P] [US2] Create `src/SunnySunday.Tests/Recap/HighlightSelectionServiceTests.cs` to cover age-plus-weight scoring, `last_seen = null` handling, recent-first tie breaks, exclusion filtering, and `count` limits.
+- [X] T015 [P] [US2] Create `src/SunnySunday.Tests/Recap/HighlightSelectionServiceTests.cs` to cover age-plus-weight scoring, `last_seen = null` handling, recent-first tie breaks, exclusion filtering, and `count` limits.
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Create `src/SunnySunday.Server/Services/HighlightSelectionService.cs` to compute `ageInDays`, rank `SelectionCandidate` records from `RecapRepository.SelectCandidatesAsync`, and return the top configured highlights.
+- [X] T016 [US2] Create `src/SunnySunday.Server/Services/HighlightSelectionService.cs` to compute `ageInDays`, rank `SelectionCandidate` records from `RecapRepository.SelectCandidatesAsync`, and return the top configured highlights.
 
 **Checkpoint**: Candidate ranking is deterministic, tested, and ready for recap composition.
 

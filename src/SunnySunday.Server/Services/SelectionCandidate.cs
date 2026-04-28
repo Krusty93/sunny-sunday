@@ -1,6 +1,6 @@
-namespace SunnySunday.Server.Services;
+﻿namespace SunnySunday.Server.Services;
 
-internal sealed record SelectionCandidate(
+public sealed record SelectionCandidate(
     int Id,
     string Text,
     string BookTitle,
