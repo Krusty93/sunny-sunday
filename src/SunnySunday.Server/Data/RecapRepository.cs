@@ -1,6 +1,7 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using SunnySunday.Server.Models;
+using SunnySunday.Server.Services;
 
 namespace SunnySunday.Server.Data;
 
@@ -74,6 +75,46 @@ public sealed class RecapRepository(IDbConnection connection)
             new { UserId = userId });
     }
 
+    public async Task<IReadOnlyList<SelectionCandidate>> SelectCandidatesAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var rows = await connection.QueryAsync<SelectionCandidateRow>(new CommandDefinition(
+            """
+            SELECT
+                h.id          AS Id,
+                h.text        AS Text,
+                b.title       AS BookTitle,
+                a.name        AS AuthorName,
+                h.weight      AS Weight,
+                h.last_seen   AS LastSeenText,
+                h.created_at  AS CreatedAtText
+            FROM highlights h
+            JOIN books b   ON b.id = h.book_id
+            JOIN authors a ON a.id = b.author_id
+            WHERE h.user_id  = @UserId
+              AND h.excluded  = 0
+              AND NOT EXISTS (
+                    SELECT 1 FROM excluded_books eb
+                    WHERE eb.user_id = @UserId AND eb.book_id = h.book_id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM excluded_authors ea
+                    WHERE ea.user_id = @UserId AND ea.author_id = b.author_id)
+            """,
+            new { UserId = userId },
+            cancellationToken: cancellationToken));
+
+        return rows
+            .Select(r => new SelectionCandidate(
+                (int)r.Id,
+                r.Text,
+                r.BookTitle,
+                r.AuthorName,
+                (int)r.Weight,
+                r.LastSeenText is null ? null : DateTimeOffset.Parse(r.LastSeenText),
+                DateTimeOffset.Parse(r.CreatedAtText),
+                Score: 0))
+            .ToList();
+    }
+
     public Task UpdateHighlightSeenAsync(int highlightId, DateTimeOffset seenAt)
     {
         return connection.ExecuteAsync(
@@ -83,5 +124,17 @@ public sealed class RecapRepository(IDbConnection connection)
             WHERE id = @HighlightId
             """,
             new { HighlightId = highlightId, SeenAt = seenAt.UtcDateTime.ToString("O") });
+    }
+
+    // Raw row type for Dapper mapping (SQLite stores dates as text; integers come back as long)
+    private sealed class SelectionCandidateRow
+    {
+        public long Id { get; set; }
+        public string Text { get; set; } = "";
+        public string BookTitle { get; set; } = "";
+        public string AuthorName { get; set; } = "";
+        public long Weight { get; set; }
+        public string? LastSeenText { get; set; }
+        public string CreatedAtText { get; set; } = "";
     }
 }
