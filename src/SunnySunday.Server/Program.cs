@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.Data.Sqlite;
 using Microsoft.OpenApi;
+using Quartz;
 using Serilog;
 using SunnySunday.Core.Contracts;
 using SunnySunday.Server.Data;
@@ -9,13 +10,15 @@ using SunnySunday.Server.Endpoints;
 using SunnySunday.Server.Infrastructure.Database;
 using SunnySunday.Server.Infrastructure.Logging;
 using SunnySunday.Server.Infrastructure.Smtp;
+using SunnySunday.Server.Jobs;
+using SunnySunday.Server.Services;
 
 var dbPath = ".data/sunny.db";
 var connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
 
 var builder = WebApplication.CreateBuilder(args);
 
-SerilogConfiguration.ConfigureLogging(builder, dbPath);
+SerilogConfiguration.ConfigureLogging(builder);
 
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 {
@@ -67,6 +70,24 @@ builder.Services.AddScoped<ExclusionRepository>();
 builder.Services.AddScoped<WeightRepository>();
 builder.Services.AddScoped<RecapRepository>();
 
+builder.Services.AddQuartz(q =>
+{
+    q.UseTimeZoneConverter();
+
+    q.UsePersistentStore(store =>
+    {
+        store.UseNewtonsoftJsonSerializer();
+        store.UseMicrosoftSQLite(db =>
+        {
+            db.ConnectionString = connectionString;
+        });
+    });
+});
+builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+builder.Services.AddSingleton<ISchedulerService, SchedulerService>();
+builder.Services.AddTransient<RecapJob>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -88,6 +109,23 @@ app.MapWeightEndpoints();
 
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);
+await QuartzSchemaInitializer.ApplyAsync(connectionString);
+
+// Schedule recap trigger only on first run (persistent store preserves it across restarts)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var schedulerService = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
+
+    if (schedulerService.GetNextFireTimeUtc() is null)
+    {
+        var userRepo = scope.ServiceProvider.GetRequiredService<UserRepository>();
+        var settingsRepo = scope.ServiceProvider.GetRequiredService<SettingsRepository>();
+
+        var userId = await userRepo.EnsureUserAsync();
+        var settings = await settingsRepo.GetByUserIdAsync(userId);
+        await schedulerService.ScheduleAsync(settings);
+    }
+}
 
 Log.Information("Sunny Sunday server started. Database: {DbPath}", dbPath);
 
