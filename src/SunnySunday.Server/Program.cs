@@ -72,6 +72,8 @@ builder.Services.AddScoped<RecapRepository>();
 
 builder.Services.AddQuartz(q =>
 {
+    q.UseTimeZoneConverter();
+
     q.UsePersistentStore(store =>
     {
         store.UseNewtonsoftJsonSerializer();

@@ -16,17 +16,24 @@ public sealed class RecapJob(
     {
         var scheduledFor = context.ScheduledFireTimeUtc ?? context.FireTimeUtc;
 
-        await using var scope = scopeFactory.CreateAsyncScope();
-        var recapRepository = scope.ServiceProvider.GetRequiredService<RecapRepository>();
-
-        var existingJob = await recapRepository.GetJobBySlotAsync(UserId, scheduledFor);
-        if (existingJob is { Status: "delivered" })
+        try
         {
-            logger.LogInformation("Recap slot {ScheduledFor} already delivered for user {UserId}, skipping", scheduledFor, UserId);
-            return;
-        }
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var recapRepository = scope.ServiceProvider.GetRequiredService<RecapRepository>();
 
-        var recapService = scope.ServiceProvider.GetRequiredService<IRecapService>();
-        await recapService.ExecuteAsync(UserId, scheduledFor, context.CancellationToken);
+            var existingJob = await recapRepository.GetJobBySlotAsync(UserId, scheduledFor);
+            if (existingJob is { Status: "delivered" })
+            {
+                logger.LogInformation("Recap slot {ScheduledFor} already delivered for user {UserId}, skipping", scheduledFor, UserId);
+                return;
+            }
+
+            var recapService = scope.ServiceProvider.GetRequiredService<IRecapService>();
+            await recapService.ExecuteAsync(UserId, scheduledFor, context.CancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "RecapJob failed for slot {ScheduledFor}, user {UserId}", scheduledFor, UserId);
+        }
     }
 }
