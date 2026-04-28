@@ -54,7 +54,8 @@ public sealed class SchemaBootstrap
             schedule      TEXT    NOT NULL DEFAULT 'weekly',
             delivery_day  TEXT    NULL,
             delivery_time TEXT    NOT NULL DEFAULT '18:00',
-            count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15)
+            count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15),
+            timezone      TEXT    NOT NULL DEFAULT 'UTC'
         );
 
         CREATE TABLE IF NOT EXISTS recap_jobs (
@@ -81,15 +82,13 @@ public sealed class SchemaBootstrap
             ON recap_jobs(user_id, scheduled_for);
         """;
 
-    public void Apply(SqliteConnection connection)
+    public async Task ApplyAsync(SqliteConnection connection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connection);
 
-        using var command = connection.CreateCommand();
+        await using var command = connection.CreateCommand();
         command.CommandText = SchemaSql;
-        command.ExecuteNonQuery();
-
-        Migrate(connection);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task ApplyAsync(string dbPath, CancellationToken cancellationToken = default)
@@ -113,36 +112,5 @@ public sealed class SchemaBootstrap
         await using var command = connection.CreateCommand();
         command.CommandText = SchemaSql;
         await command.ExecuteNonQueryAsync(cancellationToken);
-
-        await MigrateAsync(connection, cancellationToken);
-    }
-
-    private static void Migrate(SqliteConnection connection)
-    {
-        using var check = connection.CreateCommand();
-        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('settings') WHERE name = 'timezone'";
-        var exists = Convert.ToInt64(check.ExecuteScalar()) > 0;
-
-        if (!exists)
-        {
-            using var alter = connection.CreateCommand();
-            alter.CommandText = "ALTER TABLE settings ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'";
-            alter.ExecuteNonQuery();
-        }
-    }
-
-    private static async Task MigrateAsync(SqliteConnection connection, CancellationToken cancellationToken)
-    {
-        await using var check = connection.CreateCommand();
-        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('settings') WHERE name = 'timezone'";
-        var result = await check.ExecuteScalarAsync(cancellationToken);
-        var exists = Convert.ToInt64(result) > 0;
-
-        if (!exists)
-        {
-            await using var alter = connection.CreateCommand();
-            alter.CommandText = "ALTER TABLE settings ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'";
-            await alter.ExecuteNonQueryAsync(cancellationToken);
-        }
     }
 }

@@ -1,4 +1,4 @@
-namespace SunnySunday.Server.Infrastructure.Smtp;
+﻿namespace SunnySunday.Server.Infrastructure.Smtp;
 
 public sealed class SmtpSettings
 {
@@ -11,6 +11,4 @@ public sealed class SmtpSettings
     public string Password { get; set; } = string.Empty;
 
     public string FromAddress { get; set; } = string.Empty;
-
-    public bool UseSsl { get; set; } = true;
 }
