@@ -18,7 +18,7 @@ var connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }
 
 var builder = WebApplication.CreateBuilder(args);
 
-SerilogConfiguration.ConfigureLogging(builder, dbPath);
+SerilogConfiguration.ConfigureLogging(builder);
 
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 {

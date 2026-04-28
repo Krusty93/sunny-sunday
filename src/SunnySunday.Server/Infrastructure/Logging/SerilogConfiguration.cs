@@ -1,4 +1,4 @@
-using Serilog;
+﻿using Serilog;
 
 namespace SunnySunday.Server.Infrastructure.Logging;
 
@@ -7,7 +7,7 @@ internal static class SerilogConfiguration
     private const string LogDirectory = ".data/logs";
     private const string LogFilePath = ".data/logs/sunny-.log";
 
-    internal static void ConfigureLogging(WebApplicationBuilder builder, string dbPath)
+    internal static void ConfigureLogging(WebApplicationBuilder builder)
     {
         Directory.CreateDirectory(LogDirectory);
 
@@ -17,10 +17,6 @@ internal static class SerilogConfiguration
                 LogFilePath,
                 rollingInterval: RollingInterval.Day,
                 restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
-            .WriteTo.SQLite(
-                dbPath,
-                tableName: "Logs",
-                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning)
             .CreateLogger();
 
         builder.Host.UseSerilog();
