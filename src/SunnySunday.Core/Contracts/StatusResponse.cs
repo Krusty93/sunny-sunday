@@ -28,4 +28,10 @@ public sealed record StatusResponse
     /// <c>null</c> when no next recap has been scheduled yet.
     /// </summary>
     public string? NextRecap { get; set; }
+
+    /// <summary>"delivered" | "failed" | null</summary>
+    public string? LastRecapStatus { get; set; }
+
+    /// <summary>Error detail when LastRecapStatus is "failed"; null otherwise.</summary>
+    public string? LastRecapError { get; set; }
 }

@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 
 namespace SunnySunday.Server.Infrastructure.Database;
 
@@ -54,7 +54,19 @@ public sealed class SchemaBootstrap
             schedule      TEXT    NOT NULL DEFAULT 'weekly',
             delivery_day  TEXT    NULL,
             delivery_time TEXT    NOT NULL DEFAULT '18:00',
-            count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15)
+            count         INTEGER NOT NULL DEFAULT 3 CHECK(count BETWEEN 1 AND 15),
+            timezone      TEXT    NOT NULL DEFAULT 'UTC'
+        );
+
+        CREATE TABLE IF NOT EXISTS recap_jobs (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id       INTEGER NOT NULL REFERENCES users(id),
+            scheduled_for TEXT    NOT NULL,
+            status        TEXT    NOT NULL DEFAULT 'pending',
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            error_message TEXT    NULL,
+            created_at    TEXT    NOT NULL,
+            delivered_at  TEXT    NULL
         );
 
         CREATE UNIQUE INDEX IF NOT EXISTS uq_authors_name
@@ -65,15 +77,18 @@ public sealed class SchemaBootstrap
 
         CREATE UNIQUE INDEX IF NOT EXISTS uq_highlights_user_book_text
             ON highlights(user_id, book_id, text);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_recap_jobs_user_slot
+            ON recap_jobs(user_id, scheduled_for);
         """;
 
-    public void Apply(SqliteConnection connection)
+    public async Task ApplyAsync(SqliteConnection connection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connection);
 
-        using var command = connection.CreateCommand();
+        await using var command = connection.CreateCommand();
         command.CommandText = SchemaSql;
-        command.ExecuteNonQuery();
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task ApplyAsync(string dbPath, CancellationToken cancellationToken = default)

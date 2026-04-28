@@ -11,4 +11,6 @@ public class Settings
     public string DeliveryTime { get; set; } = "18:00";
 
     public int Count { get; set; } = 3;
+
+    public string Timezone { get; set; } = "UTC";
 }

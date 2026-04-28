@@ -19,7 +19,7 @@ public sealed class SunnyTestApplicationFactory : WebApplicationFactory<Program>
         pragma.CommandText = "PRAGMA foreign_keys = ON;";
         pragma.ExecuteNonQuery();
         var bootstrap = new SchemaBootstrap();
-        bootstrap.Apply(_connection);
+        bootstrap.ApplyAsync(_connection).GetAwaiter().GetResult();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

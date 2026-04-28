@@ -30,4 +30,7 @@ public sealed record SettingsResponse
     /// Send-to-Kindle email address currently used for recap delivery.
     /// </summary>
     public string KindleEmail { get; set; } = string.Empty;
+
+    /// <summary>IANA timezone identifier for the delivery schedule (e.g., "Europe/Rome").</summary>
+    public string Timezone { get; set; } = string.Empty;
 }
