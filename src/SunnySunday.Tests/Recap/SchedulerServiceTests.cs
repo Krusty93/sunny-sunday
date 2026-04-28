@@ -1,4 +1,4 @@
-using SunnySunday.Server.Models;
+﻿using SunnySunday.Server.Models;
 using SunnySunday.Server.Services;
 
 namespace SunnySunday.Tests.Recap;

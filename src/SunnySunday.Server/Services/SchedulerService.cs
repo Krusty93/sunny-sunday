@@ -1,4 +1,4 @@
-using Quartz;
+﻿using Quartz;
 using SunnySunday.Server.Jobs;
 using SunnySunday.Server.Models;
 
@@ -26,7 +26,6 @@ public sealed class SchedulerService(
 
         var job = JobBuilder.Create<RecapJob>()
             .WithIdentity(RecapJobKey)
-            .UsingJobData(RecapJob.UserIdKey, settings.UserId)
             .StoreDurably()
             .Build();
 

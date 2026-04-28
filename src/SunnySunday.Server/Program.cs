@@ -70,10 +70,7 @@ builder.Services.AddScoped<ExclusionRepository>();
 builder.Services.AddScoped<WeightRepository>();
 builder.Services.AddScoped<RecapRepository>();
 
-builder.Services.AddQuartz(q =>
-{
-    q.UseInMemoryStore();
-});
+builder.Services.AddQuartz();
 builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
 builder.Services.AddSingleton<ISchedulerService, SchedulerService>();
