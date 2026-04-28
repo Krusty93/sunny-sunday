@@ -107,6 +107,7 @@ app.MapWeightEndpoints();
 
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);
+await QuartzSchemaInitializer.ApplyAsync(connectionString);
 
 // Schedule recap trigger only on first run (persistent store preserves it across restarts)
 {

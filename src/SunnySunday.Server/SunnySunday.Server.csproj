@@ -32,4 +32,8 @@
     <InternalsVisibleTo Include="SunnySunday.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Database\quartz-sqlite.sql" />
+  </ItemGroup>
+
 </Project>
