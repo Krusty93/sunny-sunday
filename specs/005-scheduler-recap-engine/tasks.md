@@ -107,14 +107,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] Create `src/SunnySunday.Tests/Recap/RecapServiceTests.cs` to cover immediate success, transient retry then success, exhausted retries, no-eligible-highlight skips, and single history updates after confirmed delivery.
+- [X] T019 [P] [US3] Create `src/SunnySunday.Tests/Recap/RecapServiceTests.cs` to cover immediate success, transient retry then success, exhausted retries, no-eligible-highlight skips, and single history updates after confirmed delivery.
 
 ### Implementation for User Story 3
 
-- [ ] T020 [P] [US3] Create `src/SunnySunday.Server/Services/IMailDeliveryService.cs` and `src/SunnySunday.Server/Services/MailDeliveryService.cs` to send recap EPUB attachments through MailKit using `SmtpSettings.FromAddress` and the mapped SMTP environment variables.
-- [ ] T021 [P] [US3] Create `src/SunnySunday.Server/Infrastructure/Resilience/RecapDeliveryPolicy.cs` to define a Polly exponential backoff policy capped at 3 total attempts, with delay computation owned by the policy helper rather than hardcoded waits in application services.
-- [ ] T022 [US3] Create `src/SunnySunday.Server/Services/RecapService.cs` to orchestrate candidate selection, EPUB composition, `recap_jobs` persistence, SMTP delivery through the Polly policy, and post-success `last_seen` plus `delivery_count` updates.
-- [ ] T023 [US3] Update `src/SunnySunday.Server/Program.cs` and `src/SunnySunday.Server/Data/StatusRepository.cs` to register `IMailDeliveryService` and `RecapService`, and to expose `LastRecapStatus` plus `LastRecapError` from `recap_jobs` in status responses.
+- [X] T020 [P] [US3] Create `src/SunnySunday.Server/Services/IMailDeliveryService.cs` and `src/SunnySunday.Server/Services/MailDeliveryService.cs` to send recap EPUB attachments through MailKit using `SmtpSettings.FromAddress` and the mapped SMTP environment variables.
+- [X] T021 [P] [US3] Create `src/SunnySunday.Server/Infrastructure/Resilience/RecapDeliveryPolicy.cs` to define a Polly exponential backoff policy capped at 3 total attempts, with delay computation owned by the policy helper rather than hardcoded waits in application services.
+- [X] T022 [US3] Create `src/SunnySunday.Server/Services/RecapService.cs` to orchestrate candidate selection, EPUB composition, `recap_jobs` persistence, SMTP delivery through the Polly policy, and post-success `last_seen` plus `delivery_count` updates.
+- [X] T023 [US3] Update `src/SunnySunday.Server/Program.cs` and `src/SunnySunday.Server/Data/StatusRepository.cs` to register `IMailDeliveryService` and `RecapService`, and to expose `LastRecapStatus` plus `LastRecapError` from `recap_jobs` in status responses.
 
 **Checkpoint**: End-to-end recap generation and delivery are reliable, retry-aware, and auditable.
 

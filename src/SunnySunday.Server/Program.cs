@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Reflection;
+using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.OpenApi;
 using Quartz;
@@ -12,6 +13,8 @@ using SunnySunday.Server.Infrastructure.Logging;
 using SunnySunday.Server.Infrastructure.Smtp;
 using SunnySunday.Server.Jobs;
 using SunnySunday.Server.Services;
+
+SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
 
 var dbPath = ".data/sunny.db";
 var connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
@@ -87,6 +90,9 @@ builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete
 
 builder.Services.AddSingleton<ISchedulerService, SchedulerService>();
 builder.Services.AddTransient<RecapJob>();
+builder.Services.AddScoped<HighlightSelectionService>();
+builder.Services.AddScoped<IMailDeliveryService, MailDeliveryService>();
+builder.Services.AddScoped<IRecapService, RecapService>();
 
 var app = builder.Build();
 
