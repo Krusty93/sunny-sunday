@@ -89,11 +89,11 @@
 
 ### Tests for User Story 4
 
-- [ ] T017 [P] [US4] Create `src/SunnySunday.Tests/Recap/EpubComposerTests.cs` to verify EPUB structure, uncompressed `mimetype`, flat-list XHTML output, and source metadata rendering in input order.
+- [X] T017 [P] [US4] Create `src/SunnySunday.Tests/Recap/EpubComposerTests.cs` to verify EPUB structure, uncompressed `mimetype`, flat-list XHTML output, and source metadata rendering in input order.
 
 ### Implementation for User Story 4
 
-- [ ] T018 [US4] Create `src/SunnySunday.Server/Services/EpubComposer.cs` to build an EPUB 2 archive in memory with `mimetype`, `META-INF/container.xml`, `OEBPS/content.opf`, `OEBPS/toc.ncx`, and `OEBPS/highlights.xhtml` containing a flat `<ul>` of highlights.
+- [X] T018 [US4] Create `src/SunnySunday.Server/Services/EpubComposer.cs` to build an EPUB 2 archive in memory with `mimetype`, `META-INF/container.xml`, `OEBPS/content.opf`, `OEBPS/toc.ncx`, and `OEBPS/highlights.xhtml` containing a flat `<ul>` of highlights.
 
 **Checkpoint**: EPUB generation is deterministic and validated independently from scheduling and SMTP.
 
