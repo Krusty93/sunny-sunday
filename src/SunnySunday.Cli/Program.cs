@@ -1,8 +1,11 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Serilog.Core;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
+using SunnySunday.Cli.Commands.Config;
 using SunnySunday.Cli.Infrastructure;
 
 var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
@@ -24,6 +27,15 @@ if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var serverUri)
 
 var services = new ServiceCollection();
 
+var levelSwitch = new LoggingLevelSwitch();
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.ControlledBy(levelSwitch)
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+services.AddLogging(builder => builder.AddSerilog(dispose: true));
+
 services.AddHttpClient<SunnyHttpClient>(client =>
 {
     client.BaseAddress = serverUri;
@@ -44,9 +56,17 @@ app.Configure(config =>
 
     config.SetApplicationName(applicationName);
     config.SetApplicationVersion(version);
+    config.SetInterceptor(new LogInterceptor(levelSwitch));
 
     config.AddCommand<SyncCommand>("sync")
         .WithDescription("Parse and sync highlights from My Clippings.txt to the server.");
+
+    config.AddBranch("config", cfg =>
+    {
+        cfg.SetDescription("Manage server settings.");
+        cfg.AddCommand<ConfigScheduleCommand>("schedule")
+            .WithDescription("Configure recap schedule (cadence and time).");
+    });
 });
 
 return await app.RunAsync(args);

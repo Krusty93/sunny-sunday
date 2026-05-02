@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Infrastructure;
@@ -10,9 +11,9 @@ namespace SunnySunday.Cli.Commands;
 /// <summary>
 /// Parses a Kindle clippings file and syncs highlights to the server.
 /// </summary>
-public sealed class SyncCommand(SunnyHttpClient client) : AsyncCommand<SyncCommand.Settings>
+public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> logger) : AsyncCommand<SyncCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : LogCommandSettings
     {
         [CommandArgument(0, "[path]")]
         [Description("Path to My Clippings.txt. Auto-detected if omitted.")]
@@ -30,6 +31,8 @@ public sealed class SyncCommand(SunnyHttpClient client) : AsyncCommand<SyncComma
             AnsiConsole.MarkupLine("[yellow]Sync cancelled.[/]");
             return 1;
         }
+
+        logger.LogDebug("Resolved clippings path: {FilePath}", filePath);
 
         if (!File.Exists(filePath))
         {
@@ -55,6 +58,8 @@ public sealed class SyncCommand(SunnyHttpClient client) : AsyncCommand<SyncComma
         }
 
         var request = MapToSyncRequest(parseResult);
+        logger.LogDebug("Sending {BookCount} books with {HighlightCount} highlights to server",
+            request.Books.Count, request.Books.Sum(b => b.Highlights.Count));
 
         SyncResponse response;
         try
@@ -64,6 +69,7 @@ public sealed class SyncCommand(SunnyHttpClient client) : AsyncCommand<SyncComma
         catch (HttpRequestException ex)
         {
             var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
+            logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
             AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
             AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
             AnsiConsole.MarkupLine("[grey]Check that the server is running and SUNNY_SERVER is correct.[/]");

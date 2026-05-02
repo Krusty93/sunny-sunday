@@ -73,6 +73,7 @@ public sealed class SyncCommandTests : IDisposable
     private async Task<int> RunSyncCommand(string filePath)
     {
         var services = new ServiceCollection();
+        services.AddLogging();
 
         services.AddTransient(_ =>
         {
