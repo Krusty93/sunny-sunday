@@ -106,12 +106,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] Add schedule tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config schedule daily 08:00` sends correct PUT with timezone, `config schedule daily 25:00` triggers validation error without HTTP call, `config schedule show` fetches and displays current schedule.
+- [X] T016 [P] [US2] Add schedule tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config schedule daily 08:00` sends correct PUT with timezone, `config schedule daily 25:00` triggers validation error without HTTP call, `config schedule show` fetches and displays current schedule.
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Create `src/SunnySunday.Cli/Commands/Config/ConfigScheduleCommand.cs` as `AsyncCommand<Settings>`: validate time format (HH:mm regex), validate cadence (daily/weekly), handle "show" subpath, send `PUT /settings` with `Schedule`, `DeliveryTime`, `Timezone = TimeZoneInfo.Local.Id`, display confirmation.
-- [ ] T018 [US2] Register the `config` branch with `schedule` subcommand in `src/SunnySunday.Cli/Program.cs`.
+- [X] T017 [US2] Create `src/SunnySunday.Cli/Commands/Config/ConfigScheduleCommand.cs` as `AsyncCommand<Settings>`: validate time format (HH:mm regex), validate cadence (daily/weekly), handle "show" subpath, send `PUT /settings` with `Schedule`, `DeliveryTime`, `Timezone = TimeZoneInfo.Local.Id`, display confirmation.
+- [X] T018 [US2] Register the `config` branch with `schedule` subcommand in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: Schedule configuration works with local timezone propagation. Tests pass.
 
