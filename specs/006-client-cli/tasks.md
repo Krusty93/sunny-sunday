@@ -125,12 +125,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] Add count tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config count 10` sends correct PUT, `config count 0` triggers validation error, `config count 20` triggers validation error, `config count show` fetches current count.
+- [X] T019 [P] [US3] Add count tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config count 10` sends correct PUT, `config count 0` triggers validation error, `config count 20` triggers validation error, `config count show` fetches current count.
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Create `src/SunnySunday.Cli/Commands/Config/ConfigCountCommand.cs` as `AsyncCommand<Settings>`: validate count is integer 1–15, handle "show" subpath, send `PUT /settings` with `Count`, display confirmation.
-- [ ] T021 [US3] Register `count` subcommand under the `config` branch in `src/SunnySunday.Cli/Program.cs`.
+- [X] T020 [US3] Create `src/SunnySunday.Cli/Commands/Config/ConfigCountCommand.cs` as `AsyncCommand<Settings>`: validate count is integer 1–15, handle "show" subpath, send `PUT /settings` with `Count`, display confirmation.
+- [X] T021 [US3] Register `count` subcommand under the `config` branch in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: Count configuration works with range validation. Tests pass.
 
