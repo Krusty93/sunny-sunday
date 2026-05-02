@@ -25,6 +25,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!--
+      Spectre.Console.Cli uses reflection to resolve command settings types,
+      which is incompatible with full (default) trimming.
+      Partial mode trims only framework assemblies that opt in, preserving
+      third-party packages like Spectre.Console.Cli.
+      SuppressTrimAnalysisWarnings silences IL2104 from Spectre.Console.Cli itself.
+    -->
+    <TrimMode>partial</TrimMode>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
   </PropertyGroup>
 
 </Project>
