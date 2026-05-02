@@ -19,11 +19,11 @@
 
 **Purpose**: Add NuGet packages, implement the DI/host bootstrap, typed HTTP client with Polly retry, and the Spectre.Console DI bridge.
 
-- [ ] T001 Update `src/SunnySunday.Cli/SunnySunday.Cli.csproj` to add package references for `Spectre.Console.Cli` (0.55.0), `Microsoft.Extensions.Http` (10.0.6), `Microsoft.Extensions.DependencyInjection` (10.0.6); add `RichardSzalay.MockHttp` (7.0.0) to `src/SunnySunday.Tests/SunnySunday.Tests.csproj`; verify the solution builds from `src/SunnySunday.slnx`.
-- [ ] T002 [P] Create `src/SunnySunday.Cli/Infrastructure/TypeRegistrar.cs` implementing `ITypeRegistrar` and `ITypeResolver` bridging Spectre.Console.Cli to `Microsoft.Extensions.DependencyInjection.IServiceProvider`.
-- [ ] T003 [P] Create `src/SunnySunday.Cli/Infrastructure/SunnyHttpClient.cs` as a typed HTTP client with methods: `PostSyncAsync`, `GetSettingsAsync`, `PutSettingsAsync`, `GetStatusAsync`, `PostExcludeAsync`, `DeleteExcludeAsync`, `GetExclusionsAsync`, `PutWeightAsync`, `GetWeightsAsync`; uses `System.Net.Http.Json` and contracts from `SunnySunday.Core`.
-- [ ] T004 [P] Create `src/SunnySunday.Cli/Infrastructure/HttpClientResilienceExtensions.cs` with a Polly retry pipeline: handle `HttpRequestException`, retry on 408/429/5xx, max 3 attempts, exponential backoff (1s, 2s, 4s).
-- [ ] T005 Rewrite `src/SunnySunday.Cli/Program.cs` to validate `SUNNY_SERVER` env var, build `IServiceCollection` with typed `SunnyHttpClient` and Polly resilience, create `TypeRegistrar`, and run `CommandApp` with the command tree.
+- [X] T001 Update `src/SunnySunday.Cli/SunnySunday.Cli.csproj` to add package references for `Spectre.Console.Cli` (0.55.0), `Microsoft.Extensions.Http` (10.0.6), `Microsoft.Extensions.DependencyInjection` (10.0.6); add `RichardSzalay.MockHttp` (7.0.0) to `src/SunnySunday.Tests/SunnySunday.Tests.csproj`; verify the solution builds from `src/SunnySunday.slnx`.
+- [X] T002 [P] Create `src/SunnySunday.Cli/Infrastructure/TypeRegistrar.cs` implementing `ITypeRegistrar` and `ITypeResolver` bridging Spectre.Console.Cli to `Microsoft.Extensions.DependencyInjection.IServiceProvider`.
+- [X] T003 [P] Create `src/SunnySunday.Cli/Infrastructure/SunnyHttpClient.cs` as a typed HTTP client with methods: `PostSyncAsync`, `GetSettingsAsync`, `PutSettingsAsync`, `GetStatusAsync`, `PostExcludeAsync`, `DeleteExcludeAsync`, `GetExclusionsAsync`, `PutWeightAsync`, `GetWeightsAsync`; uses `System.Net.Http.Json` and contracts from `SunnySunday.Core`.
+- [X] T004 [P] Create `src/SunnySunday.Cli/Infrastructure/HttpClientResilienceExtensions.cs` with a Polly retry pipeline: handle `HttpRequestException`, retry on 408/429/5xx, max 3 attempts, exponential backoff (1s, 2s, 4s).
+- [X] T005 Rewrite `src/SunnySunday.Cli/Program.cs` to validate `SUNNY_SERVER` env var, build `IServiceCollection` with typed `SunnyHttpClient` and Polly resilience, create `TypeRegistrar`, and run `CommandApp` with the command tree.
 
 **Checkpoint**: CLI starts, validates `SUNNY_SERVER`, and exits with `--help`. `dotnet build src/SunnySunday.slnx` passes.
 
@@ -35,8 +35,8 @@
 
 **⚠️ CRITICAL**: No user story work should start until this phase is complete.
 
-- [ ] T006 Create `src/SunnySunday.Cli/Infrastructure/KindleDetector.cs` with static `DetectClippingsPath()` probing macOS (`/Volumes/Kindle/`), Linux (`/media/*/Kindle/`, `/run/media/*/Kindle/`), and Windows (drives D–G) for `documents/My Clippings.txt`.
-- [ ] T007 [P] Create `src/SunnySunday.Tests/Cli/KindleDetectorTests.cs` verifying the detector returns null when no Kindle paths exist and returns a valid path when a temp directory matches the expected layout.
+- [X] T006 Create `src/SunnySunday.Cli/Infrastructure/KindleDetector.cs` with static `DetectClippingsPath()` probing macOS (`/Volumes/Kindle/`), Linux (`/media/*/Kindle/`, `/run/media/*/Kindle/`), and Windows (drives D–G) for `documents/My Clippings.txt`.
+- [X] T007 [P] Create `src/SunnySunday.Tests/Cli/KindleDetectorTests.cs` verifying the detector returns null when no Kindle paths exist and returns a valid path when a temp directory matches the expected layout.
 
 **Checkpoint**: Foundation ready — user story implementation can now begin in parallel.
 
@@ -50,12 +50,12 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Create `src/SunnySunday.Tests/Cli/SyncCommandTests.cs` covering: successful sync displays summary, server unreachable returns exit code 1 with server URL in error, file not found returns exit code 1, empty file displays "No highlights found".
+- [X] T008 [P] [US1] Create `src/SunnySunday.Tests/Cli/SyncCommandTests.cs` covering: successful sync displays summary, server unreachable returns exit code 1 with server URL in error, file not found returns exit code 1, empty file displays "No highlights found".
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Create `src/SunnySunday.Cli/Commands/SyncCommand.cs` as `AsyncCommand<SyncCommand.Settings>`: resolve path (argument → KindleDetector → Spectre prompt), parse via `ClippingsParser`, map to `SyncRequest`, call `PostSyncAsync`, display rich summary panel.
-- [ ] T010 [US1] Register `SyncCommand` in the command tree in `src/SunnySunday.Cli/Program.cs`.
+- [X] T009 [US1] Create `src/SunnySunday.Cli/Commands/SyncCommand.cs` as `AsyncCommand<SyncCommand.Settings>`: resolve path (argument → KindleDetector → Spectre prompt), parse via `ClippingsParser`, map to `SyncRequest`, call `PostSyncAsync`, display rich summary panel.
+- [X] T010 [US1] Register `SyncCommand` in the command tree in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: `sunny sync /path/to/file` works end-to-end against a mock server. Tests pass.
 
