@@ -1,4 +1,4 @@
-using Serilog.Core;
+﻿using Serilog.Core;
 using Spectre.Console.Cli;
 
 namespace SunnySunday.Cli.Infrastructure;

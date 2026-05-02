@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Serilog.Events;
 using Spectre.Console.Cli;
 
