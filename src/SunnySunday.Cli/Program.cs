@@ -37,11 +37,12 @@ var app = new CommandApp(registrar);
 app.Configure(config =>
 {
     var assembly = typeof(SyncCommand).Assembly;
+    var applicationName = assembly.GetName().Name ?? "sunny sunday";
     var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? assembly.GetName().Version?.ToString()
         ?? "unknown";
 
-    config.SetApplicationName("sunny");
+    config.SetApplicationName(applicationName);
     config.SetApplicationVersion(version);
 
     config.AddCommand<SyncCommand>("sync")
