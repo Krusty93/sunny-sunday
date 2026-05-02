@@ -116,4 +116,95 @@ public sealed class ConfigCommandTests : IDisposable
         var fullArgs = new[] { "config", "schedule" }.Concat(args).ToArray();
         return await app.RunAsync(fullArgs);
     }
+
+    [Fact]
+    public async Task ConfigCount_ValidCount_SendsPut()
+    {
+        var handler = _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Respond("application/json", """
+                {"schedule":"daily","deliveryDay":null,"deliveryTime":"08:00","count":10,"kindleEmail":"test@kindle.com","timezone":"Europe/Rome"}
+                """);
+
+        var exitCode = await RunConfigCountCommand("10");
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(1, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task ConfigCount_Zero_ReturnsOneWithoutHttpCall()
+    {
+        var handler = _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Respond("application/json", "{}");
+
+        var exitCode = await RunConfigCountCommand("0");
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal(0, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task ConfigCount_TwentyExceedsMax_ReturnsOneWithoutHttpCall()
+    {
+        var handler = _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Respond("application/json", "{}");
+
+        var exitCode = await RunConfigCountCommand("20");
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal(0, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task ConfigCount_Show_FetchesCurrentCount()
+    {
+        var handler = _mockHttp.When(HttpMethod.Get, "http://localhost:5000/settings")
+            .Respond("application/json", """
+                {"schedule":"daily","deliveryDay":null,"deliveryTime":"08:00","count":5,"kindleEmail":"test@kindle.com","timezone":"Europe/Rome"}
+                """);
+
+        var exitCode = await RunConfigCountCommand("show");
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(1, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task ConfigCount_ServerUnreachable_ReturnsOne()
+    {
+        _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Throw(new HttpRequestException("Connection refused"));
+
+        var exitCode = await RunConfigCountCommand("10");
+
+        Assert.Equal(1, exitCode);
+    }
+
+    private async Task<int> RunConfigCountCommand(params string[] args)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddTransient(_ =>
+        {
+            var httpClient = _mockHttp.ToHttpClient();
+            httpClient.BaseAddress = new Uri("http://localhost:5000");
+            return new SunnyHttpClient(httpClient);
+        });
+
+        var registrar = new TypeRegistrar(services);
+        var app = new CommandApp(registrar);
+
+        app.Configure(config =>
+        {
+            config.SetApplicationName("sunny");
+            config.AddBranch("config", cfg =>
+            {
+                cfg.AddCommand<ConfigCountCommand>("count");
+            });
+        });
+
+        var fullArgs = new[] { "config", "count" }.Concat(args).ToArray();
+        return await app.RunAsync(fullArgs);
+    }
 }

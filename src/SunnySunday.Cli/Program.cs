@@ -66,6 +66,8 @@ app.Configure(config =>
         cfg.SetDescription("Manage server settings.");
         cfg.AddCommand<ConfigScheduleCommand>("schedule")
             .WithDescription("Configure recap schedule (cadence and time).");
+        cfg.AddCommand<ConfigCountCommand>("count")
+            .WithDescription("Configure number of highlights per recap.");
     });
 });
 
