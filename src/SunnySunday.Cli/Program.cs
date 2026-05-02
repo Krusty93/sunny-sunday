@@ -1,3 +1,4 @@
+﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -35,7 +36,13 @@ var app = new CommandApp(registrar);
 
 app.Configure(config =>
 {
+    var assembly = typeof(SyncCommand).Assembly;
+    var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? assembly.GetName().Version?.ToString()
+        ?? "unknown";
+
     config.SetApplicationName("sunny");
+    config.SetApplicationVersion(version);
 
     config.AddCommand<SyncCommand>("sync")
         .WithDescription("Parse and sync highlights from My Clippings.txt to the server.");

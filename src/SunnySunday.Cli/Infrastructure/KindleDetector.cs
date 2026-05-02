@@ -1,4 +1,4 @@
-namespace SunnySunday.Cli.Infrastructure;
+﻿namespace SunnySunday.Cli.Infrastructure;
 
 /// <summary>
 /// Detects the Kindle "My Clippings.txt" file path across macOS, Linux, and Windows.

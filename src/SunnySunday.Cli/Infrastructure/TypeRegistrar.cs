@@ -1,27 +1,24 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace SunnySunday.Cli.Infrastructure;
 
 /// <summary>
 /// Bridges Spectre.Console.Cli command resolution to Microsoft.Extensions.DependencyInjection.
+/// See: https://spectreconsole.net/cli/tutorials/dependency-injection-in-cli-apps
 /// </summary>
 public sealed class TypeRegistrar(IServiceCollection services) : ITypeRegistrar
 {
-    private IServiceProvider? _provider;
-
-    public IServiceProvider Provider => _provider ??= services.BuildServiceProvider();
-
-    public ITypeResolver Build() => new TypeResolver(Provider);
+    public ITypeResolver Build() => new TypeResolver(services.BuildServiceProvider());
 
     public void Register(Type service, Type implementation)
-        => services.AddTransient(service, implementation);
+        => services.AddSingleton(service, implementation);
 
     public void RegisterInstance(Type service, object implementation)
         => services.AddSingleton(service, implementation);
 
     public void RegisterLazy(Type service, Func<object> factory)
-        => services.AddTransient(service, _ => factory());
+        => services.AddSingleton(service, _ => factory());
 }
 
 internal sealed class TypeResolver(IServiceProvider provider) : ITypeResolver

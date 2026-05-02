@@ -1,4 +1,4 @@
-using SunnySunday.Cli.Infrastructure;
+﻿using SunnySunday.Cli.Infrastructure;
 
 namespace SunnySunday.Tests.Cli;
 
