@@ -68,6 +68,8 @@ app.Configure(config =>
             .WithDescription("Configure recap schedule (cadence and time).");
         cfg.AddCommand<ConfigCountCommand>("count")
             .WithDescription("Configure number of highlights per recap.");
+        cfg.AddCommand<ConfigShowCommand>("show")
+            .WithDescription("Display all current settings.");
     });
 });
 

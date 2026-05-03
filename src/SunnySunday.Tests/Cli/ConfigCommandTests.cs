@@ -207,4 +207,56 @@ public sealed class ConfigCommandTests : IDisposable
         var fullArgs = new[] { "config", "count" }.Concat(args).ToArray();
         return await app.RunAsync(fullArgs);
     }
+
+    [Fact]
+    public async Task ConfigShow_DisplaysAllSettings()
+    {
+        var handler = _mockHttp.When(HttpMethod.Get, "http://localhost:5000/settings")
+            .Respond("application/json", """
+                {"schedule":"weekly","deliveryDay":"monday","deliveryTime":"08:00","count":7,"kindleEmail":"user@kindle.com","timezone":"Europe/Rome"}
+                """);
+
+        var exitCode = await RunConfigShowCommand();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(1, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task ConfigShow_ServerUnreachable_ReturnsOne()
+    {
+        _mockHttp.When(HttpMethod.Get, "http://localhost:5000/settings")
+            .Throw(new HttpRequestException("Connection refused"));
+
+        var exitCode = await RunConfigShowCommand();
+
+        Assert.Equal(1, exitCode);
+    }
+
+    private async Task<int> RunConfigShowCommand()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddTransient(_ =>
+        {
+            var httpClient = _mockHttp.ToHttpClient();
+            httpClient.BaseAddress = new Uri("http://localhost:5000");
+            return new SunnyHttpClient(httpClient);
+        });
+
+        var registrar = new TypeRegistrar(services);
+        var app = new CommandApp(registrar);
+
+        app.Configure(config =>
+        {
+            config.SetApplicationName("sunny");
+            config.AddBranch("config", cfg =>
+            {
+                cfg.AddCommand<ConfigShowCommand>("show");
+            });
+        });
+
+        return await app.RunAsync(["config", "show"]);
+    }
 }

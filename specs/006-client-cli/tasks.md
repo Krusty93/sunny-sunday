@@ -144,12 +144,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T022 [P] [US4] Add config show tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config show` displays all settings from mock response, UTC times are converted to local.
+- [X] T022 [P] [US4] Add config show tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config show` displays all settings from mock response, UTC times are converted to local.
 
 ### Implementation for User Story 4
 
-- [ ] T023 [US4] Create `src/SunnySunday.Cli/Commands/Config/ConfigShowCommand.cs` as `AsyncCommand`: call `GetSettingsAsync`, display table with Schedule, Delivery Day (if weekly), Delivery Time (local), Count, Kindle Email, Timezone.
-- [ ] T024 [US4] Register `show` subcommand under the `config` branch in `src/SunnySunday.Cli/Program.cs`.
+- [X] T023 [US4] Create `src/SunnySunday.Cli/Commands/Config/ConfigShowCommand.cs` as `AsyncCommand`: call `GetSettingsAsync`, display table with Schedule, Delivery Day (if weekly), Delivery Time (local), Count, Kindle Email, Timezone.
+- [X] T024 [US4] Register `show` subcommand under the `config` branch in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: `sunny config show` displays all settings. Tests pass.
 

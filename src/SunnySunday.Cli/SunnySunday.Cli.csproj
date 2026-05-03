@@ -20,11 +20,13 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <TrimMode>partial</TrimMode>
+    <NoWarn>$(NoWarn);IL2104</NoWarn>
   </PropertyGroup>
 
 </Project>
