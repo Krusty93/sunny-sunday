@@ -12,7 +12,9 @@ using SunnySunday.Cli.Infrastructure;
 
 var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
 
-if (string.IsNullOrWhiteSpace(serverUrl))
+var validationResult = ServerUrlValidator.Validate(serverUrl, out var serverUri);
+
+if (validationResult == ServerUrlValidator.ValidationResult.Missing)
 {
     AnsiConsole.MarkupLine("[red]Error:[/] SUNNY_SERVER environment variable is not set.");
     AnsiConsole.MarkupLine("[grey]Set it to the server URL, e.g.:[/]");
@@ -20,8 +22,7 @@ if (string.IsNullOrWhiteSpace(serverUrl))
     return 1;
 }
 
-if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var serverUri)
-    || (serverUri.Scheme != "http" && serverUri.Scheme != "https"))
+if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
 {
     AnsiConsole.MarkupLine($"[red]Error:[/] SUNNY_SERVER value is not a valid HTTP URL: [yellow]{serverUrl}[/]");
     return 1;
