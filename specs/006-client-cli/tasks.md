@@ -163,14 +163,14 @@
 
 ### Tests for User Story 5
 
-- [ ] T025 [P] [US5] Create `src/SunnySunday.Tests/Cli/ExcludeCommandTests.cs` covering: `exclude highlight 5` sends POST, `exclude remove book 3` sends DELETE, `exclude list` displays grouped table, server 404 displays not-found error.
+- [X] T025 [P] [US5] Create `src/SunnySunday.Tests/Cli/ExcludeCommandTests.cs` covering: `exclude highlight 5` sends POST, `exclude remove book 3` sends DELETE, `exclude list` displays grouped table, server 404 displays not-found error.
 
 ### Implementation for User Story 5
 
-- [ ] T026 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeAddCommand.cs` as `AsyncCommand<Settings>`: validate type (highlight/book/author), parse id, call `PostExcludeAsync`, handle 404, display confirmation.
-- [ ] T027 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeRemoveCommand.cs` as `AsyncCommand<Settings>`: validate type, parse id, call `DeleteExcludeAsync`, display confirmation or error.
-- [ ] T028 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeListCommand.cs` as `AsyncCommand`: call `GetExclusionsAsync`, display three grouped tables (Highlights, Books, Authors) with "None" for empty groups.
-- [ ] T029 [US5] Register exclude commands in the command tree: `exclude` branch with default add, `remove` subcommand, and `list` subcommand in `src/SunnySunday.Cli/Program.cs`.
+- [X] T026 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeAddCommand.cs` as `AsyncCommand<Settings>`: validate type (highlight/book/author), parse id, call `PostExcludeAsync`, handle 404, display confirmation.
+- [X] T027 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeRemoveCommand.cs` as `AsyncCommand<Settings>`: validate type, parse id, call `DeleteExcludeAsync`, display confirmation or error.
+- [X] T028 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeListCommand.cs` as `AsyncCommand`: call `GetExclusionsAsync`, display three grouped tables (Highlights, Books, Authors) with "None" for empty groups.
+- [X] T029 [US5] Register exclude commands in the command tree: `exclude` branch with default add, `remove` subcommand, and `list` subcommand in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: Exclude commands work. Tests pass.
 
