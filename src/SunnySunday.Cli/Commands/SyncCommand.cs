@@ -11,8 +11,10 @@ namespace SunnySunday.Cli.Commands;
 /// <summary>
 /// Parses a Kindle clippings file and syncs highlights to the server.
 /// </summary>
-public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> logger) : AsyncCommand<SyncCommand.Settings>
+public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> logger) : ServerCommand<SyncCommand.Settings>
 {
+    protected override ILogger Logger => logger;
+
     public sealed class Settings : LogCommandSettings
     {
         [CommandArgument(0, "[path]")]
@@ -68,12 +70,7 @@ public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> log
         }
         catch (HttpRequestException ex)
         {
-            var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
-            logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
-            AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
-            AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
-            AnsiConsole.MarkupLine("[grey]Check that the server is running and SUNNY_SERVER is correct.[/]");
-            return 1;
+            return HandleServerError(ex);
         }
 
         DisplaySummary(parseResult, response);
