@@ -6,6 +6,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
 using SunnySunday.Cli.Commands.Config;
+using SunnySunday.Cli.Commands.Exclude;
 using SunnySunday.Cli.Infrastructure;
 
 var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
@@ -70,6 +71,17 @@ app.Configure(config =>
             .WithDescription("Configure number of highlights per recap.");
         cfg.AddCommand<ConfigShowCommand>("show")
             .WithDescription("Display all current settings.");
+    });
+
+    config.AddBranch("exclude", exc =>
+    {
+        exc.SetDescription("Manage exclusions from recaps.");
+        exc.AddCommand<ExcludeAddCommand>("add")
+            .WithDescription("Exclude a highlight, book, or author from recaps.");
+        exc.AddCommand<ExcludeRemoveCommand>("remove")
+            .WithDescription("Remove an exclusion.");
+        exc.AddCommand<ExcludeListCommand>("list")
+            .WithDescription("List all current exclusions.");
     });
 });
 
