@@ -184,13 +184,13 @@
 
 ### Tests for User Story 6
 
-- [ ] T030 [P] [US6] Create `src/SunnySunday.Tests/Cli/WeightCommandTests.cs` covering: `weight set 5 3` sends PUT with weight=3, `weight set 5 0` triggers validation error, `weight set 5 6` triggers validation error, `weight list` displays table.
+- [X] T030 [P] [US6] Create `src/SunnySunday.Tests/Cli/WeightCommandTests.cs` covering: `weight set 5 3` sends PUT with weight=3, `weight set 5 0` triggers validation error, `weight set 5 6` triggers validation error, `weight list` displays table.
 
 ### Implementation for User Story 6
 
-- [ ] T031 [P] [US6] Create `src/SunnySunday.Cli/Commands/Weight/WeightSetCommand.cs` as `AsyncCommand<Settings>`: validate weight range (1–5), call `PutWeightAsync`, display confirmation.
-- [ ] T032 [P] [US6] Create `src/SunnySunday.Cli/Commands/Weight/WeightListCommand.cs` as `AsyncCommand`: call `GetWeightsAsync`, display table with ID, Text (truncated), Book, Weight; show "No custom weights" if empty.
-- [ ] T033 [US6] Register weight commands in the command tree: `weight` branch with `set` and `list` subcommands in `src/SunnySunday.Cli/Program.cs`.
+- [X] T031 [P] [US6] Create `src/SunnySunday.Cli/Commands/Weight/WeightSetCommand.cs` as `AsyncCommand<Settings>`: validate weight range (1–5), call `PutWeightAsync`, display confirmation.
+- [X] T032 [P] [US6] Create `src/SunnySunday.Cli/Commands/Weight/WeightListCommand.cs` as `AsyncCommand`: call `GetWeightsAsync`, display table with ID, Text (truncated), Book, Weight; show "No custom weights" if empty.
+- [X] T033 [US6] Register weight commands in the command tree: `weight` branch with `set` and `list` subcommands in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: Weight commands work. Tests pass.
 
