@@ -63,6 +63,9 @@ app.Configure(config =>
     config.AddCommand<SyncCommand>("sync")
         .WithDescription("Parse and sync highlights from My Clippings.txt to the server.");
 
+    config.AddCommand<StatusCommand>("status")
+        .WithDescription("Display server health and aggregate state.");
+
     config.AddBranch("config", cfg =>
     {
         cfg.SetDescription("Manage server settings.");
