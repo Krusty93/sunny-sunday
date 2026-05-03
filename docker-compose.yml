@@ -1,0 +1,51 @@
+# Docker Compose for Sunny Sunday
+#
+# Services:
+#   server  — sunny-server API (always running)
+#   cli     — sunny CLI (on-demand, profile "cli")
+#
+# Usage:
+#   Start the server:
+#     docker compose up server -d
+#
+#   Run a CLI command (e.g. sunny status):
+#     docker compose run --rm cli status
+#
+#   Run sync with a local clippings file:
+#     docker compose run --rm -v /path/to/My\ Clippings.txt:/clippings.txt cli sync /clippings.txt
+#
+# Environment:
+#   Copy .env.example to .env and fill in SMTP_* values before starting.
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: sunny-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - sunny-data:/data
+    environment:
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
+
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile.cli
+    container_name: sunny-cli
+    environment:
+      SUNNY_SERVER: http://server:8080
+    depends_on:
+      - server
+    profiles:
+      - cli
+
+volumes:
+  sunny-data:
