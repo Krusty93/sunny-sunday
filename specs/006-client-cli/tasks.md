@@ -69,11 +69,11 @@
 
 ### Tests for User Story 8
 
-- [ ] T011 [P] [US8] Create `src/SunnySunday.Tests/Cli/ServerUrlValidationTests.cs` covering: missing env var exits with actionable error, malformed URL exits with validation error, valid URL allows command execution.
+- [X] T011 [P] [US8] Create `src/SunnySunday.Tests/Cli/ServerUrlValidationTests.cs` covering: missing env var exits with actionable error, malformed URL exits with validation error, valid URL allows command execution.
 
 ### Implementation for User Story 8
 
-- [ ] T012 [US8] Verify `src/SunnySunday.Cli/Program.cs` validation logic: missing `SUNNY_SERVER` → Spectre error markup + exit 1; malformed URI (not absolute, not HTTP/HTTPS) → validation error + exit 1. (Logic implemented in T005; this task adds edge-case handling and test coverage.)
+- [X] T012 [US8] Verify `src/SunnySunday.Cli/Program.cs` validation logic: missing `SUNNY_SERVER` → Spectre error markup + exit 1; malformed URI (not absolute, not HTTP/HTTPS) → validation error + exit 1. (Logic implemented in T005; this task adds edge-case handling and test coverage.)
 
 **Checkpoint**: Server URL validation is robust and tested. No command executes without a valid `SUNNY_SERVER`.
 
