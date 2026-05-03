@@ -13,8 +13,10 @@ namespace SunnySunday.Cli.Commands.Config;
 ///        sunny config count show
 /// </summary>
 public sealed class ConfigCountCommand(SunnyHttpClient client, ILogger<ConfigCountCommand> logger)
-    : AsyncCommand<ConfigCountCommand.Settings>
+    : ServerCommand<ConfigCountCommand.Settings>
 {
+    protected override ILogger Logger => logger;
+
     public sealed class Settings : LogCommandSettings
     {
         [CommandArgument(0, "<value>")]
@@ -82,13 +84,4 @@ public sealed class ConfigCountCommand(SunnyHttpClient client, ILogger<ConfigCou
         return 0;
     }
 
-    private int HandleServerError(HttpRequestException ex)
-    {
-        var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
-        logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
-        AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
-        AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
-        AnsiConsole.MarkupLine("[grey]Check that the server is running and SUNNY_SERVER is correct.[/]");
-        return 1;
-    }
 }

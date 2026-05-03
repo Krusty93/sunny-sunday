@@ -11,8 +11,10 @@ namespace SunnySunday.Cli.Commands.Config;
 /// Usage: sunny config show
 /// </summary>
 public sealed class ConfigShowCommand(SunnyHttpClient client, ILogger<ConfigShowCommand> logger)
-    : AsyncCommand<ConfigShowCommand.Settings>
+    : ServerCommand<ConfigShowCommand.Settings>
 {
+    protected override ILogger Logger => logger;
+
     public sealed class Settings : LogCommandSettings;
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -26,12 +28,7 @@ public sealed class ConfigShowCommand(SunnyHttpClient client, ILogger<ConfigShow
         }
         catch (HttpRequestException ex)
         {
-            var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
-            logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
-            AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
-            AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
-            AnsiConsole.MarkupLine("[grey]Check that the server is running and SUNNY_SERVER is correct.[/]");
-            return 1;
+            return HandleServerError(ex);
         }
 
         var table = new Table().Border(TableBorder.Rounded);

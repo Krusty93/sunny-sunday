@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Infrastructure;
@@ -10,8 +10,10 @@ namespace SunnySunday.Cli.Commands.Exclude;
 /// Usage: sunny exclude list
 /// </summary>
 public sealed class ExcludeListCommand(SunnyHttpClient client, ILogger<ExcludeListCommand> logger)
-    : AsyncCommand<ExcludeListCommand.Settings>
+    : ServerCommand<ExcludeListCommand.Settings>
 {
+    protected override ILogger Logger => logger;
+
     public sealed class Settings : LogCommandSettings;
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -25,12 +27,7 @@ public sealed class ExcludeListCommand(SunnyHttpClient client, ILogger<ExcludeLi
         }
         catch (HttpRequestException ex)
         {
-            var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
-            logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
-            AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
-            AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
-            AnsiConsole.MarkupLine("[grey]Check that the server is running and SUNNY_SERVER is correct.[/]");
-            return 1;
+            return HandleServerError(ex);
         }
 
         AnsiConsole.MarkupLine("[bold]Excluded Highlights[/]");

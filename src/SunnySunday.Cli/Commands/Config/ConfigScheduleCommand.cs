@@ -14,8 +14,10 @@ namespace SunnySunday.Cli.Commands.Config;
 ///        sunny config schedule show
 /// </summary>
 public sealed partial class ConfigScheduleCommand(SunnyHttpClient client, ILogger<ConfigScheduleCommand> logger)
-    : AsyncCommand<ConfigScheduleCommand.Settings>
+    : ServerCommand<ConfigScheduleCommand.Settings>
 {
+    protected override ILogger Logger => logger;
+
     private static readonly string[] ValidCadences = ["daily", "weekly"];
 
     public sealed class Settings : LogCommandSettings
@@ -111,16 +113,6 @@ public sealed partial class ConfigScheduleCommand(SunnyHttpClient client, ILogge
 
         AnsiConsole.MarkupLine($"[green]✓[/] Schedule set to [bold]{response.Schedule}[/] at [bold]{response.DeliveryTime}[/] ({response.Timezone})");
         return 0;
-    }
-
-    private int HandleServerError(HttpRequestException ex)
-    {
-        var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
-        logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
-        AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
-        AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
-        AnsiConsole.MarkupLine("[grey]Check that the server is running and SUNNY_SERVER is correct.[/]");
-        return 1;
     }
 
     [GeneratedRegex(@"^(?:[01]\d|2[0-3]):[0-5]\d$")]

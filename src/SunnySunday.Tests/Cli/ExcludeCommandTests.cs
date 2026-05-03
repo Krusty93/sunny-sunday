@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
 using Spectre.Console.Cli;
