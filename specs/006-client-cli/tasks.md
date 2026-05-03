@@ -87,12 +87,12 @@
 
 ### Tests for User Story 7
 
-- [ ] T013 [P] [US7] Create `src/SunnySunday.Tests/Cli/StatusCommandTests.cs` covering: normal response displays table, server unreachable shows error with URL, UTC timestamps are converted to local time.
+- [X] T013 [P] [US7] Create `src/SunnySunday.Tests/Cli/StatusCommandTests.cs` covering: normal response displays table, server unreachable shows error with URL, UTC timestamps are converted to local time.
 
 ### Implementation for User Story 7
 
-- [ ] T014 [US7] Create `src/SunnySunday.Cli/Commands/StatusCommand.cs` as `AsyncCommand`: call `GetStatusAsync`, build Spectre `Table` with Total Highlights, Total Books, Total Authors, Excluded counts, Next Recap (local time), Last Recap Status, Last Recap Error.
-- [ ] T015 [US7] Register `StatusCommand` in the command tree in `src/SunnySunday.Cli/Program.cs`.
+- [X] T014 [US7] Create `src/SunnySunday.Cli/Commands/StatusCommand.cs` as `AsyncCommand`: call `GetStatusAsync`, build Spectre `Table` with Total Highlights, Total Books, Total Authors, Excluded counts, Next Recap (local time), Last Recap Status, Last Recap Error.
+- [X] T015 [US7] Register `StatusCommand` in the command tree in `src/SunnySunday.Cli/Program.cs`.
 
 **Checkpoint**: `sunny status` displays server state. Tests pass.
 
