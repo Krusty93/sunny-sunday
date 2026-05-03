@@ -7,6 +7,7 @@ using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
 using SunnySunday.Cli.Commands.Config;
 using SunnySunday.Cli.Commands.Exclude;
+using SunnySunday.Cli.Commands.Weight;
 using SunnySunday.Cli.Infrastructure;
 
 var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
@@ -82,6 +83,15 @@ app.Configure(config =>
             .WithDescription("Remove an exclusion.");
         exc.AddCommand<ExcludeListCommand>("list")
             .WithDescription("List all current exclusions.");
+    });
+
+    config.AddBranch("weight", wgt =>
+    {
+        wgt.SetDescription("Manage highlight recap weights.");
+        wgt.AddCommand<WeightSetCommand>("set")
+            .WithDescription("Set the recap weight for a highlight (1–5).");
+        wgt.AddCommand<WeightListCommand>("list")
+            .WithDescription("List all highlights with custom weights.");
     });
 });
 
