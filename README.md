@@ -86,7 +86,7 @@ That's it. Your first recap will arrive on the next scheduled delivery (default:
 | `sunny sync [path]` | Import highlights from `My Clippings.txt` |
 | `sunny status` | Show server status and next recap |
 | `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule |
-| `sunny config count <1-15>` | Set highlights per recap (default: 3) |
+| `sunny config count <1-15>` | Set highlights per recap (default: 5) |
 | `sunny config kindle-email <address>` | Set the Kindle delivery email address |
 | `sunny exclude highlight <id>` | Exclude a highlight from all recaps |
 | `sunny exclude book <title>` | Exclude all highlights from a book |
