@@ -129,6 +129,11 @@ await QuartzSchemaInitializer.ApplyAsync(connectionString);
 
         var userId = await userRepo.EnsureUserAsync();
         var settings = await settingsRepo.GetByUserIdAsync(userId);
+
+        // Default the timezone to the host machine's local timezone on first run
+        settings.Timezone = TimeZoneInfo.Local.Id;
+        await settingsRepo.UpsertAsync(settings);
+
         await schedulerService.ScheduleAsync(settings);
     }
 }
