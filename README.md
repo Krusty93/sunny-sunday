@@ -66,11 +66,16 @@ docker run --rm -e SUNNY_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/sunnys
 ### 3. Sync your highlights
 
 ```sh
-export SUNNY_SERVER=http://192.168.1.10:8080
-sunny sync   # auto-detects Kindle mount path
+sunny sync   # SUNNY_SERVER defaults to http://localhost:8080
 ```
 
 That's it. Your first recap will arrive on the next scheduled delivery (default: every Sunday at 18:00).
+
+> **Server on a different machine?** Set `SUNNY_SERVER` before running CLI commands:
+> ```sh
+> export SUNNY_SERVER=http://192.168.1.10:8080
+> sunny sync
+> ```
 
 ---
 
