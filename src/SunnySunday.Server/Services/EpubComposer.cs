@@ -5,7 +5,7 @@ namespace SunnySunday.Server.Services;
 
 public static class EpubComposer
 {
-    public static byte[] Compose(IReadOnlyList<SelectionCandidate> highlights, DateTimeOffset recapDate)
+    public static byte[] Compose(IReadOnlyList<SelectionCandidate> highlights, DateTimeOffset recapDate, string cadence)
     {
         using var stream = new MemoryStream();
         using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
@@ -20,7 +20,7 @@ public static class EpubComposer
             AddEntry(archive, "META-INF/container.xml", BuildContainerXml());
             AddEntry(archive, "OEBPS/content.opf", BuildContentOpf(recapDate));
             AddEntry(archive, "OEBPS/toc.ncx", BuildTocNcx());
-            AddEntry(archive, "OEBPS/highlights.xhtml", BuildHighlightsXhtml(highlights, recapDate));
+            AddEntry(archive, "OEBPS/highlights.xhtml", BuildHighlightsXhtml(highlights, recapDate, cadence));
         }
 
         return stream.ToArray();
@@ -46,8 +46,9 @@ public static class EpubComposer
         <?xml version="1.0" encoding="UTF-8"?>
         <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
           <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-            <dc:title>Sunny Sunday Recap – {recapDate:yyyy-MM-dd}</dc:title>
+            <dc:title>Notes Recap ({recapDate:yyyy-MM-dd HH:mm})</dc:title>
             <dc:creator>Sunny Sunday</dc:creator>
+            <dc:subject>sunny-sunday</dc:subject>
             <dc:identifier id="BookId">sunny-recap-{recapDate:yyyyMMdd-HHmmss}</dc:identifier>
             <dc:language>en</dc:language>
           </metadata>
@@ -75,8 +76,9 @@ public static class EpubComposer
         </ncx>
         """;
 
-    private static string BuildHighlightsXhtml(IReadOnlyList<SelectionCandidate> highlights, DateTimeOffset recapDate)
+    private static string BuildHighlightsXhtml(IReadOnlyList<SelectionCandidate> highlights, DateTimeOffset recapDate, string cadence)
     {
+        var cadenceLabel = cadence.Equals("weekly", StringComparison.OrdinalIgnoreCase) ? "Weekly" : "Daily";
         var sb = new StringBuilder();
         sb.AppendLine("""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -85,12 +87,12 @@ public static class EpubComposer
             <head><title>Highlights</title></head>
             <body>
             """);
-        sb.AppendLine($"<h1>Sunny Sunday Recap — {recapDate:yyyy-MM-dd}</h1>");
+        sb.AppendLine($"<h1>Sunny Sunday {cadenceLabel} Recap ({recapDate:yyyy-MM-dd HH:mm})</h1>");
         sb.AppendLine("<ul>");
 
         foreach (var h in highlights)
         {
-            sb.AppendLine($"<li><blockquote>{EscapeXml(h.Text)}</blockquote><p>— <em>{EscapeXml(h.BookTitle)}</em> by {EscapeXml(h.AuthorName)}</p></li>");
+            sb.AppendLine($"<li><blockquote>{EscapeXml(h.Text)}</blockquote><p><em>{EscapeXml(h.BookTitle)}</em> by {EscapeXml(h.AuthorName)}</p></li>");
         }
 
         sb.AppendLine("</ul>");

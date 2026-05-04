@@ -18,7 +18,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_ReturnsValidZipArchive()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -29,7 +29,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_MimetypeIsFirstEntry()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -41,7 +41,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_MimetypeIsUncompressed()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -54,7 +54,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_MimetypeContentIsCorrect()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -66,7 +66,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_ContainsRequiredEpubFiles()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -80,7 +80,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_ContainerXmlPointsToContentOpf()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -91,22 +91,59 @@ public sealed class EpubComposerTests
     }
 
     [Fact]
-    public void Compose_ContentOpfContainsRecapDateInTitle()
+    public void Compose_ContentOpf_TitleIsNotesRecapWithDateTimeAndTag()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
 
         var opf = ReadEntry(archive, "OEBPS/content.opf");
-        Assert.Contains("2026-04-20", opf);
-        Assert.Contains("Sunny Sunday Recap", opf);
+        Assert.Contains("Notes Recap (2026-04-20 18:00)", opf);
+        Assert.Contains("<dc:subject>sunny-sunday</dc:subject>", opf);
+    }
+
+    [Fact]
+    public void Compose_HighlightsXhtml_DailyHeadingIncludesCadenceAndDateTime()
+    {
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
+
+        using var stream = new MemoryStream(epub);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+
+        var xhtml = ReadEntry(archive, "OEBPS/highlights.xhtml");
+        Assert.Contains("<h1>Sunny Sunday Daily Recap (2026-04-20 18:00)</h1>", xhtml);
+    }
+
+    [Fact]
+    public void Compose_HighlightsXhtml_WeeklyHeadingIncludesCadenceAndDateTime()
+    {
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "weekly");
+
+        using var stream = new MemoryStream(epub);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+
+        var xhtml = ReadEntry(archive, "OEBPS/highlights.xhtml");
+        Assert.Contains("<h1>Sunny Sunday Weekly Recap (2026-04-20 18:00)</h1>", xhtml);
+    }
+
+    [Fact]
+    public void Compose_HighlightsXhtml_NoEmDashBeforeBookTitle()
+    {
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
+
+        using var stream = new MemoryStream(epub);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+
+        var xhtml = ReadEntry(archive, "OEBPS/highlights.xhtml");
+        Assert.DoesNotContain("— <em>", xhtml);
+        Assert.Contains("<em>Steve Jobs Biography</em>", xhtml);
     }
 
     [Fact]
     public void Compose_HighlightsXhtml_RendersFlatList()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -120,7 +157,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_HighlightsXhtml_PreservesInputOrder()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -138,7 +175,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_HighlightsXhtml_IncludesSourceMetadata()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -155,7 +192,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_HighlightsXhtml_EscapesSpecialCharacters()
     {
-        var epub = EpubComposer.Compose(SampleHighlights, RecapDate);
+        var epub = EpubComposer.Compose(SampleHighlights, RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
@@ -173,7 +210,7 @@ public sealed class EpubComposerTests
     [Fact]
     public void Compose_EmptyHighlights_ProducesValidEpubWithEmptyList()
     {
-        var epub = EpubComposer.Compose([], RecapDate);
+        var epub = EpubComposer.Compose([], RecapDate, "daily");
 
         using var stream = new MemoryStream(epub);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
