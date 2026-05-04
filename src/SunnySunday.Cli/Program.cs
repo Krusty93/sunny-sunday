@@ -10,19 +10,19 @@ using SunnySunday.Cli.Commands.Exclude;
 using SunnySunday.Cli.Commands.Weight;
 using SunnySunday.Cli.Infrastructure;
 
+const string DefaultServerUrl = "http://localhost:8080";
+
 var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
 
 var validationResult = ServerUrlValidator.Validate(serverUrl, out var serverUri);
 
 if (validationResult == ServerUrlValidator.ValidationResult.Missing)
 {
-    AnsiConsole.MarkupLine("[red]Error:[/] SUNNY_SERVER environment variable is not set.");
-    AnsiConsole.MarkupLine("[grey]Set it to the server URL, e.g.:[/]");
-    AnsiConsole.MarkupLine("[grey]  export SUNNY_SERVER=http://192.168.1.10:8080[/]");
-    return 1;
+    serverUrl = DefaultServerUrl;
+    serverUri = new Uri(DefaultServerUrl);
+    AnsiConsole.MarkupLine($"[grey]SUNNY_SERVER not set — using default: {DefaultServerUrl}[/]");
 }
-
-if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
+else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
 {
     AnsiConsole.MarkupLine($"[red]Error:[/] SUNNY_SERVER value is not a valid HTTP URL: [yellow]{serverUrl}[/]");
     return 1;
