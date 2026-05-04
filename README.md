@@ -88,12 +88,12 @@ That's it. Your first recap will arrive on the next scheduled delivery (default:
 | `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule |
 | `sunny config count <1-15>` | Set highlights per recap (default: 3) |
 | `sunny config kindle-email <address>` | Set the Kindle delivery email address |
-| `sunny exclude highlight <id>` | Exclude a highlight from all recaps |
-| `sunny exclude book <title>` | Exclude all highlights from a book |
-| `sunny exclude author <name>` | Exclude all highlights from an author |
+| `sunny exclude add highlight <id>` | Exclude a highlight from all recaps |
+| `sunny exclude add book <id>` | Exclude all highlights from a book |
+| `sunny exclude add author <id>` | Exclude all highlights from an author |
 | `sunny exclude remove highlight <id>` | Re-include a highlight |
-| `sunny exclude remove book <title>` | Re-include a book |
-| `sunny exclude remove author <name>` | Re-include an author |
+| `sunny exclude remove book <id>` | Re-include a book |
+| `sunny exclude remove author <id>` | Re-include an author |
 | `sunny exclude list` | List all exclusions |
 | `sunny weight set <id> <1-5>` | Set highlight weight |
 | `sunny weight list` | Show weighted highlights |
