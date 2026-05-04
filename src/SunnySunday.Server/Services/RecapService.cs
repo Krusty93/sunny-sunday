@@ -53,7 +53,7 @@ public sealed class RecapService : IRecapService
             return;
         }
 
-        var epubContent = EpubComposer.Compose(candidates, scheduledFor);
+        var epubContent = EpubComposer.Compose(candidates, scheduledFor, settings.Schedule);
         var fileName = $"recap-{scheduledFor:yyyyMMdd-HHmmss}.epub";
 
         var attemptCount = 0;
