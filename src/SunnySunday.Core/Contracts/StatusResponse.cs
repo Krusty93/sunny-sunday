@@ -34,4 +34,7 @@ public sealed record StatusResponse
 
     /// <summary>Error detail when LastRecapStatus is "failed"; null otherwise.</summary>
     public string? LastRecapError { get; set; }
+
+    /// <summary>Indicates whether a Kindle delivery email is configured for the user.</summary>
+    public bool KindleEmailConfigured { get; set; }
 }

@@ -26,7 +26,8 @@ public sealed class StatusCommandTests : IDisposable
                     "excludedAuthors": 0,
                     "nextRecap": "2026-05-04T08:00:00Z",
                     "lastRecapStatus": "delivered",
-                    "lastRecapError": null
+                    "lastRecapError": null,
+                    "kindleEmailConfigured": true
                 }
                 """);
 
@@ -73,6 +74,30 @@ public sealed class StatusCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task Status_KindleEmailNotConfigured_ReturnsZero()
+    {
+        _mockHttp.When(HttpMethod.Get, "http://localhost:5000/status")
+            .Respond("application/json", """
+                {
+                    "totalHighlights": 5,
+                    "totalBooks": 1,
+                    "totalAuthors": 1,
+                    "excludedHighlights": 0,
+                    "excludedBooks": 0,
+                    "excludedAuthors": 0,
+                    "nextRecap": null,
+                    "lastRecapStatus": null,
+                    "lastRecapError": null,
+                    "kindleEmailConfigured": false
+                }
+                """);
+
+        var exitCode = await RunStatusCommand();
+
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
     public async Task Status_FailedLastRecap_ReturnsZero()
     {
         _mockHttp.When(HttpMethod.Get, "http://localhost:5000/status")
@@ -86,7 +111,8 @@ public sealed class StatusCommandTests : IDisposable
                     "excludedAuthors": 0,
                     "nextRecap": null,
                     "lastRecapStatus": "failed",
-                    "lastRecapError": "SMTP connection timeout"
+                    "lastRecapError": "SMTP connection timeout",
+                    "kindleEmailConfigured": true
                 }
                 """);
 

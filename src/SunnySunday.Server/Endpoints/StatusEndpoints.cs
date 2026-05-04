@@ -12,10 +12,12 @@ public static class StatusEndpoints
         app.MapGet("/status", async ([FromServices] UserRepository userRepo, [FromServices] StatusRepository statusRepo, [FromServices] ISchedulerService schedulerService) =>
         {
             var userId = await userRepo.EnsureUserAsync();
+            var user = await userRepo.GetByIdAsync(userId);
             var status = await statusRepo.GetStatusAsync(userId);
 
             var nextFire = schedulerService.GetNextFireTimeUtc();
             status.NextRecap = nextFire?.ToString("O");
+            status.KindleEmailConfigured = !string.IsNullOrWhiteSpace(user.KindleEmail);
 
             return Results.Ok(status);
         })

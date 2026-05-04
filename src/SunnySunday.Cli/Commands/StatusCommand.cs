@@ -40,6 +40,7 @@ public sealed class StatusCommand(SunnyHttpClient client, ILogger<StatusCommand>
         table.AddRow("Excluded Highlights", response.ExcludedHighlights.ToString());
         table.AddRow("Excluded Books", response.ExcludedBooks.ToString());
         table.AddRow("Excluded Authors", response.ExcludedAuthors.ToString());
+        table.AddRow("Kindle Email", FormatKindleEmail(response.KindleEmailConfigured));
         table.AddRow("Next Recap", FormatTimestamp(response.NextRecap) ?? "[grey]Not scheduled[/]");
         table.AddRow("Last Recap Status", FormatLastStatus(response.LastRecapStatus));
 
@@ -60,6 +61,11 @@ public sealed class StatusCommand(SunnyHttpClient client, ILogger<StatusCommand>
 
         return dt.ToLocalTime().ToString("yyyy-MM-dd HH:mm zzz");
     }
+
+    private static string FormatKindleEmail(bool configured) =>
+        configured
+            ? "[green]\u2713 Configured[/]"
+            : "[yellow]\u26a0 Not configured \u2014 run: sunny config kindle-email <address>[/]";
 
     private static string FormatLastStatus(string? status) => status switch
     {
