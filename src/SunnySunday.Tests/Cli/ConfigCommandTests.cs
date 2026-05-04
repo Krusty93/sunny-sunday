@@ -260,3 +260,87 @@ public sealed class ConfigCommandTests : IDisposable
         return await app.RunAsync(["config", "show"]);
     }
 }
+
+public sealed class ConfigKindleEmailCommandTests : IDisposable
+{
+    private readonly MockHttpMessageHandler _mockHttp = new();
+
+    public void Dispose() => _mockHttp.Dispose();
+
+    [Fact]
+    public async Task KindleEmail_ValidAddress_SendsPutAndPrintsConfirmation()
+    {
+        var handler = _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Respond("application/json", """
+                {"schedule":"daily","deliveryDay":null,"deliveryTime":"18:00","count":5,"kindleEmail":"user_abc123@kindle.com","timezone":"UTC"}
+                """);
+
+        var exitCode = await RunKindleEmailCommand("user_abc123@kindle.com");
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(1, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task KindleEmail_InvalidAddress_ReturnsOneWithoutHttpCall()
+    {
+        var handler = _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Respond("application/json", "{}");
+
+        var exitCode = await RunKindleEmailCommand("not-an-email");
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal(0, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task KindleEmail_EmptyString_ReturnsOneWithoutHttpCall()
+    {
+        var handler = _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Respond("application/json", "{}");
+
+        var exitCode = await RunKindleEmailCommand("   ");
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal(0, _mockHttp.GetMatchCount(handler));
+    }
+
+    [Fact]
+    public async Task KindleEmail_ServerUnreachable_ReturnsOne()
+    {
+        _mockHttp.When(HttpMethod.Put, "http://localhost:5000/settings")
+            .Throw(new HttpRequestException("Connection refused"));
+
+        var exitCode = await RunKindleEmailCommand("user@kindle.com");
+
+        Assert.Equal(1, exitCode);
+    }
+
+    private async Task<int> RunKindleEmailCommand(params string[] args)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddTransient(_ =>
+        {
+            var httpClient = _mockHttp.ToHttpClient();
+            httpClient.BaseAddress = new Uri("http://localhost:5000");
+            return new SunnyHttpClient(httpClient);
+        });
+
+        var registrar = new TypeRegistrar(services);
+        var app = new CommandApp(registrar);
+
+        app.Configure(config =>
+        {
+            config.SetApplicationName("sunny");
+            config.AddBranch("config", cfg =>
+            {
+                cfg.AddCommand<ConfigKindleEmailCommand>("kindle-email");
+            });
+        });
+
+        var fullArgs = new[] { "config", "kindle-email" }.Concat(args).ToArray();
+        return await app.RunAsync(fullArgs);
+    }
+}
