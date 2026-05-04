@@ -32,7 +32,7 @@ public sealed class SettingsEndpointTests : IDisposable
         Assert.Equal("daily", result.Schedule);
         Assert.Null(result.DeliveryDay);
         Assert.Equal("18:00", result.DeliveryTime);
-        Assert.Equal(3, result.Count);
+        Assert.Equal(5, result.Count);
         Assert.Equal(string.Empty, result.KindleEmail);
     }
 
@@ -50,7 +50,7 @@ public sealed class SettingsEndpointTests : IDisposable
         Assert.Equal("weekly", result.Schedule);
         Assert.Null(result.DeliveryDay);
         Assert.Equal("18:00", result.DeliveryTime);
-        Assert.Equal(3, result.Count);
+        Assert.Equal(5, result.Count);
         Assert.Equal(string.Empty, result.KindleEmail);
     }
 
