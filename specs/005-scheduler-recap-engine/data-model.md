@@ -181,7 +181,6 @@ public sealed class SmtpSettings
     public int Port { get; set; } = 587;
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public bool UseSsl { get; set; } = true;
 }
 ```
 
@@ -191,7 +190,6 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=sender@gmail.com
 SMTP_PASSWORD=app-specific-password
-SMTP_USE_SSL=true
 ```
 
 ---
