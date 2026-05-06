@@ -278,6 +278,27 @@ Errors are actionable — they tell the user exactly what to do.
 
 ---
 
+## Development endpoints
+
+These endpoints are registered **only when `ASPNETCORE_ENVIRONMENT=Development`** and appear in the local Swagger UI (`http://localhost:8080/swagger`).
+
+### `POST /dev/recap/trigger`
+
+Executes the full recap pipeline immediately (highlight selection → EPUB composition → email delivery via smtp4dev) without waiting for the scheduled time.
+
+```sh
+curl -X POST http://localhost:8080/dev/recap/trigger
+```
+
+Response:
+```json
+{ "status": "triggered", "scheduledFor": "2026-05-06T14:32:00Z" }
+```
+
+Returns `500` with an error message if the pipeline throws.
+
+---
+
 ## Decisions
 
 - `sunny sync` auto-detects the Kindle mount path on macOS, Linux, and Windows. If not found, it prompts the user to enter the path interactively.
