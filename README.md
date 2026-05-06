@@ -79,6 +79,53 @@ That's it. Your first recap will arrive on the next scheduled delivery (default:
 
 ---
 
+## Mounting your Clippings file (Docker CLI users)
+
+If you run the CLI via Docker rather than the native binary, mount `My Clippings.txt` with a read-only volume.
+
+### Scenario 1 — Kindle connected via USB
+
+**macOS** (Kindle mounts at `/Volumes/Kindle`):
+```sh
+docker run --rm \
+  -v "/Volumes/Kindle/documents:/kindle:ro" \
+  -e SUNNY_SERVER=http://host.docker.internal:8080 \
+  ghcr.io/krusty93/sunnysunday.cli:latest \
+  sync "/kindle/My Clippings.txt"
+```
+
+**Linux** (Kindle mounts at `/media/$USER/Kindle`):
+```sh
+docker run --rm \
+  -v "/media/$USER/Kindle/documents:/kindle:ro" \
+  -e SUNNY_SERVER=http://localhost:8080 \
+  ghcr.io/krusty93/sunnysunday.cli:latest \
+  sync "/kindle/My Clippings.txt"
+```
+
+**Windows** (PowerShell, Kindle mounts as drive `D:`):
+```powershell
+docker run --rm `
+  -v "D:\documents:/kindle:ro" `
+  -e SUNNY_SERVER=http://host.docker.internal:8080 `
+  ghcr.io/krusty93/sunnysunday.cli:latest `
+  sync "/kindle/My Clippings.txt"
+```
+
+### Scenario 2 — File in the current directory
+
+```sh
+docker run --rm \
+  -v "$PWD/My Clippings.txt:/clippings/My Clippings.txt:ro" \
+  -e SUNNY_SERVER=http://host.docker.internal:8080 \
+  ghcr.io/krusty93/sunnysunday.cli:latest \
+  sync "/clippings/My Clippings.txt"
+```
+
+> **Native binary users:** `sunny sync` auto-detects the Kindle mount path on all platforms — no volume mounting needed.
+
+---
+
 ## CLI reference
 
 | Command | Description |
