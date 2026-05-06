@@ -17,7 +17,7 @@ Distribute the server exclusively as a **Docker image** published to GitHub Cont
 
 Configuration is passed entirely via environment variables:
 - `KINDLE_EMAIL` — the user's Send-to-Kindle email address
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` — outbound email credentials; `SMTP_FROM_ADDRESS` — sender address (optional, defaults to `SMTP_USER`)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` — outbound email credentials
 - `SUNNY_SERVER` — server address (used by the client; also set here for reference)
 
 Data is persisted in a named Docker volume (`sunny-data`).

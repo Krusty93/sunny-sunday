@@ -33,8 +33,8 @@
 - [X] T003 [P] Update `src/SunnySunday.Server/Models/Settings.cs` and `src/SunnySunday.Server/Data/SettingsRepository.cs` to persist `Timezone` with a default of `UTC` alongside the existing schedule fields.
 - [X] T004 [P] Create `src/SunnySunday.Server/Models/RecapJobRecord.cs`, `src/SunnySunday.Server/Services/SelectionCandidate.cs`, and `src/SunnySunday.Server/Data/RecapRepository.cs` for recap slot persistence, last-job lookup, candidate reads, and post-delivery highlight history updates.
 - [X] T005 [P] Update `src/SunnySunday.Core/Contracts/SettingsResponse.cs`, `src/SunnySunday.Core/Contracts/UpdateSettingsRequest.cs`, and `src/SunnySunday.Core/Contracts/StatusResponse.cs` to add `Timezone`, `LastRecapStatus`, and `LastRecapError` contract fields.
-- [X] T006 [P] Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` and update `src/SunnySunday.Server/appsettings.Development.json` with `Smtp` settings for `Host`, `Port`, `Username`, `Password`, `FromAddress` and `FromAddress`.
-- [X] T007 Update `src/SunnySunday.Server/Program.cs` to bind `SmtpSettings` from configuration and map the README-source environment variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM_ADDRESS` onto that options model before feature service registration.
+- [X] T006 [P] Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` and update `src/SunnySunday.Server/appsettings.Development.json` with `Smtp` settings for `Host`, `Port`, `Username`, and `Password`.
+- [X] T007 Update `src/SunnySunday.Server/Program.cs` to bind `SmtpSettings` from configuration and map the README-source environment variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD` onto that options model before feature service registration.
 - [X] T008 Update `src/SunnySunday.Tests/Api/SunnyTestApplicationFactory.cs` to apply the new schema shape in-memory and support replacing recap pipeline services during scheduler and delivery integration tests.
 
 **Checkpoint**: Schema, contracts, SMTP config binding, and shared test plumbing are ready. User stories can now proceed in dependency order.
@@ -111,7 +111,7 @@
 
 ### Implementation for User Story 3
 
-- [X] T020 [P] [US3] Create `src/SunnySunday.Server/Services/IMailDeliveryService.cs` and `src/SunnySunday.Server/Services/MailDeliveryService.cs` to send recap EPUB attachments through MailKit using `SmtpSettings.FromAddress` and the mapped SMTP environment variables.
+- [X] T020 [P] [US3] Create `src/SunnySunday.Server/Services/IMailDeliveryService.cs` and `src/SunnySunday.Server/Services/MailDeliveryService.cs` to send recap EPUB attachments through MailKit using `SmtpSettings.Username` and the mapped SMTP environment variables.
 - [X] T021 [P] [US3] Create `src/SunnySunday.Server/Infrastructure/Resilience/RecapDeliveryPolicy.cs` to define a Polly exponential backoff policy capped at 3 total attempts, with delay computation owned by the policy helper rather than hardcoded waits in application services.
 - [X] T022 [US3] Create `src/SunnySunday.Server/Services/RecapService.cs` to orchestrate candidate selection, EPUB composition, `recap_jobs` persistence, SMTP delivery through the Polly policy, and post-success `last_seen` plus `delivery_count` updates.
 - [X] T023 [US3] Update `src/SunnySunday.Server/Program.cs` and `src/SunnySunday.Server/Data/StatusRepository.cs` to register `IMailDeliveryService` and `RecapService`, and to expose `LastRecapStatus` plus `LastRecapError` from `recap_jobs` in status responses.
@@ -124,7 +124,7 @@
 
 **Purpose**: Align repo docs with the implemented behavior and verify the full feature set.
 
-- [ ] T024 [P] Update `README.md`, `docs/DX.md`, and `docs/ARCHITECTURE.md` to document the recap pipeline, `recap_jobs`, timezone-aware scheduling, and the authoritative SMTP variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM_ADDRESS`.
+- [ ] T024 [P] Update `README.md`, `docs/DX.md`, and `docs/ARCHITECTURE.md` to document the recap pipeline, `recap_jobs`, timezone-aware scheduling, and the authoritative SMTP variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`.
 - [ ] T025 [P] Reconcile `specs/005-scheduler-recap-engine/quickstart.md` with the shipped configuration shape so local-development and Docker examples include the final SMTP settings and UTC scheduling expectations.
 - [ ] T026 Validate the feature against `specs/005-scheduler-recap-engine/quickstart.md` and run the regression suite from `src/SunnySunday.slnx`.
 
@@ -202,6 +202,6 @@ For this feature, the smallest demonstrable increment is **Phase 1 + Phase 2 + U
 
 ## Notes
 
-- All SMTP configuration work should preserve `FromAddress` inside `SmtpSettings`; it is not derived from `Username`.
+- SMTP sender address is derived from `SmtpSettings.Username`.
 - The README-style environment variable names are the source of truth for server config mapping.
 - Retry logic must use Polly exponential backoff with a maximum of 3 total attempts and no inline fixed-delay waits in application code.

@@ -17,7 +17,7 @@ public sealed class MailDeliveryService : IMailDeliveryService
     public async Task SendRecapAsync(string toAddress, byte[] epubContent, string fileName, CancellationToken cancellationToken = default)
     {
         using var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Sunny Sunday", _settings.FromAddress));
+        message.From.Add(new MailboxAddress("Sunny Sunday", _settings.Username));
         message.To.Add(MailboxAddress.Parse(toAddress));
         message.Subject = "Your Sunny Sunday Recap";
 

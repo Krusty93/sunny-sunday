@@ -37,8 +37,6 @@ docker run -d \
 
 That's it. The server is running and will start sending recaps on the default schedule (daily at 18:00 client's local time).
 
-> **Advanced:** set `SMTP_FROM_ADDRESS` to override the sender address (defaults to `SMTP_USER`).
-
 ### Client CLI
 
 **Option A — Docker (no install required):**

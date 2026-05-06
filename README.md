@@ -31,8 +31,6 @@ docker run -d \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
-> **Advanced:** set `SMTP_FROM_ADDRESS` to override the sender address (defaults to `SMTP_USER`).
-
 Optional supply-chain verification:
 
 ```sh

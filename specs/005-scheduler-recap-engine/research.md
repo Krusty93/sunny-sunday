@@ -71,7 +71,7 @@ Each highlight item in `highlights.xhtml` renders as:
 - MailKit is explicitly listed in the project stack (`docs/ARCHITECTURE.md`). It provides full SMTP support including STARTTLS, OAUTH2, and modern authentication — significantly more reliable than the deprecated .NET BCL `SmtpClient`.
 - SMTP credentials (host, port, username, password, from address) are **server-side operational configuration**, not user preferences. They must **not** be stored in the SQLite DB. They belong in `appsettings.json` with environment variable overrides.
 - The Kindle recipient email (`users.kindle_email`) is stored in SQLite — it is user data, not server config.
-- `IOptions<SmtpSettings>` remains the binding target, while startup code maps variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`, `SMTP_USE_SSL`) into the options model.
+- `IOptions<SmtpSettings>` remains the binding target, while startup code maps variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_USE_SSL`) into the options model.
 - `IMailDeliveryService` abstracts MailKit for testability. Tests inject a fake implementation; production registers `MailDeliveryService`.
 
 **SmtpSettings configuration keys** (in `appsettings.json` / env vars):
@@ -80,7 +80,7 @@ Smtp:Host         (default: "smtp.gmail.com")
 Smtp:Port         (default: 587)
 Smtp:Username     (required)
 Smtp:Password     (required — use env var in production, never hardcode)
-Smtp:FromAddress  (required)
+Smtp:Username     (required; also used as sender address)
 Smtp:UseSsl       (default: true)
 ```
 
@@ -90,7 +90,6 @@ SMTP_HOST
 SMTP_PORT
 SMTP_USER
 SMTP_PASSWORD
-SMTP_FROM_ADDRESS
 SMTP_USE_SSL
 ```
 
