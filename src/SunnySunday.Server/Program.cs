@@ -29,7 +29,8 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
     ["Smtp:Port"] = Environment.GetEnvironmentVariable("SMTP_PORT"),
     ["Smtp:Username"] = Environment.GetEnvironmentVariable("SMTP_USER"),
     ["Smtp:Password"] = Environment.GetEnvironmentVariable("SMTP_PASSWORD"),
-    ["Smtp:FromAddress"] = Environment.GetEnvironmentVariable("SMTP_FROM_ADDRESS"),
+    ["Smtp:FromAddress"] = Environment.GetEnvironmentVariable("SMTP_FROM_ADDRESS")
+        ?? (builder.Environment.IsDevelopment() ? null : Environment.GetEnvironmentVariable("SMTP_USER")),
 });
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
