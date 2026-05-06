@@ -38,6 +38,14 @@ docker run -d \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
+Replace the `SMTP_*` values with those for your provider. The following table contains the common ones:
+
+|         | SMTP_HOST             | SMTP_PORT | SMTP_USER       | SMTP_PASSWORD              | Notes                                                                                       |
+|---------|-----------------------|-----------|-----------------|----------------------------|---------------------------------------------------------------------------------------------|
+| GMail   | smtp.gmail.com        | 587       | you@gmail.com   | your-app-password          | requires an [App Password](https://myaccount.google.com/apppasswords) (2FA must be enabled) |
+| Outlook | smtp-mail.outlook.com | 587       | you@outlook.com | yourpassword               | use your full Microsoft account email as `SMTP_USER`                                        |
+| iCloud  | smtp.mail.me.com      | 587       | you@icloud.com  | your-app-specific-password | requires an [app-specific password](https://support.apple.com/en-us/102654)                 |
+
 ### 3. Sync the Kindle highlights
 
 Upload highlights to the server using the CLI. It automatically detects the path to your Kindle:
