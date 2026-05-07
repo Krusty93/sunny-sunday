@@ -108,6 +108,7 @@ if (app.Environment.IsDevelopment())
     {
         options.DisplayRequestDuration();
     });
+    app.MapDevEndpoints();
 }
 
 app.MapGet("/", () => "Sunny Sunday server is running.");
