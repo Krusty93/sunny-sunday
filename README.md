@@ -15,9 +15,15 @@ Existing solutions deliver periodic recaps only via mobile or web apps. Sunny Su
 
 ## Getting started
 
-### 1. Deploy the server
+### 1. Connect your Kindle device
+
+Connect your Kindle device to your computer via USB cable.
+
+### 2. Run the server
 
 ```sh
+docker network create sunnysunday
+
 docker run -d \
   --name sunny-server \
   --restart unless-stopped \
@@ -28,123 +34,158 @@ docker run -d \
   -e SMTP_PASSWORD=yourpassword \
   -p 8080:8080 \
   -v sunny-data:/data \
+  --network sunnysunday \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
-Optional supply-chain verification:
+### 3. Sync the Kindle highlights
+
+Upload highlights to the server using the CLI. It automatically detects the path to your Kindle:
+
+<details>
+  <summary>Docker (suggested - no install)</summary>
+
+  **Windows** (Kindle mounts as drive `D:`):
+
+  ```powershell
+  docker run `
+    -v "D:\documents:/kindle:ro" `
+    --network sunnysunday `
+    -e SUNNY_SERVER="http://sunny-server:8080" `
+    ghcr.io/krusty93/sunnysunday.cli:latest `
+    sync "/kindle/My Clippings.txt"
+  ```
+
+  > NB: Follow the [WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) to allow WSL to access the Kindle device. Another simpler option is to copy the `My Clippings.txt` file to your PC (e.g. local path) and mounting the volume:
+
+  ```powershell
+  docker run `
+    -v "$(PWD):/kindle:ro" `
+    --network sunnysunday `
+    -e SUNNY_SERVER="http://sunny-server:8080" `
+    ghcr.io/krusty93/sunnysunday.cli:latest `
+    sync "/kindle/My Clippings.txt"
+  ```
+
+  **macOS** (Kindle mounts at `/Volumes/Kindle`):
+  ```sh
+  docker run \
+    -v "/Volumes/Kindle/documents:/kindle:ro" \
+    -e SUNNY_SERVER="http://sunny-server:8080" \
+    ghcr.io/krusty93/sunnysunday.cli:latest \
+    sync "/kindle/My Clippings.txt"
+  ```
+
+  **Linux** (Kindle mounts at `/media/$USER/Kindle`):
+  ```sh
+  docker run \
+    -v "/media/$USER/Kindle/documents:/kindle:ro" \
+    -e SUNNY_SERVER="http://sunny-server:8080" \
+    ghcr.io/krusty93/sunnysunday.cli:latest \
+    sync "/kindle/My Clippings.txt"
+  ```
+
+</details>
+
+<details>
+  <summary>Windows</summary>
+
+#### winget
+
+  ```sh
+  winget install Krusty93.SunnySunday sync
+  ```
+
+#### Binary
+
+  Replace `<version>` with the actual version number (e.g. `1.0.0`).
+
+  ```powershell
+  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/sunny-<version>-win-x64 -o ./sunny.exe
+  ./sunny.exe sync
+  ```
+
+</details>
+
+<details>
+  <summary>MacOS</summary>
+
+  Replace `<version>` with the actual version number (e.g. `1.0.0`).
+
+#### Apple Silicon
+
+  ```sh
+  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/sunny-<version>-osx-arm64 -o /usr/local/bin/sunny
+  chmod +x /usr/local/bin/sunny
+  sunny sync
+  ```
+
+#### Intel
+
+  ```sh
+  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/sunny-<version>-osx-amd64 -o /usr/local/bin/sunny
+  chmod +x /usr/local/bin/sunny
+  sunny sync
+  ```
+
+</details>
+
+<details>
+  <summary>Linux</summary>
+
+  Replace `<version>` with the actual version number (e.g. `1.0.0`).
+
+  ```sh
+  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/sunny-<version>-linux-x64 -o /usr/local/bin/sunny
+  chmod +x /usr/local/bin/sunny
+  sunny sync
+  ```
+
+</details>
+
+The client automatically connects to `http://localhost:8080`. If you ran the server on a different host machine or port, you can override the default URL exporting the variable `SUNNY_SERVER`:
 
 ```sh
-gh attestation verify \
-  oci://ghcr.io/krusty93/sunnysunday.server:latest \
-  --owner Krusty93
+# binary
+export SUNNY_SERVER=http://192.168.1.10:8080
+sunny sync
+
+# Docker
+docker run \
+  -e SUNNY_SERVER=http://192.168.1.10:8080 \
+  ghcr.io/krusty93/sunnysunday.cli:latest sync
 ```
 
-### 2. Install the client CLI
+That's it. Your first recap will arrive on the next scheduled delivery (default: every day at 18:00).
 
-**macOS (Apple Silicon)**
-```sh
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/sunny-darwin-arm64 -o /usr/local/bin/sunny
-chmod +x /usr/local/bin/sunny
-```
-
-**macOS (Intel) / Linux**
-```sh
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/sunny-darwin-amd64 -o /usr/local/bin/sunny
-chmod +x /usr/local/bin/sunny
-```
-
-**Windows**
-```sh
-winget install Krusty93.SunnySunday
-```
-
-**Docker (no install)**
-```sh
-docker run --rm -e SUNNY_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/sunnysunday.cli:latest <command>
-```
-
-### 3. Sync your highlights
-
-```sh
-sunny sync   # SUNNY_SERVER defaults to http://localhost:8080
-```
-
-That's it. Your first recap will arrive on the next scheduled delivery (default: every Sunday at 18:00).
-
-> **Server on a different machine?** Set `SUNNY_SERVER` before running CLI commands:
+> **My Clippings.txt on a different path?** Override the default location using:
+>
 > ```sh
-> export SUNNY_SERVER=http://192.168.1.10:8080
-> sunny sync
+> sunny sync <path>
 > ```
-
----
-
-## Mounting your Clippings file (Docker CLI users)
-
-If you run the CLI via Docker rather than the native binary, mount `My Clippings.txt` with a read-only volume.
-
-### Scenario 1 — Kindle connected via USB
-
-**macOS** (Kindle mounts at `/Volumes/Kindle`):
-```sh
-docker run --rm \
-  -v "/Volumes/Kindle/documents:/kindle:ro" \
-  -e SUNNY_SERVER=http://host.docker.internal:8080 \
-  ghcr.io/krusty93/sunnysunday.cli:latest \
-  sync "/kindle/My Clippings.txt"
-```
-
-**Linux** (Kindle mounts at `/media/$USER/Kindle`):
-```sh
-docker run --rm \
-  -v "/media/$USER/Kindle/documents:/kindle:ro" \
-  -e SUNNY_SERVER=http://localhost:8080 \
-  ghcr.io/krusty93/sunnysunday.cli:latest \
-  sync "/kindle/My Clippings.txt"
-```
-
-**Windows** (PowerShell, Kindle mounts as drive `D:`):
-```powershell
-docker run --rm `
-  -v "D:\documents:/kindle:ro" `
-  -e SUNNY_SERVER=http://host.docker.internal:8080 `
-  ghcr.io/krusty93/sunnysunday.cli:latest `
-  sync "/kindle/My Clippings.txt"
-```
-
-### Scenario 2 — File in the current directory
-
-```sh
-docker run --rm \
-  -v "$PWD/My Clippings.txt:/clippings/My Clippings.txt:ro" \
-  -e SUNNY_SERVER=http://host.docker.internal:8080 \
-  ghcr.io/krusty93/sunnysunday.cli:latest \
-  sync "/clippings/My Clippings.txt"
-```
-
-> **Native binary users:** `sunny sync` auto-detects the Kindle mount path on all platforms — no volume mounting needed.
+>
 
 ---
 
 ## CLI reference
 
-| Command | Description |
-|---|---|
-| `sunny sync [path]` | Import highlights from `My Clippings.txt` |
-| `sunny status` | Show server status and next recap |
-| `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule |
-| `sunny config count <1-15>` | Set highlights per recap (default: 5) |
-| `sunny config kindle-email <address>` | Set the Kindle delivery email address |
-| `sunny exclude highlight <id>` | Exclude a highlight from all recaps |
-| `sunny exclude book <title>` | Exclude all highlights from a book |
-| `sunny exclude author <name>` | Exclude all highlights from an author |
-| `sunny exclude remove highlight <id>` | Re-include a highlight |
-| `sunny exclude remove book <title>` | Re-include a book |
-| `sunny exclude remove author <name>` | Re-include an author |
-| `sunny exclude list` | List all exclusions |
-| `sunny weight set <id> <1-5>` | Set highlight weight |
-| `sunny weight list` | Show weighted highlights |
-| `sunny version` | Print version |
+|                   Command                       |              Description                  |
+|-------------------------------------------------|-------------------------------------------|
+| `sunny sync [path]`                             | Import highlights from `My Clippings.txt` |
+| `sunny status`                                  | Show server status and next recap         |
+| `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule                        |
+| `sunny config count <1-15>`                     | Set highlights per recap (default: 5)     |
+| `sunny config kindle-email <address>`           | Set the Kindle delivery email address     |
+| `sunny exclude highlight <id>`                  | Exclude a highlight from all recaps       |
+| `sunny exclude book <title>`                    | Exclude all highlights from a book        |
+| `sunny exclude author <name>`                   | Exclude all highlights from an author     |
+| `sunny exclude remove highlight <id>`           | Re-include a highlight                    |
+| `sunny exclude remove book <title>`             | Re-include a book                         |
+| `sunny exclude remove author <name>`            | Re-include an author                      |
+| `sunny exclude list`                            | List all exclusions                       |
+| `sunny weight set <id> <1-5>`                   | Set highlight weight                      |
+| `sunny weight list`                             | Show weighted highlights                  |
+| `sunny version`                                 | Print version                             |
 
 ---
 
@@ -157,11 +198,22 @@ docker run --rm \
 
 ---
 
+## Supply chain verification
+
+Verify Docker image origin via GitHub CLI:
+
+```sh
+gh attestation verify \
+  oci://ghcr.io/krusty93/sunnysunday.server:latest \
+  --owner Krusty93
+```
+
+---
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
+MIT, see [LICENSE](LICENSE).
