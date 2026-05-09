@@ -38,13 +38,11 @@ docker run -d \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
-Replace the `SMTP_*` values with those for your provider. The following table contains the common ones:
+Replace the `SMTP_*` values with those for your provider.
 
-|         | SMTP_HOST             | SMTP_PORT | SMTP_USER       | SMTP_PASSWORD              | Notes                                                                                       |
-|---------|-----------------------|-----------|-----------------|----------------------------|---------------------------------------------------------------------------------------------|
-| GMail   | smtp.gmail.com        | 587       | you@gmail.com   | your-app-password          | requires an [App Password](https://myaccount.google.com/apppasswords) (2FA must be enabled) |
-| Outlook | smtp-mail.outlook.com | 587       | you@outlook.com | yourpassword               | use your full Microsoft account email as `SMTP_USER`                                        |
-| iCloud  | smtp.mail.me.com      | 587       | you@icloud.com  | your-app-specific-password | requires an [app-specific password](https://support.apple.com/en-us/102654)                 |
+> Gmail and Outlook personal accounts do not support SMTP with password authentication.
+>
+> Use a free SMTP relay like [Resend](https://resend.com/docs/send-with-smtp), [MailerSend](https://www.mailersend.com/help/smtp-relay) or [Mailgun](https://www.mailgun.com/features/smtp-server/) instead. They offer a free tier with a generous limit of free emails. Otherwise, you can use your own SMPT relay server.
 
 ### 3. Sync the Kindle highlights
 
