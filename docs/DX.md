@@ -40,34 +40,6 @@ docker run -d \
 
 That's it. The server is running and will start sending recaps on the default schedule (daily at 18:00 client's local time).
 
-#### SMTP provider quick reference
-
-Replace the `SMTP_*` values with those for your provider:
-
-**Gmail** — requires an [App Password](https://myaccount.google.com/apppasswords) (2FA must be enabled):
-```sh
--e SMTP_HOST=smtp.gmail.com \
--e SMTP_PORT=587 \
--e SMTP_USER=you@gmail.com \
--e SMTP_PASSWORD=your-app-password
-```
-
-**Outlook / Hotmail** — use your full Microsoft account email as `SMTP_USER`:
-```sh
--e SMTP_HOST=smtp-mail.outlook.com \
--e SMTP_PORT=587 \
--e SMTP_USER=you@outlook.com \
--e SMTP_PASSWORD=yourpassword
-```
-
-**iCloud Mail** — requires an [app-specific password](https://support.apple.com/en-us/102654):
-```sh
--e SMTP_HOST=smtp.mail.me.com \
--e SMTP_PORT=587 \
--e SMTP_USER=you@icloud.com \
--e SMTP_PASSWORD=your-app-specific-password
-```
-
 ### Client CLI
 
 **Option A — Docker (no install required):**
