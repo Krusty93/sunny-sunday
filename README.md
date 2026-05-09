@@ -216,6 +216,12 @@ gh attestation verify \
   --owner Krusty93
 ```
 
+```sh
+gh attestation verify \
+  oci://ghcr.io/krusty93/sunnysunday.cli:latest \
+  --owner Krusty93
+```
+
 ---
 
 ## Contributing
