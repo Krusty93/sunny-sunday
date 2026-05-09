@@ -38,6 +38,12 @@ docker run -d \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
+Replace the `SMTP_*` values with those for your provider.
+
+> Gmail and Outlook personal accounts do not support SMTP with password authentication.
+>
+> Use a free SMTP relay like [Resend](https://resend.com/docs/send-with-smtp), [MailerSend](https://www.mailersend.com/help/smtp-relay) or [Mailgun](https://www.mailgun.com/features/smtp-server/) instead. They offer a free tier with a generous limit of free emails. Otherwise, you can use your own SMPT relay server.
+
 ### 3. Sync the Kindle highlights
 
 Upload highlights to the server using the CLI. It automatically detects the path to your Kindle:
