@@ -22,6 +22,8 @@ The guiding DX principle: **zero friction after a one-time setup**. Onboarding r
 ### Server
 
 ```sh
+docker network create sunnysunday
+
 docker run -d \
   --name sunny-server \
   --restart unless-stopped \
@@ -32,6 +34,7 @@ docker run -d \
   -e SMTP_PASSWORD=yourpassword \
   -p 8080:8080 \
   -v sunny-data:/data \
+  --network sunnysunday \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
@@ -73,13 +76,12 @@ docker run -d \
   --name sunny-server \
   --restart unless-stopped \
   -e KINDLE_EMAIL=your-address@kindle.com \
-  -e SUNNY_SERVER=http://192.168.1.10:8080 \
   -p 8080:8080 \
   -v sunny-data:/data \
   ghcr.io/krusty93/sunnysunday.server:latest
 ```
 
-On the client side, set `SUNNY_SERVER` once in your shell profile:
+The client automatically connects to `http://localhost:8080`. If your server runs on a different host or port, set `SUNNY_SERVER` on the client side:
 
 ```sh
 # ~/.zshrc or ~/.bashrc (macOS/Linux)
@@ -195,7 +197,7 @@ sunny weight list
 ### Highlights per recap
 
 ```sh
-sunny config count 5      # Show 5 highlights per recap (default: 3, min: 1, max: 15)
+sunny config count 5      # Show 5 highlights per recap (default: 5, min: 1, max: 15)
 sunny config count show   # Print current setting
 ```
 
@@ -208,7 +210,7 @@ sunny status
 ```
 Server:       http://192.168.1.10:8080 ✓ online
 Highlights:   1,198 total · 12 excluded · 34 weighted
-Highlights/recap: 3 (default)
+Highlights/recap: 5 (default)
 Last recap:   Mar 30, 2026 at 18:00 (3 highlights delivered)
 Next recap:   Apr 5, 2026 at 18:00
 Schedule:     weekly (Sunday at 18:00)
@@ -257,24 +259,25 @@ Errors are actionable — they tell the user exactly what to do.
 
 ## Full CLI reference
 
-| Command | Description |
-|---|---|
-| `sunny sync [path]` | Import highlights from `My Clippings.txt` (auto-detects Kindle path if omitted) |
-| `sunny status` | Show server status, next recap, highlight stats |
-| `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule and optional delivery time |
-| `sunny config schedule show` | Show current schedule |
-| `sunny config count <1-15>` | Set number of highlights per recap |
-| `sunny config count show` | Show current highlights-per-recap setting |
-| `sunny exclude highlight <id>` | Exclude a highlight from all recaps |
-| `sunny exclude book <title>` | Exclude all highlights from a book |
-| `sunny exclude author <name>` | Exclude all highlights from an author |
-| `sunny exclude remove highlight <id>` | Re-include a previously excluded highlight |
-| `sunny exclude remove book <title>` | Re-include a previously excluded book |
-| `sunny exclude remove author <name>` | Re-include a previously excluded author |
-| `sunny exclude list` | List all exclusions |
-| `sunny weight set <id> <1-5>` | Set weight for a highlight |
-| `sunny weight list` | Show all weighted highlights |
-| `sunny version` | Print client and server version |
+|                   Command                       |              Description                  |
+|-------------------------------------------------|-------------------------------------------|
+| `sunny sync [path]`                             | Import highlights from `My Clippings.txt` |
+| `sunny status`                                  | Show server status and next recap         |
+| `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule                        |
+| `sunny config schedule show`                    | Show current schedule                     |
+| `sunny config count show`                       | Show current highlights-per-recap setting |
+| `sunny config count <1-15>`                     | Set highlights per recap (default: 5)     |
+| `sunny config kindle-email <address>`           | Set the Kindle delivery email address     |
+| `sunny exclude highlight <id>`                  | Exclude a highlight from all recaps       |
+| `sunny exclude book <title>`                    | Exclude all highlights from a book        |
+| `sunny exclude author <name>`                   | Exclude all highlights from an author     |
+| `sunny exclude remove highlight <id>`           | Re-include a highlight                    |
+| `sunny exclude remove book <title>`             | Re-include a book                         |
+| `sunny exclude remove author <name>`            | Re-include an author                      |
+| `sunny exclude list`                            | List all exclusions                       |
+| `sunny weight set <id> <1-5>`                   | Set highlight weight                      |
+| `sunny weight list`                             | Show weighted highlights                  |
+| `sunny version`                                 | Print version                             |
 
 ---
 
