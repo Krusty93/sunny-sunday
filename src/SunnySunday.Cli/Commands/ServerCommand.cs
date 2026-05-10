@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using SunnySunday.Cli.Infrastructure;
 
 namespace SunnySunday.Cli.Commands;
 
@@ -10,7 +9,7 @@ namespace SunnySunday.Cli.Commands;
 /// Provides shared error handling for HTTP failures.
 /// </summary>
 public abstract class ServerCommand<TSettings> : AsyncCommand<TSettings>
-    where TSettings : LogCommandSettings
+    where TSettings : CommandSettings
 {
     protected abstract ILogger Logger { get; }
 

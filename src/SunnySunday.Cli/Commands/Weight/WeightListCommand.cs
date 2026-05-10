@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Infrastructure;
@@ -14,7 +14,7 @@ public sealed class WeightListCommand(SunnyHttpClient client, ILogger<WeightList
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings;
+    public sealed class Settings : CommandSettings;
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {

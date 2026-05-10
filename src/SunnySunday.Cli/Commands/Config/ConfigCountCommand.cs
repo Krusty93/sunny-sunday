@@ -17,7 +17,7 @@ public sealed class ConfigCountCommand(SunnyHttpClient client, ILogger<ConfigCou
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<value>")]
         [Description("Number of highlights per recap (1–15), or 'show' to display current count.")]

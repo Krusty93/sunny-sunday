@@ -10,22 +10,22 @@ namespace SunnySunday.Cli.Infrastructure;
 /// </summary>
 public sealed class TypeRegistrar(IServiceProvider services) : ITypeRegistrar
 {
-    private readonly Dictionary<Type, Type> registrations = [];
-    private readonly Dictionary<Type, object> instances = [];
-    private readonly Dictionary<Type, Func<object>> factories = [];
+    private readonly Dictionary<Type, Type> _registrations = [];
+    private readonly Dictionary<Type, object> _instances = [];
+    private readonly Dictionary<Type, Func<object>> _factories = [];
 
-    public ITypeResolver Build() => new TypeResolver(services, registrations, instances, factories);
+    public ITypeResolver Build() => new TypeResolver(services, _registrations, _instances, _factories);
 
     [UnconditionalSuppressMessage("Trimming", "IL2067",
         Justification = "Types registered by Spectre.Console.Cli are preserved via TrimMode=partial.")]
     public void Register(Type service, Type implementation)
-        => registrations[service] = implementation;
+        => _registrations[service] = implementation;
 
     public void RegisterInstance(Type service, object implementation)
-        => instances[service] = implementation;
+        => _instances[service] = implementation;
 
     public void RegisterLazy(Type service, Func<object> factory)
-        => factories[service] = factory;
+        => _factories[service] = factory;
 }
 
 internal sealed class TypeResolver(

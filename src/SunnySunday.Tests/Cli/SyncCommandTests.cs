@@ -82,7 +82,7 @@ public sealed class SyncCommandTests : IDisposable
             return new SunnyHttpClient(httpClient);
         });
 
-        var registrar = new TypeRegistrar(services);
+        var registrar = new TypeRegistrar(services.BuildServiceProvider());
         var app = new CommandApp(registrar);
 
         app.Configure(config =>

@@ -34,7 +34,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TrimMode>partial</TrimMode>
-    <NoWarn>$(NoWarn);IL2104;CA1724</NoWarn>
+    <NoWarn>$(NoWarn);CA1724;</NoWarn>
   </PropertyGroup>
 
 </Project>

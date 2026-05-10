@@ -17,7 +17,7 @@ public sealed class ExcludeAddCommand(SunnyHttpClient client, ILogger<ExcludeAdd
 
     private static readonly string[] ValidTypes = ["highlight", "book", "author"];
 
-    public sealed class Settings : LogCommandSettings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<type>")]
         [Description("Entity type to exclude: highlight, book, or author.")]
