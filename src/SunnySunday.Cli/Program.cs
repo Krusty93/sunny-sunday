@@ -9,6 +9,7 @@ using SunnySunday.Cli.Commands.Config;
 using SunnySunday.Cli.Commands.Exclude;
 using SunnySunday.Cli.Commands.Weight;
 using SunnySunday.Cli.Infrastructure;
+using SunnySunday.Cli.Tui;
 
 const string DefaultServerUrl = "http://localhost:8080";
 
@@ -31,6 +32,12 @@ else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
 var services = new ServiceCollection();
 
 var levelSwitch = new LoggingLevelSwitch();
+var assembly = typeof(SyncCommand).Assembly;
+var applicationName = assembly.GetName().Name ?? "sunny sunday";
+var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+    ?? assembly.GetName().Version?.ToString()
+    ?? "unknown";
+var normalizedServerUrl = serverUri!.ToString().TrimEnd('/');
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.ControlledBy(levelSwitch)
@@ -45,18 +52,21 @@ services.AddHttpClient<SunnyHttpClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 }).AddSunnyResilience();
 
+if (TuiModeDetector.Detect(args, Console.IsInputRedirected) == StartupMode.Tui)
+{
+    using var provider = services.BuildServiceProvider();
+    var client = provider.GetRequiredService<SunnyHttpClient>();
+    var tuiApp = new TuiApp(client, normalizedServerUrl, version);
+    await tuiApp.RunAsync(CancellationToken.None);
+    return 0;
+}
+
 var registrar = new TypeRegistrar(services);
 
 var app = new CommandApp(registrar);
 
 app.Configure(config =>
 {
-    var assembly = typeof(SyncCommand).Assembly;
-    var applicationName = assembly.GetName().Name ?? "sunny sunday";
-    var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-        ?? assembly.GetName().Version?.ToString()
-        ?? "unknown";
-
     config.SetApplicationName(applicationName);
     config.SetApplicationVersion(version);
     config.SetInterceptor(new LogInterceptor(levelSwitch));

@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using SunnySunday.Core.Contracts;
 
 namespace SunnySunday.Cli.Infrastructure;
@@ -14,6 +14,8 @@ namespace SunnySunday.Cli.Infrastructure;
 [JsonSerializable(typeof(UpdateSettingsRequest))]
 [JsonSerializable(typeof(StatusResponse))]
 [JsonSerializable(typeof(ExclusionsResponse))]
+[JsonSerializable(typeof(HighlightsResponse))]
+[JsonSerializable(typeof(HighlightItemDto))]
 [JsonSerializable(typeof(SetWeightRequest))]
 [JsonSerializable(typeof(List<WeightedHighlightDto>))]
 internal partial class SunnyJsonContext : JsonSerializerContext;
