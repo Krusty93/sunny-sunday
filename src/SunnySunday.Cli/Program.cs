@@ -1,9 +1,10 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
-using Serilog.Events;
+using Serilog.Settings.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
@@ -31,11 +32,7 @@ else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
     return 1;
 }
 
-var builder = Host.CreateApplicationBuilder();
-
-var configLevel = builder.Configuration["Serilog:MinimumLevel:Default"];
-var initialLevel = Enum.TryParse<LogEventLevel>(configLevel, out var parsed) ? parsed : LogEventLevel.Warning;
-var levelSwitch = new LoggingLevelSwitch(initialLevel);
+LoggingLevelSwitch? levelSwitch = null;
 var assembly = typeof(SyncCommand).Assembly;
 var applicationName = assembly.GetName().Name ?? "sunny sunday";
 var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -43,29 +40,44 @@ var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>
     ?? "unknown";
 var normalizedServerUrl = serverUri!.ToString().TrimEnd('/');
 
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .MinimumLevel.ControlledBy(levelSwitch)
-    .CreateLogger();
-
-builder.Services.AddLogging(b => b.AddSerilog(dispose: true));
-
-builder.Services.AddHttpClient<SunnyHttpClient>(client =>
-{
-    client.BaseAddress = serverUri;
-    client.Timeout = TimeSpan.FromSeconds(30);
-}).AddSunnyResilience();
+var hostBuilder = Host.CreateDefaultBuilder(args)
+    .ConfigureLogging(logging => logging.ClearProviders())
+    .UseSerilog((context, _, loggerConfiguration) =>
+    {
+        loggerConfiguration.ReadFrom.Configuration(
+            context.Configuration,
+            new ConfigurationReaderOptions
+            {
+                OnLevelSwitchCreated = (switchName, loggingSwitch) =>
+                {
+                    if (switchName.Equals("$cli", StringComparison.Ordinal))
+                    {
+                        levelSwitch = loggingSwitch;
+                    }
+                }
+            });
+    })
+    .ConfigureServices((_, services) =>
+    {
+        services.AddHttpClient<SunnyHttpClient>(client =>
+        {
+            client.BaseAddress = serverUri;
+            client.Timeout = TimeSpan.FromSeconds(30);
+        }).AddSunnyResilience();
+    });
 
 if (TuiModeDetector.Detect(args, Console.IsInputRedirected) == StartupMode.Tui)
 {
-    using var provider = builder.Services.BuildServiceProvider();
-    var client = provider.GetRequiredService<SunnyHttpClient>();
+    using var tuiHost = hostBuilder.Build();
+    var client = tuiHost.Services.GetRequiredService<SunnyHttpClient>();
     var tuiApp = new TuiApp(client, normalizedServerUrl, version);
     await tuiApp.RunAsync(CancellationToken.None);
     return 0;
 }
 
-var registrar = new TypeRegistrar(builder.Services);
+using var cliHost = hostBuilder.Build();
+
+var registrar = new TypeRegistrar(cliHost.Services);
 
 var app = new CommandApp(registrar);
 
@@ -73,7 +85,8 @@ app.Configure(config =>
 {
     config.SetApplicationName(applicationName);
     config.SetApplicationVersion(version);
-    config.SetInterceptor(new LogInterceptor(levelSwitch));
+    config.SetInterceptor(new LogInterceptor(() => levelSwitch
+        ?? throw new InvalidOperationException("CLI log level switch '$cli' was not initialized from configuration.")));
 
     config.AddCommand<SyncCommand>("sync")
         .WithDescription("Parse and sync highlights from My Clippings.txt to the server.");
