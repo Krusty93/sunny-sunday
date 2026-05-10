@@ -9,11 +9,13 @@ public sealed class BookGroupingTests
     public void FromHighlights_GroupsMultipleHighlightsFromSameBook()
     {
         var result = BookViewModel.FromHighlights([
-            new HighlightItemDto { Id = 1, Text = "One", BookTitle = "Book A", AuthorName = "Author A" },
-            new HighlightItemDto { Id = 2, Text = "Two", BookTitle = "Book A", AuthorName = "Author A" }
+            new HighlightItemDto { Id = 1, BookId = 10, AuthorId = 100, Text = "One", BookTitle = "Book A", AuthorName = "Author A" },
+            new HighlightItemDto { Id = 2, BookId = 10, AuthorId = 100, Text = "Two", BookTitle = "Book A", AuthorName = "Author A" }
         ]);
 
         var book = Assert.Single(result);
+        Assert.Equal(10, book.BookId);
+        Assert.Equal(100, book.AuthorId);
         Assert.Equal("Book A", book.Title);
         Assert.Equal("Author A", book.Author);
         Assert.Equal(2, book.HighlightCount);
@@ -24,9 +26,9 @@ public sealed class BookGroupingTests
     public void FromHighlights_SeparatesBooksByTitleAndAuthor()
     {
         var result = BookViewModel.FromHighlights([
-            new HighlightItemDto { Id = 1, Text = "One", BookTitle = "Shared", AuthorName = "Author A" },
-            new HighlightItemDto { Id = 2, Text = "Two", BookTitle = "Shared", AuthorName = "Author B" },
-            new HighlightItemDto { Id = 3, Text = "Three", BookTitle = "Other", AuthorName = "Author C" }
+            new HighlightItemDto { Id = 1, BookId = 10, AuthorId = 100, Text = "One", BookTitle = "Shared", AuthorName = "Author A" },
+            new HighlightItemDto { Id = 2, BookId = 20, AuthorId = 200, Text = "Two", BookTitle = "Shared", AuthorName = "Author B" },
+            new HighlightItemDto { Id = 3, BookId = 30, AuthorId = 300, Text = "Three", BookTitle = "Other", AuthorName = "Author C" }
         ]);
 
         Assert.Equal(3, result.Count);

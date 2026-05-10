@@ -1,4 +1,4 @@
-namespace SunnySunday.Core.Contracts;
+﻿namespace SunnySunday.Core.Contracts;
 
 /// <summary>
 /// Paginated list of highlights.
@@ -35,6 +35,16 @@ public sealed record HighlightItemDto
     /// Highlight identifier.
     /// </summary>
     public int Id { get; set; }
+
+    /// <summary>
+    /// Book identifier.
+    /// </summary>
+    public int BookId { get; set; }
+
+    /// <summary>
+    /// Author identifier.
+    /// </summary>
+    public int AuthorId { get; set; }
 
     /// <summary>
     /// Full highlight text.

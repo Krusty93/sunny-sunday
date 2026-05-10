@@ -155,35 +155,43 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         IEnumerable<SunnySunday.Core.Contracts.WeightedHighlightDto> weights)
     {
         var excludedHighlightIds = exclusions.Highlights.Select(highlight => highlight.Id).ToHashSet();
-        var excludedBooks = exclusions.Books
-            .Select(book => CreateBookKey(book.Title, book.AuthorName))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var excludedAuthors = exclusions.Authors
-            .Select(author => author.Name)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var excludedBookIds = exclusions.Books
+            .Select(book => book.Id)
+            .ToHashSet();
+        var excludedAuthorIds = exclusions.Authors
+            .Select(author => author.Id)
+            .ToHashSet();
         var weightLookup = weights.ToDictionary(weight => weight.Id, weight => weight.Weight);
 
         return books
             .Select(book =>
             {
-                var isBookExcluded = excludedBooks.Contains(CreateBookKey(book.Title, book.Author));
-                var isAuthorExcluded = excludedAuthors.Contains(book.Author);
+                var isBookExcluded = excludedBookIds.Contains(book.BookId);
+                var isAuthorExcluded = excludedAuthorIds.Contains(book.AuthorId);
                 var highlights = book.Highlights
                     .Select(highlight => new HighlightViewModel(
                         highlight.Id,
+                        highlight.BookId,
+                        highlight.AuthorId,
                         highlight.Text,
                         highlight.BookTitle,
                         highlight.AuthorName,
-                        excludedHighlightIds.Contains(highlight.Id) || isBookExcluded || isAuthorExcluded,
+                        excludedHighlightIds.Contains(highlight.Id),
                         weightLookup.TryGetValue(highlight.Id, out var weight) ? weight : null))
                     .ToList();
 
-                return new BookViewModel(book.Title, book.Author, highlights.Count, highlights);
+                return new BookViewModel(
+                    book.BookId,
+                    book.AuthorId,
+                    book.Title,
+                    book.Author,
+                    highlights.Count,
+                    isBookExcluded,
+                    isAuthorExcluded,
+                    highlights);
             })
             .ToList();
     }
-
-    private static string CreateBookKey(string title, string author) => $"{title}|{author}";
 
     private IRenderable BuildBody()
     {
