@@ -34,8 +34,8 @@ public sealed class StatusChrome(string serverUrl, string version)
     // Width must match BannerLines[0].Length (48 chars)
     private static readonly string[] SundayBannerLines =
     [
-        "              s  u  n  d  a  y              ",
-        "────────────────────────────────────────────",
+        "             s   u   n   d   a   y              ",
+        "────────────────────────────────────────────────",
     ];
     private static readonly Color[] SundayBannerColors =
     [
@@ -220,7 +220,7 @@ public sealed class StatusChrome(string serverUrl, string version)
     private IEnumerable<Markup> BuildWideSundayLines()
     {
         var width = BannerLines.Max(line => line.Length);
-        var edgeColor = "#DFFBFF";
+        var edgeColor = "#A6EEFF";
 
         for (var index = 0; index < SundayBannerLines.Length; index++)
         {
