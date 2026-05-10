@@ -33,6 +33,7 @@
         "ms-vscode.vscode-websearchforcopilot",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
+        "ms-vscode.vscode-chat-customizations-evaluations",
         "EditorConfig.EditorConfig",
         "redhat.vscode-yaml",
         "github.copilot",
