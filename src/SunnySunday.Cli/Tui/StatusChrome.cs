@@ -15,12 +15,20 @@ public sealed class StatusChrome(string serverUrl, string version)
     private const string SundayText = "sunday";
     private static readonly string[] BannerLines =
     [
-        "█▀  █░█ █▄░█ █▄░█ █▄█",
-        "▄█  █▄█ █░▀█ █░▀█ ░█░",
+        "███████╗██╗   ██╗███╗   ██╗███╗   ██╗██╗   ██╗",
+        "██╔════╝██║   ██║████╗  ██║████╗  ██║╚██╗ ██╔╝",
+        "███████╗██║   ██║██╔██╗ ██║██╔██╗ ██║ ╚████╔╝ ",
+        "╚════██║██║   ██║██║╚██╗██║██║╚██╗██║  ╚██╔╝  ",
+        "███████║╚██████╔╝██║ ╚████║██║ ╚████║   ██║   ",
+        "╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝   ╚═╝   ",
     ];
     private static readonly Color[] BannerLineColors =
     [
         Color.Blue1,
+        Color.DodgerBlue1,
+        Color.DeepSkyBlue1,
+        Color.Aqua,
+        Color.White,
         Color.DeepSkyBlue1,
     ];
 
@@ -80,13 +88,13 @@ public sealed class StatusChrome(string serverUrl, string version)
             _sundayRevealCount = 0;
             var maxWidth = BannerLines.Max(line => line.Length);
 
-            for (var width = 1; width <= maxWidth; width++)
+            for (var width = 1; width <= maxWidth; width += 2)
             {
                 ct.ThrowIfCancellationRequested();
                 _bannerRevealWidth = Math.Min(width, maxWidth);
-                _bannerColor = palette[Math.Min((width - 1) / 5, palette.Length - 1)];
+                _bannerColor = palette[Math.Min((width - 1) / 4, palette.Length - 1)];
                 refresh();
-                await Task.Delay(70, ct).ConfigureAwait(false);
+                await Task.Delay(55, ct).ConfigureAwait(false);
             }
 
             _bannerRevealWidth = maxWidth;
@@ -143,9 +151,8 @@ public sealed class StatusChrome(string serverUrl, string version)
         var visibleChars = Math.Max(1, (int)Math.Ceiling((double)_bannerRevealWidth / maxWidth * BannerText.Length));
         var visibleText = BannerText[..Math.Min(visibleChars, BannerText.Length)];
         var colorName = ToMarkupColor(_bannerColor);
-        var visibleSunday = SundayText[..Math.Min(Math.Max(_sundayRevealCount, 0), SundayText.Length)];
-        var sundayMarkup = visibleSunday.Length > 0
-            ? $"\n[italic #7FDBFF]{Markup.Escape(visibleSunday)}[/]"
+        var sundayMarkup = _sundayRevealCount > 0
+            ? $"\n[italic #7FDBFF]{Markup.Escape(BuildCompactSundayLine())}[/]"
             : string.Empty;
 
         return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]{sundayMarkup}");
@@ -178,8 +185,7 @@ public sealed class StatusChrome(string serverUrl, string version)
 
         if (_sundayRevealCount > 0)
         {
-            var visibleSunday = SundayText[..Math.Min(_sundayRevealCount, SundayText.Length)];
-            renderables.Add(new Markup($"[italic #7FDBFF]{Markup.Escape(visibleSunday)}[/]"));
+            renderables.Add(new Markup($"[italic #7FDBFF]{Markup.Escape(BuildWideSundayLine())}[/]"));
         }
         else
         {
@@ -191,4 +197,42 @@ public sealed class StatusChrome(string serverUrl, string version)
 
     private static string ToMarkupColor(Color color)
         => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+
+    private string BuildCompactSundayLine()
+        => SundayText[..Math.Min(_sundayRevealCount, SundayText.Length)];
+
+    private string BuildWideSundayLine()
+    {
+        var width = BannerLines.Max(line => line.Length);
+        var buffer = Enumerable.Repeat(' ', width).ToArray();
+        var positions = SpreadPositions(SundayText.Length, width);
+        var visibleCount = Math.Min(_sundayRevealCount, SundayText.Length);
+
+        for (var index = 0; index < visibleCount; index++)
+        {
+            buffer[positions[index]] = SundayText[index];
+        }
+
+        return new string(buffer);
+    }
+
+    private static int[] SpreadPositions(int count, int width)
+    {
+        if (count <= 1)
+        {
+            return [Math.Max(0, width / 2)];
+        }
+
+        var padding = 2;
+        var usableWidth = Math.Max(count, width - (padding * 2));
+        var positions = new int[count];
+
+        for (var index = 0; index < count; index++)
+        {
+            var position = padding + (int)Math.Round(index * (usableWidth - 1d) / (count - 1d));
+            positions[index] = Math.Min(width - 1, position);
+        }
+
+        return positions;
+    }
 }
