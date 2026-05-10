@@ -11,28 +11,22 @@ namespace SunnySunday.Cli.Tui;
 /// </summary>
 public sealed class StatusChrome(string serverUrl, string version)
 {
-    private const string BannerText = "SunnySunday";
+    private const string BannerText = "SUNNY";
+    private const string SundayText = "sunday";
     private static readonly string[] BannerLines =
     [
-        "███████╗██╗   ██╗███╗   ██╗███╗   ██╗██╗   ██╗",
-        "██╔════╝██║   ██║████╗  ██║████╗  ██║╚██╗ ██╔╝",
-        "███████╗██║   ██║██╔██╗ ██║██╔██╗ ██║ ╚████╔╝ ",
-        "╚════██║██║   ██║██║╚██╗██║██║╚██╗██║  ╚██╔╝  ",
-        "███████║╚██████╔╝██║ ╚████║██║ ╚████║   ██║   ",
-        "╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝   ╚═╝   ",
+        "█▀  █░█ █▄░█ █▄░█ █▄█",
+        "▄█  █▄█ █░▀█ █░▀█ ░█░",
     ];
     private static readonly Color[] BannerLineColors =
     [
         Color.Blue1,
-        Color.DodgerBlue1,
-        Color.DeepSkyBlue1,
-        Color.Aqua,
-        Color.White,
         Color.DeepSkyBlue1,
     ];
 
     private Color _bannerColor = Color.DeepSkyBlue1;
     private int _bannerRevealWidth = BannerLines.Max(line => line.Length);
+    private int _sundayRevealCount = SundayText.Length;
 
     public bool IsConnected { get; private set; }
     public bool KindleEmailConfigured { get; private set; }
@@ -77,33 +71,38 @@ public sealed class StatusChrome(string serverUrl, string version)
             Color.DodgerBlue1,
             Color.DeepSkyBlue1,
             Color.Aqua,
-            Color.White,
             Color.DeepSkyBlue1,
         };
 
         try
         {
             _bannerRevealWidth = 0;
+            _sundayRevealCount = 0;
             var maxWidth = BannerLines.Max(line => line.Length);
 
-            for (var width = 1; width <= maxWidth; width += 2)
+            for (var width = 1; width <= maxWidth; width++)
             {
                 ct.ThrowIfCancellationRequested();
                 _bannerRevealWidth = Math.Min(width, maxWidth);
-                _bannerColor = palette[Math.Min((width - 1) / 4, palette.Length - 1)];
+                _bannerColor = palette[Math.Min((width - 1) / 5, palette.Length - 1)];
                 refresh();
-                await Task.Delay(55, ct).ConfigureAwait(false);
-            }
-
-            foreach (var color in new[] { Color.Aqua, Color.White, Color.DeepSkyBlue1, Color.Aqua, Color.DeepSkyBlue1 })
-            {
-                ct.ThrowIfCancellationRequested();
-                _bannerColor = color;
-                refresh();
-                await Task.Delay(90, ct).ConfigureAwait(false);
+                await Task.Delay(70, ct).ConfigureAwait(false);
             }
 
             _bannerRevealWidth = maxWidth;
+            _bannerColor = Color.DeepSkyBlue1;
+            refresh();
+
+            for (var index = 1; index <= SundayText.Length; index++)
+            {
+                ct.ThrowIfCancellationRequested();
+                _sundayRevealCount = index;
+                refresh();
+                await Task.Delay(45, ct).ConfigureAwait(false);
+            }
+
+            _bannerRevealWidth = maxWidth;
+            _sundayRevealCount = SundayText.Length;
             _bannerColor = Color.DeepSkyBlue1;
             refresh();
         }
@@ -144,12 +143,17 @@ public sealed class StatusChrome(string serverUrl, string version)
         var visibleChars = Math.Max(1, (int)Math.Ceiling((double)_bannerRevealWidth / maxWidth * BannerText.Length));
         var visibleText = BannerText[..Math.Min(visibleChars, BannerText.Length)];
         var colorName = ToMarkupColor(_bannerColor);
-        return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]");
+        var visibleSunday = SundayText[..Math.Min(Math.Max(_sundayRevealCount, 0), SundayText.Length)];
+        var sundayMarkup = visibleSunday.Length > 0
+            ? $"\n[italic #7FDBFF]{Markup.Escape(visibleSunday)}[/]"
+            : string.Empty;
+
+        return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]{sundayMarkup}");
     }
 
     private Rows BuildWideBanner()
     {
-        var renderables = new List<IRenderable>(BannerLines.Length);
+        var renderables = new List<IRenderable>(BannerLines.Length + 1);
         var edgeColor = ToMarkupColor(_bannerColor);
 
         for (var index = 0; index < BannerLines.Length; index++)
@@ -170,6 +174,16 @@ public sealed class StatusChrome(string serverUrl, string version)
 
             renderables.Add(new Markup(
                 $"[{baseColor}]{Markup.Escape(stableSegment)}[/][bold {edgeColor}]{Markup.Escape(leadingEdge)}[/]"));
+        }
+
+        if (_sundayRevealCount > 0)
+        {
+            var visibleSunday = SundayText[..Math.Min(_sundayRevealCount, SundayText.Length)];
+            renderables.Add(new Markup($"[italic #7FDBFF]{Markup.Escape(visibleSunday)}[/]"));
+        }
+        else
+        {
+            renderables.Add(new Markup(string.Empty));
         }
 
         return new Rows(renderables);
