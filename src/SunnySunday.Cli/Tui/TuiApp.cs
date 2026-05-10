@@ -11,6 +11,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        await StatusChrome.PlayStartupAnimationAsync(cancellationToken).ConfigureAwait(false);
         await _chrome.RefreshAsync(_client, cancellationToken).ConfigureAwait(false);
 
         if (_screens.Count == 0)

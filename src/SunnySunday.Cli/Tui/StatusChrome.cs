@@ -1,4 +1,4 @@
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 using SunnySunday.Cli.Infrastructure;
 
@@ -40,11 +40,51 @@ public sealed class StatusChrome(string serverUrl, string version)
         }
     }
 
+    /// <summary>
+    /// Plays a brief colour-fade animation on the Figlet banner at startup.
+    /// Cycles through a blue-to-cyan gradient inspired by GitHub Copilot CLI.
+    /// No-ops when the terminal is too narrow for Figlet or cancellation is requested.
+    /// </summary>
+    public static async Task PlayStartupAnimationAsync(CancellationToken ct = default)
+    {
+        if (Console.WindowWidth < 60)
+            return;
+
+        Color[] palette =
+        [
+            Color.NavyBlue,
+            Color.Blue,
+            Color.DodgerBlue1,
+            Color.DeepSkyBlue1,
+            Color.Aqua,
+            Color.DeepSkyBlue1,
+        ];
+
+        try
+        {
+            await AnsiConsole.Live(BuildFiglet(palette[0]))
+                .StartAsync(async ctx =>
+                {
+                    foreach (var color in palette)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        ctx.UpdateTarget(BuildFiglet(color));
+                        ctx.Refresh();
+                        await Task.Delay(70, ct).ConfigureAwait(false);
+                    }
+                }).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // user quit before animation finished — safe to ignore
+        }
+    }
+
     public IRenderable Render()
     {
         IRenderable banner = Console.WindowWidth >= 60
-            ? new FigletText("SunnySunday")
-            : new Markup("[bold]SunnySunday[/]");
+            ? BuildFiglet(Color.DeepSkyBlue1)
+            : new Markup("[bold][deepskyblue1]SunnySunday[/][/]");
 
         var connectionStatus = IsConnected
             ? new Markup("[green]● Connected[/]")
@@ -64,4 +104,7 @@ public sealed class StatusChrome(string serverUrl, string version)
 
         return new Rows(rows);
     }
+
+    private static FigletText BuildFiglet(Color color)
+        => new FigletText("SunnySunday").Color(color);
 }
