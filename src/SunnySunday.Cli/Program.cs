@@ -1,10 +1,8 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Core;
-using Serilog.Settings.Configuration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
@@ -14,70 +12,51 @@ using SunnySunday.Cli.Commands.Weight;
 using SunnySunday.Cli.Infrastructure;
 using SunnySunday.Cli.Tui;
 
-const string DefaultServerUrl = "http://localhost:8080";
+var builder = Host.CreateApplicationBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
-var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
-
-var validationResult = ServerUrlValidator.Validate(serverUrl, out var serverUri);
-
-if (validationResult == ServerUrlValidator.ValidationResult.Missing)
+builder.Services.AddLogging(loggingBuilder =>
 {
-    serverUrl = DefaultServerUrl;
-    serverUri = new Uri(DefaultServerUrl);
-    AnsiConsole.MarkupLine($"[grey]SUNNY_SERVER not set — using default: {DefaultServerUrl}[/]");
-}
-else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
+    loggingBuilder.AddSerilog(Log.Logger, dispose: true);
+});
+
+string? serverUrl = builder.Configuration["sunny_server"];
+var validationResult = ServerUrlValidator.Validate(serverUrl, out Uri? serverUri);
+if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
 {
     AnsiConsole.MarkupLine($"[red]Error:[/] SUNNY_SERVER value is not a valid HTTP URL: [yellow]{serverUrl}[/]");
     return 1;
 }
 
-LoggingLevelSwitch? levelSwitch = null;
-var assembly = typeof(SyncCommand).Assembly;
-var applicationName = assembly.GetName().Name ?? "sunny sunday";
-var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-    ?? assembly.GetName().Version?.ToString()
-    ?? "unknown";
 var normalizedServerUrl = serverUri!.ToString().TrimEnd('/');
 
-var hostBuilder = Host.CreateDefaultBuilder(args)
-    .ConfigureLogging(logging => logging.ClearProviders())
-    .UseSerilog((context, _, loggerConfiguration) =>
-    {
-        loggerConfiguration.ReadFrom.Configuration(
-            context.Configuration,
-            new ConfigurationReaderOptions
-            {
-                OnLevelSwitchCreated = (switchName, loggingSwitch) =>
-                {
-                    if (switchName.Equals("$cli", StringComparison.Ordinal))
-                    {
-                        levelSwitch = loggingSwitch;
-                    }
-                }
-            });
-    })
-    .ConfigureServices((_, services) =>
-    {
-        services.AddHttpClient<SunnyHttpClient>(client =>
-        {
-            client.BaseAddress = serverUri;
-            client.Timeout = TimeSpan.FromSeconds(30);
-        }).AddSunnyResilience();
-    });
+Assembly assembly = typeof(SyncCommand).Assembly;
+string applicationName = assembly.GetName().Name ?? "sunny sunday";
+string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+    ?? assembly.GetName().Version?.ToString()
+    ?? "unknown";
+
+builder.Services.AddHttpClient<SunnyHttpClient>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var serverUrl = config["sunny_server"]!;
+    client.BaseAddress = new Uri(serverUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+}).AddSunnyResilience();
+
+using IHost host = builder.Build();
 
 if (TuiModeDetector.Detect(args, Console.IsInputRedirected) == StartupMode.Tui)
 {
-    using var tuiHost = hostBuilder.Build();
-    var client = tuiHost.Services.GetRequiredService<SunnyHttpClient>();
+    var client = host.Services.GetRequiredService<SunnyHttpClient>();
     var tuiApp = new TuiApp(client, normalizedServerUrl, version);
     await tuiApp.RunAsync(CancellationToken.None);
     return 0;
 }
 
-using var cliHost = hostBuilder.Build();
-
-var registrar = new TypeRegistrar(cliHost.Services);
+var registrar = new TypeRegistrar(host.Services);
 
 var app = new CommandApp(registrar);
 
@@ -85,8 +64,6 @@ app.Configure(config =>
 {
     config.SetApplicationName(applicationName);
     config.SetApplicationVersion(version);
-    config.SetInterceptor(new LogInterceptor(() => levelSwitch
-        ?? throw new InvalidOperationException("CLI log level switch '$cli' was not initialized from configuration.")));
 
     config.AddCommand<SyncCommand>("sync")
         .WithDescription("Parse and sync highlights from My Clippings.txt to the server.");

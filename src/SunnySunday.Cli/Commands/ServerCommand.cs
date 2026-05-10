@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Infrastructure;
@@ -16,7 +16,7 @@ public abstract class ServerCommand<TSettings> : AsyncCommand<TSettings>
 
     protected int HandleServerError(HttpRequestException ex)
     {
-        var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER") ?? "unknown";
+        var serverUrl = Environment.GetEnvironmentVariable("SUNNY_SERVER");
         Logger.LogError(ex, "Failed to reach server at {ServerUrl}", serverUrl);
         AnsiConsole.MarkupLine($"[red]Error:[/] Cannot reach server at [yellow]{serverUrl}[/]");
         AnsiConsole.MarkupLine($"[grey]{ex.Message}[/]");
