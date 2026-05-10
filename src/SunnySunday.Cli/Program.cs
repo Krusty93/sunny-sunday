@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
@@ -30,19 +31,11 @@ else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
     return 1;
 }
 
-var services = new ServiceCollection();
+var builder = Host.CreateApplicationBuilder();
 
-var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
-    ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-    ?? "Production";
-
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false)
-    .Build();
-
-var levelSwitch = new LoggingLevelSwitch();
+var configLevel = builder.Configuration["Serilog:MinimumLevel:Default"];
+var initialLevel = Enum.TryParse<LogEventLevel>(configLevel, out var parsed) ? parsed : LogEventLevel.Warning;
+var levelSwitch = new LoggingLevelSwitch(initialLevel);
 var assembly = typeof(SyncCommand).Assembly;
 var applicationName = assembly.GetName().Name ?? "sunny sunday";
 var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -51,14 +44,13 @@ var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>
 var normalizedServerUrl = serverUri!.ToString().TrimEnd('/');
 
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(configuration)
     .MinimumLevel.ControlledBy(levelSwitch)
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
-services.AddLogging(builder => builder.AddSerilog(dispose: true));
+builder.Services.AddLogging(b => b.AddSerilog(dispose: true));
 
-services.AddHttpClient<SunnyHttpClient>(client =>
+builder.Services.AddHttpClient<SunnyHttpClient>(client =>
 {
     client.BaseAddress = serverUri;
     client.Timeout = TimeSpan.FromSeconds(30);
@@ -66,14 +58,14 @@ services.AddHttpClient<SunnyHttpClient>(client =>
 
 if (TuiModeDetector.Detect(args, Console.IsInputRedirected) == StartupMode.Tui)
 {
-    using var provider = services.BuildServiceProvider();
+    using var provider = builder.Services.BuildServiceProvider();
     var client = provider.GetRequiredService<SunnyHttpClient>();
     var tuiApp = new TuiApp(client, normalizedServerUrl, version);
     await tuiApp.RunAsync(CancellationToken.None);
     return 0;
 }
 
-var registrar = new TypeRegistrar(services);
+var registrar = new TypeRegistrar(builder.Services);
 
 var app = new CommandApp(registrar);
 
