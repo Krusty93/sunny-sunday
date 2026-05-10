@@ -31,15 +31,16 @@ public sealed class StatusChrome(string serverUrl, string version)
         Color.White,
         Color.DeepSkyBlue1,
     ];
+    // Width must match BannerLines[0].Length (48 chars)
     private static readonly string[] SundayBannerLines =
     [
-        " ▄▀▄   █ █   █▄ █   █▀▄   ▄▀█   █ █ ",
-        " ▀▄▀   ▀▄▀   █ ▀█   █▄▀   █▀█    █  ",
+        "              s  u  n  d  a  y              ",
+        "────────────────────────────────────────────",
     ];
     private static readonly Color[] SundayBannerColors =
     [
         new(166, 238, 255),
-        new(127, 219, 255),
+        new(100, 200, 240),
     ];
 
     private Color _bannerColor = Color.DeepSkyBlue1;
