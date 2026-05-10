@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
-using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
@@ -32,7 +32,17 @@ else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
 
 var services = new ServiceCollection();
 
-var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Warning);
+var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? "Production";
+
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false)
+    .Build();
+
+var levelSwitch = new LoggingLevelSwitch();
 var assembly = typeof(SyncCommand).Assembly;
 var applicationName = assembly.GetName().Name ?? "sunny sunday";
 var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -41,6 +51,7 @@ var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>
 var normalizedServerUrl = serverUri!.ToString().TrimEnd('/');
 
 Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
     .MinimumLevel.ControlledBy(levelSwitch)
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
