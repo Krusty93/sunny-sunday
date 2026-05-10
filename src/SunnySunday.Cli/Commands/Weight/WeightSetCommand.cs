@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -16,7 +16,7 @@ public sealed class WeightSetCommand(SunnyHttpClient client, ILogger<WeightSetCo
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<id>")]
         [Description("ID of the highlight to update.")]

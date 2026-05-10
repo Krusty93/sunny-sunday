@@ -17,7 +17,7 @@ public sealed partial class ConfigKindleEmailCommand(SunnyHttpClient client, ILo
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<address>")]
         [Description("Send-to-Kindle email address (e.g. yourname_XXXX@kindle.com).")]

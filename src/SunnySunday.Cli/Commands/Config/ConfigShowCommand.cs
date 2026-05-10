@@ -15,7 +15,7 @@ public sealed class ConfigShowCommand(SunnyHttpClient client, ILogger<ConfigShow
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings;
+    public sealed class Settings : CommandSettings;
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {

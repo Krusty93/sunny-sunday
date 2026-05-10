@@ -14,7 +14,7 @@ public sealed class StatusCommand(SunnyHttpClient client, ILogger<StatusCommand>
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings;
+    public sealed class Settings : CommandSettings;
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {

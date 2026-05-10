@@ -15,7 +15,7 @@ public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> log
 {
     protected override ILogger Logger => logger;
 
-    public sealed class Settings : LogCommandSettings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "[path]")]
         [Description("Path to My Clippings.txt. Auto-detected if omitted.")]

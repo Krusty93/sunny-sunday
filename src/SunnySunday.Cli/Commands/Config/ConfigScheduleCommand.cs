@@ -20,7 +20,7 @@ public sealed partial class ConfigScheduleCommand(SunnyHttpClient client, ILogge
 
     private static readonly string[] ValidCadences = ["daily", "weekly"];
 
-    public sealed class Settings : LogCommandSettings
+    public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<cadence>")]
         [Description("Recap cadence: daily, weekly, or 'show' to display current schedule.")]

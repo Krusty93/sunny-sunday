@@ -6,12 +6,11 @@ namespace SunnySunday.Cli.Tui;
 public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client, string serverUrl, string version)
 {
     private readonly SunnySunday.Cli.Infrastructure.SunnyHttpClient _client = client;
+    private readonly StatusChrome _chrome = new(serverUrl, version);
     private readonly Stack<IScreen> _screens = new();
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        _ = _client;
-
         if (_screens.Count == 0)
         {
             var initialScreen = new PlaceholderScreen();
@@ -33,18 +32,38 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
             await AnsiConsole.Live(layout).StartAsync(async context =>
             {
+                layout["Chrome"].Update(_chrome.Render());
+                layout["Content"].Update(new Markup(string.Empty));
+                layout["KeyHints"].Update(new Markup(string.Empty));
+                context.Refresh();
+
+                await _chrome.PlayStartupAnimationAsync(() =>
+                {
+                    layout["Chrome"].Update(_chrome.Render());
+                    context.Refresh();
+                }, cancellationToken).ConfigureAwait(false);
+
+                await _chrome.RefreshAsync(_client, cancellationToken).ConfigureAwait(false);
+
                 while (!cancellationToken.IsCancellationRequested && _screens.Count > 0)
                 {
                     var currentScreen = _screens.Peek();
 
-                    layout["Chrome"].Update(BuildChrome());
+                    layout["Chrome"].Update(_chrome.Render());
                     layout["Content"].Update(BuildContent(currentScreen));
                     layout["KeyHints"].Update(new Markup($"[grey]{Markup.Escape(currentScreen.KeyHints)}[/]"));
                     context.Refresh();
 
                     var key = Console.ReadKey(intercept: true);
-                    var result = await currentScreen.HandleKeyAsync(key, cancellationToken).ConfigureAwait(false);
-                    await HandleScreenResultAsync(result, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        var result = await currentScreen.HandleKeyAsync(key, cancellationToken).ConfigureAwait(false);
+                        await HandleScreenResultAsync(result, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (HttpRequestException)
+                    {
+                        await _chrome.RefreshAsync(_client, cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }).ConfigureAwait(false);
         }
@@ -53,12 +72,6 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
             Console.TreatControlCAsInput = previousTreatControlCAsInput;
         }
     }
-
-    private IRenderable BuildChrome()
-        => new Rows(
-            new Markup("[bold]SunnySunday[/]"),
-            new Markup($"[grey]v{Markup.Escape(version)}[/]"),
-            new Markup($"[grey]{Markup.Escape(serverUrl)}[/]"));
 
     private static IRenderable BuildContent(IScreen currentScreen)
     {

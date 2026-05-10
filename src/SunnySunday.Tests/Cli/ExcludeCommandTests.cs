@@ -123,7 +123,7 @@ public sealed class ExcludeCommandTests : IDisposable
             return new SunnyHttpClient(httpClient);
         });
 
-        var registrar = new TypeRegistrar(services);
+        var registrar = new TypeRegistrar(services.BuildServiceProvider());
         var app = new CommandApp(registrar);
 
         app.Configure(config =>
