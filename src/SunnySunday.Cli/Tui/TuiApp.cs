@@ -13,7 +13,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
     {
         if (_screens.Count == 0)
         {
-            var initialScreen = new PlaceholderScreen();
+            var initialScreen = new BookListScreen(_client);
             await initialScreen.InitializeAsync(cancellationToken).ConfigureAwait(false);
             _screens.Push(initialScreen);
         }
@@ -110,27 +110,6 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
                 return;
             default:
                 throw new ArgumentOutOfRangeException(nameof(result.Action), result.Action, null);
-        }
-    }
-
-    private sealed class PlaceholderScreen : IScreen
-    {
-        public string KeyHints => "[Q] Quit";
-
-        public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-
-        public IRenderable Render()
-            => new Panel(new Markup("[grey]TUI bootstrap ready. Phase 1 placeholder screen.[/]"))
-            {
-                Header = new PanelHeader("Phase 1")
-            };
-
-        public Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken cancellationToken)
-        {
-            var isQuit = key.Key == ConsoleKey.Q
-                || (key.Key == ConsoleKey.C && key.Modifiers.HasFlag(ConsoleModifiers.Control));
-
-            return Task.FromResult(isQuit ? ScreenResult.Quit() : ScreenResult.Stay());
         }
     }
 }
