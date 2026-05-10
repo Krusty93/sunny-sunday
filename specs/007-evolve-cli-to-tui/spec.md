@@ -83,7 +83,24 @@ When the user selects a book from the book list and presses Enter, a detail view
 
 ---
 
-### User Story 5 — Settings Page (Priority: P2)
+### User Story 5 — Test Email Verification Endpoint (Priority: P1)
+
+The server exposes a dedicated endpoint to send a simple plain-text test email to the configured Kindle address, so the TUI can verify SMTP configuration without generating or delivering a recap.
+
+**Why this priority**: The settings screen depends on this endpoint for a safe SMTP verification flow. Without it, the TUI would have to reuse the development-only recap trigger or omit test-email verification entirely.
+
+**Independent Test**: Call `POST /settings/test-email` against a configured server and verify a plain-text email is sent without recap attachment or recap generation side effects.
+
+**Acceptance Scenarios**:
+
+1. **Given** SMTP settings are valid and Kindle email is configured, **When** the client calls `POST /settings/test-email`, **Then** the server sends a simple plain-text test email and returns a success response.
+2. **Given** Kindle email is not configured, **When** the client calls `POST /settings/test-email`, **Then** the server returns an actionable validation error and no email is sent.
+3. **Given** SMTP delivery fails, **When** the client calls `POST /settings/test-email`, **Then** the server returns an actionable error response describing the failure.
+4. **Given** the client calls `POST /settings/test-email`, **When** the server sends the message, **Then** the message does not include recap content or recap attachments.
+
+---
+
+### User Story 6 — Settings Page (Priority: P2)
 
 The user can navigate to a dedicated settings page from the main screen. The settings page displays all configurable fields: Kindle email, recap schedule (cadence + time), highlight count per recap. The user can edit each setting and send a test email.
 
@@ -105,7 +122,7 @@ The user can navigate to a dedicated settings page from the main screen. The set
 
 ---
 
-### User Story 6 — Client-Side Search (Priority: P3)
+### User Story 7 — Client-Side Search (Priority: P3)
 
 A search bar allows the user to filter the book list table by typing a query. The search matches against highlight text, author name, and book title — all filtering happens client-side on already-fetched data.
 
@@ -123,7 +140,7 @@ A search bar allows the user to filter the book list table by typing a query. Th
 
 ---
 
-### User Story 7 — TUI Rendering Approach with Spectre.Console (Priority: P1)
+### User Story 8 — TUI Rendering Approach with Spectre.Console (Priority: P1)
 
 The TUI is built using Spectre.Console's Live rendering, Layout, Panel, and Table APIs — not a full TUI framework. The application manages a custom render loop that listens for keyboard input and re-renders the screen layout on each interaction. This approach works within Spectre.Console's capabilities without introducing a new dependency.
 
@@ -166,8 +183,9 @@ The TUI is built using Spectre.Console's Live rendering, Layout, Panel, and Tabl
 - **FR-007-09**: TUI MUST provide actions in the highlight detail view: modify weight, exclude/include by highlight, exclude/include by book, exclude/include by author, delete highlight.
 - **FR-007-10**: TUI MUST provide a settings page accessible from the main screen via the `S` key.
 - **FR-007-11**: Settings page MUST allow editing: Kindle email, recap schedule (cadence + time), highlight count per recap.
-- **FR-007-12**: Settings page MUST support sending a simple plain-text test email via `POST /settings/test-email` to verify SMTP configuration. This API is not yet implemented on the server and must be added.
-- **FR-007-12a**: Settings page MUST support triggering a recap via `POST /dev/recap/trigger`, but ONLY when the .NET environment is `Development`. This option MUST be hidden in non-Development environments.
+- **FR-007-12**: Server MUST expose `POST /settings/test-email` to send a simple plain-text test email for SMTP verification without generating a recap.
+- **FR-007-12a**: Settings page MUST support sending a simple plain-text test email via `POST /settings/test-email` to verify SMTP configuration.
+- **FR-007-12b**: Settings page MUST support triggering a recap via `POST /dev/recap/trigger`, but ONLY when the .NET environment is `Development`. This option MUST be hidden in non-Development environments.
 - **FR-007-13**: TUI MUST provide a client-side search bar (activated by `/`) that filters the book list by title, author, and highlight text (case-insensitive).
 - **FR-007-14**: TUI MUST be built exclusively with Spectre.Console — no new UI framework dependencies.
 - **FR-007-15**: TUI MUST use Spectre.Console's Layout and Live rendering APIs for screen composition and flicker-free updates.
@@ -197,6 +215,7 @@ The TUI is built using Spectre.Console's Live rendering, Layout, Panel, and Tabl
 - **SC-007-05**: Users with 100+ books can scroll and search the book list without perceptible rendering lag.
 - **SC-007-06**: The TUI renders correctly in terminals with at least 80 columns and 24 rows.
 - **SC-007-07**: Search filters the book list as the user types, showing results within 200ms of each keystroke.
+- **SC-007-08**: Users can verify SMTP delivery with a plain-text test email without sending a real recap.
 
 ## Assumptions
 

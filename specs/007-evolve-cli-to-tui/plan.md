@@ -5,7 +5,7 @@
 
 ## Summary
 
-Evolve the existing `sunny` CLI into a dual-mode application: when invoked without arguments, it launches a persistent interactive TUI built exclusively with Spectre.Console's `Layout`, `LiveDisplay`, `Panel`, `Table`, and `FigletText` APIs. When invoked with arguments, the existing `CommandApp` processes commands identically to today. The TUI provides a branded splash screen, always-visible status chrome, a navigable book list, highlight detail management, settings editing, and client-side search — all communicating with the server via the existing REST API surface.
+Evolve the existing `sunny` CLI into a dual-mode application: when invoked without arguments, it launches a persistent interactive TUI built exclusively with Spectre.Console's `Layout`, `LiveDisplay`, `Panel`, `Table`, and `FigletText` APIs. When invoked with arguments, the existing `CommandApp` processes commands identically to today. The TUI provides a branded splash screen, always-visible status chrome, a navigable book list, highlight detail management, settings editing, and client-side search. One targeted server-side addition supports the TUI: a dedicated `POST /settings/test-email` endpoint for plain-text SMTP verification.
 
 ## Technical Context
 
@@ -14,10 +14,10 @@ Evolve the existing `sunny` CLI into a dual-mode application: when invoked witho
 **Storage**: N/A — TUI is stateless; all data fetched from server REST API and cached in memory for the session.
 **Testing**: xUnit (existing `SunnySunday.Tests` project) — test data/logic layer, not rendering.
 **Target Platform**: Cross-platform CLI (Windows, macOS, Linux) — interactive terminals with ≥80×24.
-**Project Type**: CLI application (TUI mode added to existing `SunnySunday.Cli` project)
+**Project Type**: CLI application with one supporting server endpoint addition
 **Performance Goals**: TUI startup < 3s (SC-007-01), search filtering < 200ms (SC-007-07), book list scrolling smooth with 100+ books (SC-007-05).
 **Constraints**: No new NuGet UI dependencies (FR-007-14). No changes to existing API endpoints (FR-007-18). One new server endpoint required: `POST /settings/test-email` (documented on #188). Single-user MVP. Custom render loop — Spectre.Console is NOT a TUI framework.
-**Scale/Scope**: Single user, 3 screens, ~12 new source files in `Tui/` folder, ~6 new test files.
+**Scale/Scope**: Single user, 3 screens, ~12 new source files in `Tui/` folder, 1 server endpoint addition, ~7 new test files.
 
 ## Constitution Check
 
@@ -84,6 +84,18 @@ src/SunnySunday.Tests/
     ├── BookListScreenTests.cs          ← NEW: key handling and navigation state
     ├── HighlightDetailScreenTests.cs   ← NEW: action dispatch + navigation
     └── SettingsScreenTests.cs          ← NEW: field editing logic
+
+src/SunnySunday.Server/
+├── Endpoints/
+│   └── SettingsEndpoints.cs            ← MODIFIED: add POST /settings/test-email
+├── Services/
+│   ├── IMailDeliveryService.cs         ← MODIFIED: add plain-text test email contract
+│   ├── MailDeliveryService.cs          ← MODIFIED: implement plain-text test email delivery
+│   └── DevMailDeliveryService.cs       ← MODIFIED: implement plain-text test email delivery for dev SMTP relay
+
+src/SunnySunday.Tests/
+└── Api/
+  └── SettingsTestEmailEndpointTests.cs ← NEW: POST /settings/test-email behavior
 ```
 
 **Structure Decision**: All TUI code lives in a new `Tui/` folder within the existing `SunnySunday.Cli` project, cleanly separated from `Commands/` (CLI) and `Infrastructure/` (shared). No new .NET projects are created. Test files live in `src/SunnySunday.Tests/Tui/`.
@@ -175,11 +187,23 @@ No constitution violations. No complexity justification needed.
 
 ---
 
-## Phase 5: Settings Screen
+## Phase 5: Test Email API Endpoint
 
-**Purpose**: Implement the settings page for editing Kindle email, recap schedule, highlight count, and sending a test email (US-5).
+**Purpose**: Add the missing server endpoint used by the TUI settings page to verify SMTP delivery without triggering a recap.
 
-- [ ] T020 Create `src/SunnySunday.Cli/Tui/SettingsScreen.cs`: implements `IScreen`. Constructor takes `SunnyHttpClient client`. State: `SettingsResponse settings`, `int selectedField`, `bool isEditing`, `string editBuffer`.
+- [ ] T021 Update `src/SunnySunday.Server/Services/IMailDeliveryService.cs`: add a plain-text test email contract and implement plain-text test email delivery in `MailDeliveryService.cs` and `DevMailDeliveryService.cs` using the configured SMTP transport, without recap attachment or recap generation.
+- [ ] T022 Update `src/SunnySunday.Server/Endpoints/SettingsEndpoints.cs`: add `POST /settings/test-email` that validates Kindle email presence, sends a plain-text verification email, returns a success payload on 200, validation error when Kindle email is missing, and actionable failure on SMTP error.
+- [ ] T023 Write `src/SunnySunday.Tests/Api/SettingsTestEmailEndpointTests.cs`: cover success, missing Kindle email, and SMTP failure cases for `POST /settings/test-email`.
+
+**Checkpoint**: `POST /settings/test-email` is available and covered by API tests. The endpoint sends a plain-text verification email without generating a recap.
+
+---
+
+## Phase 6: Settings Screen
+
+**Purpose**: Implement the settings page for editing Kindle email, recap schedule, highlight count, and sending a test email (US-6).
+
+- [ ] T024 Create `src/SunnySunday.Cli/Tui/SettingsScreen.cs`: implements `IScreen`. Constructor takes `SunnyHttpClient client`, `bool isDevelopment`. State: `SettingsResponse settings`, `int selectedField`, `bool isEditing`, `string editBuffer`.
   1. `InitializeAsync`: call `GetSettingsAsync()` to load current settings.
   2. `Render()`: build a `Table` or panel layout showing fields:
      - Kindle Email: `{value}` (or "[not set]")
@@ -198,22 +222,22 @@ No constitution violations. No complexity justification needed.
   6. Send test email: call `PostTestEmailAsync` (`POST /settings/test-email`), display success/error inline. This sends a simple plain-text verification email, not a recap.
   6a. Trigger recap (dev only): if the .NET environment is `Development`, show an additional option to call `PostTestRecapAsync` (`POST /dev/recap/trigger`). This option is hidden in non-Development environments.
   7. `KeyHints`: `"[↑↓] Navigate · [Enter] Edit · [T] Test email · [R] Refresh · [Esc] Back"`.
-- [ ] T021 Write `src/SunnySunday.Tests/Tui/SettingsScreenTests.cs`: test key handling: navigation, `Esc` returns `Pop`, edit mode activation. Test validation logic: invalid email rejected, invalid count rejected, valid values accepted.
+- [ ] T025 Write `src/SunnySunday.Tests/Tui/SettingsScreenTests.cs`: test key handling: navigation, `Esc` returns `Pop`, edit mode activation. Test validation logic: invalid email rejected, invalid count rejected, valid values accepted.
 
 **Checkpoint**: Pressing `S` from book list opens settings. Settings are displayed and editable. Test email can be triggered. `Esc` returns to book list. Tests pass.
 
 ---
 
-## Phase 6: Polish, Edge Cases & Documentation
+## Phase 7: Polish, Edge Cases & Documentation
 
 **Purpose**: Handle edge cases (terminal size, disconnected server, non-interactive terminal), update architecture docs, and run full test suite.
 
-- [ ] T022 Implement terminal size check in `TuiApp.cs`: on each render cycle, check `Console.WindowWidth` and `Console.WindowHeight`. If below 80×24, render a centered message: "Terminal too small. Please resize to at least 80×24." instead of the normal layout.
-- [ ] T023 Implement graceful server disconnection handling: when any `SunnyHttpClient` call throws `HttpRequestException` during a TUI action, catch it, update `StatusChrome.IsConnected = false`, and display an inline error message in the content area (e.g., "Cannot reach server. Check connection."). Do not crash the TUI.
-- [ ] T024 Implement Figlet fallback in `StatusChrome`: if `Console.WindowWidth < 60`, render plain `Markup("[bold]SunnySunday[/]")` instead of `FigletText`.
-- [ ] T025 Implement clean exit in `TuiApp`: on quit (`Q` or `Ctrl+C`), restore `Console.TreatControlCAsInput = false`, clear the live display, and return control to the terminal cleanly.
-- [ ] T026 Update `docs/ARCHITECTURE.md`: add TUI section describing dual-mode detection, render loop pattern, screen architecture, and data flow. Add diagram showing TUI components and their relationship to the existing infrastructure.
-- [ ] T027 Run full test suite: `dotnet test src/SunnySunday.slnx`. Confirm no regressions across all existing parser, API, CLI, infrastructure, and recap tests. All new TUI tests pass.
+- [ ] T026 Implement terminal size check in `TuiApp.cs`: on each render cycle, check `Console.WindowWidth` and `Console.WindowHeight`. If below 80×24, render a centered message: "Terminal too small. Please resize to at least 80×24." instead of the normal layout.
+- [ ] T027 Update `docs/ARCHITECTURE.md` and `README.md`: add the TUI to the architecture and refresh the project-level presentation in the README so the repository overview covers CLI mode, TUI mode, and the new SMTP verification flow.
+- [ ] T028 Implement graceful server disconnection handling: when any `SunnyHttpClient` call throws `HttpRequestException` during a TUI action, catch it, update `StatusChrome.IsConnected = false`, and display an inline error message in the content area (e.g., "Cannot reach server. Check connection."). Do not crash the TUI.
+- [ ] T029 Implement Figlet fallback in `StatusChrome`: if `Console.WindowWidth < 60`, render plain `Markup("[bold]SunnySunday[/]")` instead of `FigletText`.
+- [ ] T030 Implement clean exit in `TuiApp`: on quit (`Q` or `Ctrl+C`), restore `Console.TreatControlCAsInput = false`, clear the live display, and return control to the terminal cleanly.
+- [ ] T031 Run full test suite: `dotnet test src/SunnySunday.slnx`. Confirm no regressions across all existing parser, API, CLI, infrastructure, recap, and new settings-email API tests. All new TUI tests pass.
 
 **Checkpoint**: All edge cases handled. Architecture docs updated. Full test suite green. TUI is feature-complete per spec.
 
@@ -225,17 +249,18 @@ No constitution violations. No complexity justification needed.
 
 ```
 Phase 1 (Infra) ──► Phase 2 (Chrome) ──► Phase 3 (Book List) ──┬──► Phase 4 (Highlight Detail)
-                                                                 ├──► Phase 5 (Settings)
-                                                                 └──► Phase 6 (Polish) ← depends on ALL
+                                                                 ├──► Phase 5 (Test Email API)
+                                                                 └──► Phase 6 (Settings) ──► Phase 7 (Polish)
 ```
 
 - **Phase 1 (Infra)**: No prerequisites — start immediately. **BLOCKS all subsequent phases.**
 - **Phase 2 (Chrome)**: Depends on Phase 1 (`TuiApp` + `Layout` structure). **BLOCKS Phase 3** (chrome must exist before content screens).
-- **Phase 3 (Book List)**: Depends on Phase 2 (chrome provides the layout context). **BLOCKS Phases 4 and 5** (they are navigated from the book list).
+- **Phase 3 (Book List)**: Depends on Phase 2 (chrome provides the layout context). **BLOCKS Phases 4, 5, and 6**.
 - **Phase 4 (Highlight Detail)**: Depends on Phase 3. Parallel with Phase 5.
-- **Phase 5 (Settings)**: Depends on Phase 3. Parallel with Phase 4.
-- **Phase 6 (Polish)**: Depends on all preceding phases.
+- **Phase 5 (Test Email API)**: Depends on Phase 3 for feature flow alignment. Parallel with Phase 4.
+- **Phase 6 (Settings)**: Depends on Phase 3 and Phase 5.
+- **Phase 7 (Polish)**: Depends on all preceding phases.
 
 ### Parallel Opportunities
 
-Phases 4 and 5 are independent once Phase 3 is complete. Each introduces its own screen and tests without depending on the other.
+Phases 4 and 5 are independent once Phase 3 is complete. Phase 6 depends on Phase 5 because the settings UI consumes the new test-email endpoint.
