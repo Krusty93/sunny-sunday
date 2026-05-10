@@ -44,8 +44,8 @@ var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>
 var normalizedServerUrl = serverUri!.ToString().TrimEnd('/');
 
 Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
     .MinimumLevel.ControlledBy(levelSwitch)
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
 builder.Services.AddLogging(b => b.AddSerilog(dispose: true));
