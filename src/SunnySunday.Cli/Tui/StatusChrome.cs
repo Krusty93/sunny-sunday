@@ -12,8 +12,27 @@ namespace SunnySunday.Cli.Tui;
 public sealed class StatusChrome(string serverUrl, string version)
 {
     private const string BannerText = "SunnySunday";
+    private static readonly string[] BannerLines =
+    [
+        "███████╗██╗   ██╗███╗   ██╗███╗   ██╗██╗   ██╗",
+        "██╔════╝██║   ██║████╗  ██║████╗  ██║╚██╗ ██╔╝",
+        "███████╗██║   ██║██╔██╗ ██║██╔██╗ ██║ ╚████╔╝ ",
+        "╚════██║██║   ██║██║╚██╗██║██║╚██╗██║  ╚██╔╝  ",
+        "███████║╚██████╔╝██║ ╚████║██║ ╚████║   ██║   ",
+        "╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝   ╚═╝   ",
+    ];
+    private static readonly Color[] BannerLineColors =
+    [
+        Color.Blue1,
+        Color.DodgerBlue1,
+        Color.DeepSkyBlue1,
+        Color.Aqua,
+        Color.White,
+        Color.DeepSkyBlue1,
+    ];
+
     private Color _bannerColor = Color.DeepSkyBlue1;
-    private int _bannerCharacterCount = BannerText.Length;
+    private int _bannerRevealWidth = BannerLines.Max(line => line.Length);
 
     public bool IsConnected { get; private set; }
     public bool KindleEmailConfigured { get; private set; }
@@ -64,26 +83,27 @@ public sealed class StatusChrome(string serverUrl, string version)
 
         try
         {
-            _bannerCharacterCount = 0;
+            _bannerRevealWidth = 0;
+            var maxWidth = BannerLines.Max(line => line.Length);
 
-            for (var index = 1; index <= BannerText.Length; index++)
+            for (var width = 1; width <= maxWidth; width += 2)
             {
                 ct.ThrowIfCancellationRequested();
-                _bannerCharacterCount = index;
-                _bannerColor = palette[Math.Min(index - 1, palette.Length - 1)];
+                _bannerRevealWidth = Math.Min(width, maxWidth);
+                _bannerColor = palette[Math.Min((width - 1) / 4, palette.Length - 1)];
                 refresh();
-                await Task.Delay(120, ct).ConfigureAwait(false);
+                await Task.Delay(55, ct).ConfigureAwait(false);
             }
 
-            foreach (var color in palette.Skip(2))
+            foreach (var color in new[] { Color.Aqua, Color.White, Color.DeepSkyBlue1, Color.Aqua, Color.DeepSkyBlue1 })
             {
                 ct.ThrowIfCancellationRequested();
                 _bannerColor = color;
                 refresh();
-                await Task.Delay(110, ct).ConfigureAwait(false);
+                await Task.Delay(90, ct).ConfigureAwait(false);
             }
 
-            _bannerCharacterCount = BannerText.Length;
+            _bannerRevealWidth = maxWidth;
             _bannerColor = Color.DeepSkyBlue1;
             refresh();
         }
@@ -96,7 +116,7 @@ public sealed class StatusChrome(string serverUrl, string version)
     public IRenderable Render()
     {
         IRenderable banner = Console.WindowWidth >= 60
-            ? BuildFiglet(_bannerCharacterCount, _bannerColor)
+            ? BuildWideBanner()
             : BuildCompactBanner();
 
         var connectionStatus = IsConnected
@@ -120,15 +140,39 @@ public sealed class StatusChrome(string serverUrl, string version)
 
     private Markup BuildCompactBanner()
     {
-        var visibleText = BannerText[..Math.Max(_bannerCharacterCount, 1)];
+        var maxWidth = BannerLines.Max(line => line.Length);
+        var visibleChars = Math.Max(1, (int)Math.Ceiling((double)_bannerRevealWidth / maxWidth * BannerText.Length));
+        var visibleText = BannerText[..Math.Min(visibleChars, BannerText.Length)];
         var colorName = ToMarkupColor(_bannerColor);
         return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]");
     }
 
-    private static FigletText BuildFiglet(int characterCount, Color color)
+    private Rows BuildWideBanner()
     {
-        var visibleText = BannerText[..Math.Max(characterCount, 1)];
-        return new FigletText(visibleText).Color(color);
+        var renderables = new List<IRenderable>(BannerLines.Length);
+        var edgeColor = ToMarkupColor(_bannerColor);
+
+        for (var index = 0; index < BannerLines.Length; index++)
+        {
+            var line = BannerLines[index];
+            var visibleWidth = Math.Min(_bannerRevealWidth, line.Length);
+            var baseColor = ToMarkupColor(BannerLineColors[index]);
+
+            if (visibleWidth <= 0)
+            {
+                renderables.Add(new Markup(string.Empty));
+                continue;
+            }
+
+            var edgeStart = Math.Max(0, visibleWidth - 2);
+            var stableSegment = line[..edgeStart];
+            var leadingEdge = line[edgeStart..visibleWidth];
+
+            renderables.Add(new Markup(
+                $"[{baseColor}]{Markup.Escape(stableSegment)}[/][bold {edgeColor}]{Markup.Escape(leadingEdge)}[/]"));
+        }
+
+        return new Rows(renderables);
     }
 
     private static string ToMarkupColor(Color color)
