@@ -33,12 +33,12 @@ public sealed class StatusChrome(string serverUrl, string version)
     ];
     private static readonly string[] SundayBannerLines =
     [
-        "   ▄▄▄   █ █   █▄█   ▄▄█   ▄▄█   █ █",
-        " █▄▄    ▀▄▀   █ █   █▄█   █ █    █  ",
+        " ▄▀▄   █ █   █▄ █   █▀▄   ▄▀█   █ █ ",
+        " ▀▄▀   ▀▄▀   █ ▀█   █▄▀   █▀█    █  ",
     ];
     private static readonly Color[] SundayBannerColors =
     [
-        new(185, 242, 255),
+        new(166, 238, 255),
         new(127, 219, 255),
     ];
 
