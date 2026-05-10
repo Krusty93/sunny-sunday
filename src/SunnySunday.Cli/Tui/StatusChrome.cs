@@ -11,6 +11,10 @@ namespace SunnySunday.Cli.Tui;
 /// </summary>
 public sealed class StatusChrome(string serverUrl, string version)
 {
+    private const string BannerText = "SunnySunday";
+    private Color _bannerColor = Color.DeepSkyBlue1;
+    private int _bannerCharacterCount = BannerText.Length;
+
     public bool IsConnected { get; private set; }
     public bool KindleEmailConfigured { get; private set; }
 
@@ -41,38 +45,47 @@ public sealed class StatusChrome(string serverUrl, string version)
     }
 
     /// <summary>
-    /// Plays a brief colour-fade animation on the Figlet banner at startup.
-    /// Cycles through a blue-to-cyan gradient inspired by GitHub Copilot CLI.
-    /// No-ops when the terminal is too narrow for Figlet or cancellation is requested.
+    /// Plays the startup animation inside the active TUI live session.
+    /// The banner is written one character at a time with a high-contrast blue-to-cyan ramp.
     /// </summary>
-    public static async Task PlayStartupAnimationAsync(CancellationToken ct = default)
+    public async Task PlayStartupAnimationAsync(Action refresh, CancellationToken ct = default)
     {
-        if (Console.WindowWidth < 60)
-            return;
+        ArgumentNullException.ThrowIfNull(refresh);
 
-        Color[] palette =
-        [
-            Color.NavyBlue,
-            Color.Blue,
+        var palette = new[]
+        {
+            Color.Blue1,
             Color.DodgerBlue1,
             Color.DeepSkyBlue1,
             Color.Aqua,
+            Color.White,
             Color.DeepSkyBlue1,
-        ];
+        };
 
         try
         {
-            await AnsiConsole.Live(BuildFiglet(palette[0]))
-                .StartAsync(async ctx =>
-                {
-                    foreach (var color in palette)
-                    {
-                        ct.ThrowIfCancellationRequested();
-                        ctx.UpdateTarget(BuildFiglet(color));
-                        ctx.Refresh();
-                        await Task.Delay(70, ct).ConfigureAwait(false);
-                    }
-                }).ConfigureAwait(false);
+            _bannerCharacterCount = 0;
+
+            for (var index = 1; index <= BannerText.Length; index++)
+            {
+                ct.ThrowIfCancellationRequested();
+                _bannerCharacterCount = index;
+                _bannerColor = palette[Math.Min(index - 1, palette.Length - 1)];
+                refresh();
+                await Task.Delay(120, ct).ConfigureAwait(false);
+            }
+
+            foreach (var color in palette.Skip(2))
+            {
+                ct.ThrowIfCancellationRequested();
+                _bannerColor = color;
+                refresh();
+                await Task.Delay(110, ct).ConfigureAwait(false);
+            }
+
+            _bannerCharacterCount = BannerText.Length;
+            _bannerColor = Color.DeepSkyBlue1;
+            refresh();
         }
         catch (OperationCanceledException)
         {
@@ -83,8 +96,8 @@ public sealed class StatusChrome(string serverUrl, string version)
     public IRenderable Render()
     {
         IRenderable banner = Console.WindowWidth >= 60
-            ? BuildFiglet(Color.DeepSkyBlue1)
-            : new Markup("[bold][deepskyblue1]SunnySunday[/][/]");
+            ? BuildFiglet(_bannerCharacterCount, _bannerColor)
+            : BuildCompactBanner();
 
         var connectionStatus = IsConnected
             ? new Markup("[green]● Connected[/]")
@@ -105,6 +118,19 @@ public sealed class StatusChrome(string serverUrl, string version)
         return new Rows(rows);
     }
 
-    private static FigletText BuildFiglet(Color color)
-        => new FigletText("SunnySunday").Color(color);
+    private Markup BuildCompactBanner()
+    {
+        var visibleText = BannerText[..Math.Max(_bannerCharacterCount, 1)];
+        var colorName = ToMarkupColor(_bannerColor);
+        return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]");
+    }
+
+    private static FigletText BuildFiglet(int characterCount, Color color)
+    {
+        var visibleText = BannerText[..Math.Max(characterCount, 1)];
+        return new FigletText(visibleText).Color(color);
+    }
+
+    private static string ToMarkupColor(Color color)
+        => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
 }

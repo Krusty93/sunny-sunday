@@ -11,9 +11,6 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        await StatusChrome.PlayStartupAnimationAsync(cancellationToken).ConfigureAwait(false);
-        await _chrome.RefreshAsync(_client, cancellationToken).ConfigureAwait(false);
-
         if (_screens.Count == 0)
         {
             var initialScreen = new PlaceholderScreen();
@@ -35,6 +32,19 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
             await AnsiConsole.Live(layout).StartAsync(async context =>
             {
+                layout["Chrome"].Update(_chrome.Render());
+                layout["Content"].Update(new Markup(string.Empty));
+                layout["KeyHints"].Update(new Markup(string.Empty));
+                context.Refresh();
+
+                await _chrome.PlayStartupAnimationAsync(() =>
+                {
+                    layout["Chrome"].Update(_chrome.Render());
+                    context.Refresh();
+                }, cancellationToken).ConfigureAwait(false);
+
+                await _chrome.RefreshAsync(_client, cancellationToken).ConfigureAwait(false);
+
                 while (!cancellationToken.IsCancellationRequested && _screens.Count > 0)
                 {
                     var currentScreen = _screens.Peek();

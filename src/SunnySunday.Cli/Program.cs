@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
@@ -31,7 +32,7 @@ else if (validationResult == ServerUrlValidator.ValidationResult.Malformed)
 
 var services = new ServiceCollection();
 
-var levelSwitch = new LoggingLevelSwitch();
+var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Warning);
 var assembly = typeof(SyncCommand).Assembly;
 var applicationName = assembly.GetName().Name ?? "sunny sunday";
 var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
