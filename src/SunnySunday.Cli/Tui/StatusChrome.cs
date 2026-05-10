@@ -37,7 +37,7 @@ public sealed class StatusChrome(string serverUrl, string version)
 
     private Color _bannerColor = Color.DeepSkyBlue1;
     private int _bannerRevealWidth = BannerLines.Max(line => line.Length);
-    private bool _sundayVisible;
+    private int _sundayCharCount = SundayText.Length;
 
     public bool IsConnected { get; private set; }
     public bool KindleEmailConfigured { get; private set; }
@@ -88,7 +88,7 @@ public sealed class StatusChrome(string serverUrl, string version)
         try
         {
             _bannerRevealWidth = 0;
-            _sundayVisible = false;
+            _sundayCharCount = 0;
             var maxWidth = BannerLines.Max(line => line.Length);
 
             for (var width = 1; width <= maxWidth; width += 2)
@@ -102,8 +102,15 @@ public sealed class StatusChrome(string serverUrl, string version)
 
             _bannerRevealWidth = maxWidth;
             _bannerColor = Color.DeepSkyBlue1;
-            _sundayVisible = true;
             refresh();
+
+            for (var charIndex = 1; charIndex <= SundayText.Length; charIndex++)
+            {
+                ct.ThrowIfCancellationRequested();
+                _sundayCharCount = charIndex;
+                refresh();
+                await Task.Delay(50, ct).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -142,8 +149,8 @@ public sealed class StatusChrome(string serverUrl, string version)
         var visibleChars = Math.Max(1, (int)Math.Ceiling((double)_bannerRevealWidth / maxWidth * BannerText.Length));
         var visibleText = BannerText[..Math.Min(visibleChars, BannerText.Length)];
         var colorName = ToMarkupColor(_bannerColor);
-        var sundayMarkup = _sundayVisible
-            ? $"\n[italic #A6EEFF]{SundayText}[/]"
+        var sundayMarkup = _sundayCharCount > 0
+            ? $"\n[italic #A6EEFF]{SundayText[..Math.Min(_sundayCharCount, SundayText.Length)]}[/]"
             : string.Empty;
 
         return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]{sundayMarkup}");
@@ -174,9 +181,10 @@ public sealed class StatusChrome(string serverUrl, string version)
                 $"[{baseColor}]{Markup.Escape(stableSegment)}[/][bold {edgeColor}]{Markup.Escape(leadingEdge)}[/]"));
         }
 
-        if (_sundayVisible)
+        if (_sundayCharCount > 0)
         {
-            renderables.Add(new FigletText(SundayText).Color(SundayColor));
+            var partialSunday = SundayText[..Math.Min(_sundayCharCount, SundayText.Length)];
+            renderables.Add(new FigletText(partialSunday).Color(SundayColor));
             var separatorWidth = BannerLines.Max(line => line.Length);
             renderables.Add(new Markup($"[{ToMarkupColor(SeparatorColor)}]{new string('─', separatorWidth)}[/]"));
         }
