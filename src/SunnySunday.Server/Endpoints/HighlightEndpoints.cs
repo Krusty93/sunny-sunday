@@ -38,6 +38,23 @@ public static class HighlightEndpoints
         .Produces<HighlightsResponse>(StatusCodes.Status200OK)
         .ProducesValidationProblem(StatusCodes.Status422UnprocessableEntity);
 
+        app.MapDelete("/highlights/{id:int}", async (
+            int id,
+            [FromServices] UserRepository userRepo,
+            [FromServices] HighlightRepository highlightRepo) =>
+        {
+            var userId = await userRepo.EnsureUserAsync();
+            var deleted = await highlightRepo.DeleteHighlightAsync(userId, id);
+
+            return deleted
+                ? Results.NoContent()
+                : Results.Problem(detail: $"Highlight {id} not found.", statusCode: StatusCodes.Status404NotFound);
+        })
+        .WithSummary("Delete a highlight.")
+        .WithDescription("Deletes a stored highlight for the implicit MVP user.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
         return app;
     }
 }

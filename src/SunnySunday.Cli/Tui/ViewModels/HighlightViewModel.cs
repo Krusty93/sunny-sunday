@@ -2,6 +2,8 @@
 
 public sealed record HighlightViewModel(
     int Id,
+    int BookId,
+    int AuthorId,
     string Text,
     string BookTitle,
     string AuthorName,

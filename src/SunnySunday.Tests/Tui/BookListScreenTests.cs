@@ -62,7 +62,9 @@ public sealed class BookListScreenTests : IDisposable
         var screen = await CreateScreenAsync();
 
         var foundation = Assert.Single(screen.Books, book => book.Title == "Foundation");
-        Assert.All(foundation.Highlights, highlight => Assert.True(highlight.IsExcluded));
+        Assert.True(foundation.IsAuthorExcluded);
+        Assert.False(foundation.IsBookExcluded);
+        Assert.All(foundation.Highlights, highlight => Assert.False(highlight.IsExcluded));
         Assert.Contains(foundation.Highlights, highlight => highlight.Id == 1 && highlight.Weight == 5);
         Assert.Contains(foundation.Highlights, highlight => highlight.Id == 2 && highlight.Weight is null);
     }
@@ -151,18 +153,24 @@ public sealed class BookListScreenTests : IDisposable
             [
               {
                 "id": 1,
+                "bookId": 10,
+                "authorId": 7,
                 "text": "Psychohistory is built on large numbers.",
                 "bookTitle": "Foundation",
                 "authorName": "Isaac Asimov"
               },
               {
                 "id": 2,
+                "bookId": 10,
+                "authorId": 7,
                 "text": "Violence is the last refuge of the incompetent.",
                 "bookTitle": "Foundation",
                 "authorName": "Isaac Asimov"
               },
               {
                 "id": 3,
+                "bookId": 20,
+                "authorId": 8,
                 "text": "In a hole in the ground there lived a hobbit.",
                 "bookTitle": "The Hobbit",
                 "authorName": "J.R.R. Tolkien"

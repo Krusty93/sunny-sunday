@@ -31,13 +31,16 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         new(0, 160, 255),
     ];
 
+    private static readonly Color FooterKeyColor = new(110, 200, 255);
+    private static readonly Color FooterLabelColor = new(190, 190, 190);
+
     private readonly SunnySunday.Cli.Infrastructure.SunnyHttpClient _client = client;
     private readonly StatusChrome _chrome = new(serverUrl, version);
     private readonly Stack<IScreen> _screens = new();
     private IApplication? _app;
     private FrameView? _contentFrame;
     private View? _toolbarView;
-    private StatusBar? _statusBar;
+    private View? _statusBar;
     private Window? _window;
 
     public async Task RunAsync(CancellationToken cancellationToken)
@@ -78,7 +81,14 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
             _contentFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(60, 100, 140), StatusChrome.Background)));
             _window.Add(_contentFrame);
 
-            _statusBar = new StatusBar();
+            _statusBar = new View
+            {
+                X = 0,
+                Y = Pos.AnchorEnd(1),
+                Width = Dim.Fill(),
+                Height = 1,
+                CanFocus = false
+            };
             _statusBar.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(180, 180, 180), StatusChrome.Background)));
             _window.Add(_statusBar);
 
@@ -310,7 +320,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         UpdateStatusBar(screen.KeyHints);
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Shortcuts are owned by the StatusBar")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Labels are owned by the footer view")]
     private void UpdateStatusBar(IReadOnlyList<(string Key, string Label)> hints)
     {
         if (_statusBar is null)
@@ -320,13 +330,50 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
         _statusBar.RemoveAll();
 
+        var cursorX = 1;
+
         foreach (var (key, label) in hints)
         {
-            _statusBar.Add(new Shortcut
+            if (string.Equals(key, "Ctrl+C", StringComparison.OrdinalIgnoreCase))
             {
-                Text = label,
-                HelpText = $"<{key}>"
-            });
+                continue;
+            }
+
+            var keyText = key.Contains('↑') || key.Contains('↓')
+                ? key
+                : $"<{key}>";
+
+            var keyLabel = new Label
+            {
+                X = cursorX,
+                Y = 0,
+                Width = keyText.Length,
+                Height = 1,
+                Text = keyText,
+                CanFocus = false
+            };
+            keyLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(FooterKeyColor, StatusChrome.Background)));
+            _statusBar.Add(keyLabel);
+            cursorX += keyText.Length;
+
+            if (!string.IsNullOrWhiteSpace(label) && !(key.Contains('↑') || key.Contains('↓')))
+            {
+                var labelText = $" {label}";
+                var descriptionLabel = new Label
+                {
+                    X = cursorX,
+                    Y = 0,
+                    Width = labelText.Length,
+                    Height = 1,
+                    Text = labelText,
+                    CanFocus = false
+                };
+                descriptionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(FooterLabelColor, StatusChrome.Background)));
+                _statusBar.Add(descriptionLabel);
+                cursorX += labelText.Length;
+            }
+
+            cursorX += 2;
         }
     }
 }

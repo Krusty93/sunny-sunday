@@ -9,7 +9,7 @@ namespace SunnySunday.Cli.Tui;
 /// </summary>
 internal sealed class ShortcutListView : ListView
 {
-    private static readonly HashSet<char> ShortcutChars = ['q', 's', 'r', '/'];
+    private static readonly HashSet<char> ShortcutChars = ['q', 'a', 'r', '/'];
 
     /// <summary>
     /// Raised when a shortcut key is pressed. Set <see cref="Key.Handled"/> to true
