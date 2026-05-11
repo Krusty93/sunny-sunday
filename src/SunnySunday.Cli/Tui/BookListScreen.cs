@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
@@ -12,12 +13,24 @@ namespace SunnySunday.Cli.Tui;
 public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 {
     private const int PageSize = 100;
+    private const int DefaultTableWidth = 80;
+    private const int HighlightsColumnWidth = 10;
+    private const int MinimumTitleColumnWidth = 18;
+    private const int MinimumAuthorColumnWidth = 18;
+    private const int PreferredAuthorColumnWidth = 30;
+    private const int TableHorizontalPadding = 2;
+    private const string SectionTitle = "Books";
+    private const string PlaceholderIdle = "type / to search";
+    private const string PlaceholderFocused = "Press Esc to return to the list";
     private readonly SunnyHttpClient _client = client;
     private List<BookViewModel> _books = [];
     private List<BookViewModel> _filteredBooks = [];
     private int _selectedIndex;
     private bool _isSearchActive;
     private string _searchQuery = string.Empty;
+    private FrameView? _searchFrame;
+    private SearchTextField? _searchField;
+    private Label? _searchPlaceholder;
 
     public IReadOnlyList<BookViewModel> Books => _books;
 
@@ -29,7 +42,7 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
     public string SearchQuery => _searchQuery;
 
-    public string Title => "Books";
+    public string Title => string.Empty;
 
     public IReadOnlyList<(string Key, string Label)> KeyHints =>
     [
@@ -40,6 +53,100 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         ("R", "Refresh"),
         ("Q", "Quit")
     ];
+
+    private readonly record struct TableLayout(int TitleWidth, int AuthorWidth, int HighlightsWidth);
+
+    public int ToolbarHeight => 4;
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the window hierarchy")]
+    public View? CreateToolbarView(Action<ScreenResult> navigate)
+    {
+        var container = new View
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = 4,
+            CanFocus = true
+        };
+
+        _searchFrame = new FrameView
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = 3,
+            BorderStyle = LineStyle.Rounded,
+            Title = string.Empty,
+            CanFocus = true
+        };
+        _searchFrame.SetScheme(CreateSearchFrameScheme(isFocused: false));
+
+        var fieldAttribute = new Terminal.Gui.Drawing.Attribute(
+            Terminal.Gui.Drawing.Color.White, StatusChrome.Background);
+
+        _searchField = new SearchTextField
+        {
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(2),
+            Height = 1,
+            CanFocus = true,
+            Text = _searchQuery
+        };
+        _searchField.SetScheme(CreateSearchFieldScheme(fieldAttribute));
+
+        _searchPlaceholder = new Label
+        {
+            X = 2,
+            Y = 0,
+            Width = Dim.Fill(3),
+            Height = 1,
+            CanFocus = false,
+            Text = PlaceholderIdle,
+            Visible = string.IsNullOrEmpty(_searchQuery)
+        };
+        _searchPlaceholder.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(90, 90, 90), StatusChrome.Background)));
+
+        _searchFrame.Add(_searchField, _searchPlaceholder);
+        container.Add(_searchFrame);
+
+        return container;
+    }
+
+    private static Scheme CreateSearchFrameScheme(bool isFocused)
+    {
+        var borderColor = isFocused
+            ? new Terminal.Gui.Drawing.Color(110, 200, 255)
+            : new Terminal.Gui.Drawing.Color(60, 100, 140);
+
+        return new Scheme(new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background))
+        {
+            Normal = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
+            Focus = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
+            Active = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
+            HotNormal = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
+            HotFocus = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
+            HotActive = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
+            Disabled = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background)
+        };
+    }
+
+    private static Scheme CreateSearchFieldScheme(Terminal.Gui.Drawing.Attribute attribute) => new(attribute)
+    {
+        Normal = attribute,
+        Focus = attribute,
+        Active = attribute,
+        Code = attribute,
+        Editable = attribute,
+        Highlight = attribute,
+        HotActive = attribute,
+        HotFocus = attribute,
+        HotNormal = attribute,
+        ReadOnly = attribute,
+        Disabled = attribute
+    };
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -77,31 +184,46 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
             return container;
         }
 
-        var searchField = new TextField
+        var tableLayout = CalculateTableLayout(DefaultTableWidth);
+
+        var titleLabel = new Label
         {
-            X = 0,
+            Text = SectionTitle,
+            X = TableHorizontalPadding,
             Y = 0,
-            Width = Dim.Fill(),
-            Visible = _isSearchActive,
-            Text = _searchQuery
+            Width = Dim.Fill(TableHorizontalPadding * 2)
         };
+        titleLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(110, 200, 255), StatusChrome.Background)));
 
         var headerLabel = new Label
         {
-            Text = FormatHeader(),
-            X = 0,
-            Y = _isSearchActive ? 1 : 0,
-            Width = Dim.Fill()
+            Text = FormatHeader(tableLayout),
+            X = TableHorizontalPadding,
+            Y = 2,
+            Width = Dim.Fill(TableHorizontalPadding * 2)
         };
+        headerLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+
+        var headerRuleLabel = new Label
+        {
+            X = TableHorizontalPadding,
+            Y = 3,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
+            Text = string.Empty
+        };
+        headerRuleLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(60, 100, 140), StatusChrome.Background)));
 
         var displayItems = new ObservableCollection<string>(
-            _filteredBooks.Select(FormatBookRow));
+            _filteredBooks.Select(book => FormatBookRow(book, tableLayout)));
 
-        var listView = new ListView
+        var listView = new ShortcutListView
         {
-            X = 0,
-            Y = _isSearchActive ? 2 : 1,
-            Width = Dim.Fill(),
+            X = TableHorizontalPadding,
+            Y = 4,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
             Height = Dim.Fill(),
             CanFocus = true
         };
@@ -124,7 +246,7 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         void RefreshVisibleBooks()
         {
             displayItems.Clear();
-            foreach (var item in _filteredBooks.Select(FormatBookRow))
+            foreach (var item in _filteredBooks.Select(book => FormatBookRow(book, tableLayout)))
             {
                 displayItems.Add(item);
             }
@@ -139,57 +261,94 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
             }
         }
 
-        void SetSearchLayout(bool searchActive)
+        void UpdateTableLayout()
         {
-            searchField.Visible = searchActive;
-            headerLabel.Y = searchActive ? 1 : 0;
-            listView.Y = searchActive ? 2 : 1;
-        }
+            var availableWidth = Math.Max(listView.Viewport.Width, headerLabel.Viewport.Width);
+            if (availableWidth <= 0)
+            {
+                return;
+            }
 
-        void ActivateSearchUi()
-        {
-            SetSearchLayout(true);
-            searchField.Text = string.Empty;
+            var nextLayout = CalculateTableLayout(availableWidth);
+            if (nextLayout == tableLayout)
+            {
+                return;
+            }
+
+            tableLayout = nextLayout;
+            headerLabel.Text = FormatHeader(tableLayout);
+            headerRuleLabel.Text = new string('-', availableWidth);
             RefreshVisibleBooks();
-            searchField.SetFocus();
         }
 
-        void DeactivateSearchUi()
+        void FocusSearchField()
         {
-            DeactivateSearch();
-            SetSearchLayout(false);
-            searchField.Text = string.Empty;
-            RefreshVisibleBooks();
-            listView.SetFocus();
+            _isSearchActive = true;
+            _searchField?.SetFocus();
+            UpdateSearchChrome();
         }
 
-        searchField.TextChanged += (_, args) =>
+        void FocusListView()
         {
-            _searchQuery = searchField.Text ?? string.Empty;
+            _isSearchActive = false;
+            if (_searchField is not null)
+            {
+                _searchQuery = _searchField.Text ?? string.Empty;
+            }
+
             ApplyFilter();
             RefreshVisibleBooks();
-        };
-
-        searchField.KeyDown += (_, key) =>
-        {
-            if (key.KeyCode == KeyCode.Esc)
-            {
-                DeactivateSearchUi();
-                key.Handled = true;
-            }
-        };
-
-        container.Add(searchField, headerLabel, listView);
-        SetupContainerKeyBindings(container, listView, navigate, RefreshVisibleBooks, ActivateSearchUi);
-
-        if (_isSearchActive)
-        {
-            searchField.SetFocus();
-        }
-        else
-        {
             listView.SetFocus();
+            UpdateSearchChrome();
         }
+
+        void UpdateSearchChrome()
+        {
+            if (_searchPlaceholder is not null && _searchField is not null)
+            {
+                _searchPlaceholder.Visible = string.IsNullOrEmpty(_searchField.Text);
+                _searchPlaceholder.Text = _searchField.HasFocus
+                    ? PlaceholderFocused
+                    : PlaceholderIdle;
+            }
+
+            if (_searchFrame is not null && _searchField is not null)
+            {
+                _searchFrame.SetScheme(CreateSearchFrameScheme(_searchField.HasFocus));
+            }
+        }
+
+        if (_searchField is not null)
+        {
+            _searchField.TextChanged += (_, _) =>
+            {
+                _searchQuery = _searchField.Text ?? string.Empty;
+                ApplyFilter();
+                RefreshVisibleBooks();
+                UpdateSearchChrome();
+            };
+
+            _searchField.HasFocusChanged += (_, _) => UpdateSearchChrome();
+
+            _searchField.KeyDown += (_, key) =>
+            {
+                if (key.KeyCode is KeyCode.Esc or KeyCode.CursorDown)
+                {
+                    FocusListView();
+                    key.Handled = true;
+                }
+            };
+        }
+
+        UpdateSearchChrome();
+        UpdateTableLayout();
+
+        container.SubViewsLaidOut += (_, _) => UpdateTableLayout();
+        listView.ViewportChanged += (_, _) => UpdateTableLayout();
+
+        container.Add(titleLabel, headerLabel, headerRuleLabel, listView);
+        SetupContainerKeyBindings(container, listView, navigate, RefreshVisibleBooks, FocusSearchField);
+        listView.SetFocus();
 
         return container;
     }
@@ -231,19 +390,14 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
     private void SetupContainerKeyBindings(
         View container,
-        ListView? listView,
+        ShortcutListView? listView,
         Action<ScreenResult> navigate,
         Action? refreshVisibleBooks,
-        Action? activateSearchUi)
+        Action? focusSearchField)
     {
-        void HandleGlobalKey(Key key)
+        void HandleShortcutKey(Key key)
         {
             if (key.Handled)
-            {
-                return;
-            }
-
-            if (_isSearchActive)
             {
                 return;
             }
@@ -254,17 +408,18 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
                 return;
             }
 
-            if (TryHandleShortcutKey(shortcutKey.Value, navigate, refreshVisibleBooks, activateSearchUi))
+            if (TryHandleShortcutKey(shortcutKey.Value, navigate, refreshVisibleBooks, focusSearchField))
             {
                 key.Handled = true;
             }
         }
 
-        container.KeyDown += (_, key) => HandleGlobalKey(key);
+        container.KeyDown += (_, key) => HandleShortcutKey(key);
 
         if (listView is not null)
         {
-            listView.KeyDown += (_, key) => HandleGlobalKey(key);
+            // ShortcutKeyPressed fires inside OnKeyDown, BEFORE the CollectionNavigator
+            listView.ShortcutKeyPressed += (_, key) => HandleShortcutKey(key);
 
             listView.ValueChanged += (_, args) =>
             {
@@ -277,7 +432,7 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         char shortcutKey,
         Action<ScreenResult> navigate,
         Action? refreshVisibleBooks,
-        Action? activateSearchUi)
+        Action? focusSearchField)
     {
         switch (char.ToLowerInvariant(shortcutKey))
         {
@@ -295,8 +450,7 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
                 return true;
 
             case '/':
-                ActivateSearch();
-                activateSearchUi?.Invoke();
+                focusSearchField?.Invoke();
                 return true;
 
             default:
@@ -321,16 +475,70 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         };
     }
 
-    private static string FormatHeader()
+    private static TableLayout CalculateTableLayout(int availableWidth)
     {
-        return $"{"Title",-40} {"Author",-30} {"Highlights",10}";
+        const int spacingWidth = 2;
+
+        var textColumnsWidth = Math.Max(0, availableWidth - HighlightsColumnWidth - spacingWidth);
+        if (textColumnsWidth == 0)
+        {
+            return new TableLayout(0, 0, HighlightsColumnWidth);
+        }
+
+        var authorWidth = Math.Min(
+            PreferredAuthorColumnWidth,
+            Math.Max(MinimumAuthorColumnWidth, textColumnsWidth / 3));
+
+        var titleWidth = Math.Max(MinimumTitleColumnWidth, textColumnsWidth - authorWidth);
+        if (titleWidth + authorWidth > textColumnsWidth)
+        {
+            authorWidth = Math.Max(0, textColumnsWidth - titleWidth);
+        }
+
+        if (textColumnsWidth >= MinimumTitleColumnWidth + MinimumAuthorColumnWidth)
+        {
+            authorWidth = Math.Max(MinimumAuthorColumnWidth, authorWidth);
+            titleWidth = textColumnsWidth - authorWidth;
+        }
+        else
+        {
+            titleWidth = Math.Max(0, textColumnsWidth / 2);
+            authorWidth = Math.Max(0, textColumnsWidth - titleWidth);
+        }
+
+        return new TableLayout(titleWidth, authorWidth, HighlightsColumnWidth);
     }
 
-    private static string FormatBookRow(BookViewModel book)
+    private static string FormatHeader(TableLayout tableLayout)
     {
-        var title = book.Title.Length > 38 ? book.Title[..35] + "..." : book.Title;
-        var author = book.Author.Length > 28 ? book.Author[..25] + "..." : book.Author;
-        return $"{title,-40} {author,-30} {book.HighlightCount.ToString(CultureInfo.InvariantCulture),10}";
+        return $"{FitCell("TITLE", tableLayout.TitleWidth)} {FitCell("AUTHOR", tableLayout.AuthorWidth)} {"HIGHLIGHTS".PadLeft(tableLayout.HighlightsWidth)}";
+    }
+
+    private static string FormatBookRow(BookViewModel book, TableLayout tableLayout)
+    {
+        var title = FitCell(book.Title, tableLayout.TitleWidth);
+        var author = FitCell(book.Author, tableLayout.AuthorWidth);
+        return $"{title} {author} {book.HighlightCount.ToString(CultureInfo.InvariantCulture).PadLeft(tableLayout.HighlightsWidth)}";
+    }
+
+    private static string FitCell(string value, int width)
+    {
+        if (width <= 0)
+        {
+            return string.Empty;
+        }
+
+        if (value.Length <= width)
+        {
+            return value.PadRight(width);
+        }
+
+        if (width <= 3)
+        {
+            return value[..width];
+        }
+
+        return value[..(width - 3)] + "...";
     }
 
     private async Task<List<SunnySunday.Core.Contracts.HighlightItemDto>> LoadAllHighlightsAsync(CancellationToken cancellationToken)
@@ -396,9 +604,9 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
     private void ApplyFilter()
     {
-        _filteredBooks = _isSearchActive
-            ? SearchFilter.Apply(_books, _searchQuery)
-            : [.. _books];
+        _filteredBooks = string.IsNullOrEmpty(_searchQuery)
+            ? [.. _books]
+            : SearchFilter.Apply(_books, _searchQuery);
 
         if (_filteredBooks.Count == 0)
         {

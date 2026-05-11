@@ -75,12 +75,15 @@ public sealed class StatusChrome(string serverUrl, string version)
         separatorLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(60, 60, 60), bg)));
         container.Add(separatorLabel);
 
+        var longestContent = $"⟳ Checking...  {serverUrl}";
+        var frameContentWidth = longestContent.Length + 4; // 2 border + 2 padding
+
         var infoFrame = new FrameView
         {
-            Title = "Status",
-            X = LogoTextWidth + 3,
+            Title = string.Empty,
+            X = Pos.AnchorEnd(frameContentWidth),
             Y = 1,
-            Width = Dim.Fill(1),
+            Width = frameContentWidth,
             Height = 5,
             BorderStyle = LineStyle.Rounded
         };

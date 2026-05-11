@@ -34,6 +34,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
     private readonly Stack<IScreen> _screens = new();
     private IApplication? _app;
     private FrameView? _contentFrame;
+    private View? _toolbarView;
     private StatusBar? _statusBar;
     private Window? _window;
 
@@ -230,12 +231,40 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
     private void ShowCurrentScreen()
     {
-        if (_screens.Count == 0 || _contentFrame is null)
+        if (_screens.Count == 0 || _contentFrame is null || _window is null)
         {
             return;
         }
 
         var screen = _screens.Peek();
+
+        // Remove previous toolbar if any
+        if (_toolbarView is not null)
+        {
+            _window.Remove(_toolbarView);
+            _toolbarView = null;
+        }
+
+        // Add toolbar if the screen provides one
+        var toolbarHeight = screen.ToolbarHeight;
+        _toolbarView = screen.CreateToolbarView(Navigate);
+
+        if (_toolbarView is not null && toolbarHeight > 0)
+        {
+            _toolbarView.X = 0;
+            _toolbarView.Y = StatusChrome.LogoHeight;
+            _toolbarView.Width = Dim.Fill();
+            _toolbarView.Height = toolbarHeight;
+            _window.Add(_toolbarView);
+        }
+        else
+        {
+            toolbarHeight = 0;
+        }
+
+        // Adjust content frame position
+        _contentFrame.Y = StatusChrome.LogoHeight + toolbarHeight;
+
         _contentFrame.RemoveAll();
         _contentFrame.Title = screen.Title;
 

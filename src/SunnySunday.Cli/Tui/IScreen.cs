@@ -6,6 +6,10 @@ public interface IScreen
 {
     View CreateView(Action<ScreenResult> navigate);
 
+    View? CreateToolbarView(Action<ScreenResult> navigate) => null;
+
+    int ToolbarHeight => 0;
+
     Task InitializeAsync(CancellationToken cancellationToken);
 
     string Title { get; }

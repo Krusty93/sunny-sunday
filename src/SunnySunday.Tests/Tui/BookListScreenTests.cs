@@ -81,16 +81,15 @@ public sealed class BookListScreenTests : IDisposable
     }
 
     [Fact]
-    public async Task TryHandleShortcutKey_Slash_ActivatesSearchMode()
+    public async Task TryHandleShortcutKey_Slash_FocusesSearchField()
     {
         var screen = await CreateScreenAsync();
-        var activatedSearchUi = false;
+        var focusedSearchField = false;
 
-        var handled = screen.TryHandleShortcutKey('/', _ => { }, null, () => activatedSearchUi = true);
+        var handled = screen.TryHandleShortcutKey('/', _ => { }, null, () => focusedSearchField = true);
 
         Assert.True(handled);
-        Assert.True(screen.IsSearchActive);
-        Assert.True(activatedSearchUi);
+        Assert.True(focusedSearchField);
     }
 
     [Fact]
