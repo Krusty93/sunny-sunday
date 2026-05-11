@@ -13,6 +13,11 @@ namespace SunnySunday.Cli.Tui;
 public sealed class HighlightDetailScreen : IScreen
 {
     private const int DetailPageSize = 200;
+    private const int DefaultTableWidth = 80;
+    private const int TableHorizontalPadding = 2;
+    private const int WeightColumnWidth = 8;
+    private const int MinimumStateColumnWidth = 10;
+    private const int MinimumHighlightColumnWidth = 18;
     private readonly SunnyHttpClient _client;
     private readonly List<HighlightViewModel> _highlights;
     private readonly int _bookId;
@@ -24,7 +29,11 @@ public sealed class HighlightDetailScreen : IScreen
     private string? _statusMessage;
     private ObservableCollection<string>? _highlightRows;
     private ShortcutListView? _highlightList;
+    private Label? _titleLabel;
+    private Label? _authorLabel;
     private Label? _summaryLabel;
+    private Label? _headerLabel;
+    private Label? _headerRuleLabel;
     private Label? _statusLabel;
     private FrameView? _actionMenuFrame;
     private ObservableCollection<string>? _actionRows;
@@ -32,6 +41,9 @@ public sealed class HighlightDetailScreen : IScreen
     private FrameView? _deleteConfirmationFrame;
     private Action<ScreenResult>? _navigate;
     private bool _viewCreated;
+    private TableLayout _tableLayout = CalculateTableLayout(DefaultTableWidth);
+
+    private readonly record struct TableLayout(int HighlightWidth, int WeightWidth, int StatusWidth);
 
     public HighlightDetailScreen(BookViewModel book, SunnyHttpClient client)
     {
@@ -63,7 +75,7 @@ public sealed class HighlightDetailScreen : IScreen
 
     public IReadOnlyList<HighlightViewModel> Highlights => _highlights;
 
-    public string Title => $"Highlights - {_bookTitle}";
+    public string Title => string.Empty;
 
     public IReadOnlyList<(string Key, string Label)> KeyHints =>
     [
@@ -92,32 +104,70 @@ public sealed class HighlightDetailScreen : IScreen
             CanFocus = true
         };
 
+        _titleLabel = new Label
+        {
+            X = TableHorizontalPadding,
+            Y = 0,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
+            Height = 1,
+            CanFocus = false,
+            Text = _bookTitle
+        };
+        _titleLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(110, 200, 255), StatusChrome.Background)));
+
+        _authorLabel = new Label
+        {
+            X = TableHorizontalPadding,
+            Y = 1,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
+            Height = 1,
+            CanFocus = false,
+            Text = $"by {_authorName}"
+        };
+        _authorLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+
         _summaryLabel = new Label
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = 2,
+            X = TableHorizontalPadding,
+            Y = 2,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
+            Height = 1,
             CanFocus = false
         };
 
-        var headerLabel = new Label
+        _headerLabel = new Label
         {
-            X = 0,
-            Y = 2,
-            Width = Dim.Fill(),
+            X = TableHorizontalPadding,
+            Y = 4,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
             Height = 1,
-            Text = FormatHeader(),
+            Text = FormatHeader(_tableLayout),
             CanFocus = false
         };
+        _headerLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+
+        _headerRuleLabel = new Label
+        {
+            X = TableHorizontalPadding,
+            Y = 5,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
+            Height = 1,
+            Text = string.Empty,
+            CanFocus = false
+        };
+        _headerRuleLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(60, 100, 140), StatusChrome.Background)));
 
         _highlightRows = new ObservableCollection<string>();
         _highlightList = new ShortcutListView
         {
-            X = 0,
-            Y = 3,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(2),
+            X = TableHorizontalPadding,
+            Y = 6,
+            Width = Dim.Fill(TableHorizontalPadding * 2),
+            Height = Dim.Fill(1),
             CanFocus = true
         };
         _highlightList.SetSource(_highlightRows);
@@ -154,9 +204,9 @@ public sealed class HighlightDetailScreen : IScreen
 
         _actionMenuFrame = new FrameView
         {
-            X = Pos.AnchorEnd(30),
-            Y = 2,
-            Width = 28,
+            X = Pos.AnchorEnd(36),
+            Y = 6,
+            Width = 34,
             Height = 8,
             Title = "Actions",
             CanFocus = true,
@@ -187,18 +237,32 @@ public sealed class HighlightDetailScreen : IScreen
 
         _statusLabel = new Label
         {
-            X = 0,
+            X = TableHorizontalPadding,
             Y = Pos.AnchorEnd(1),
-            Width = Dim.Fill(),
+            Width = Dim.Fill(TableHorizontalPadding * 2),
             Height = 1,
             Visible = false,
             CanFocus = false
         };
+        _statusLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
+            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
 
         container.KeyDown += async (_, key) => await HandleContainerKeyDownAsync(key).ConfigureAwait(false);
-        container.Add(_summaryLabel, headerLabel, _highlightList, _statusLabel, _actionMenuFrame, _deleteConfirmationFrame);
+        container.SubViewsLaidOut += (_, _) => UpdateTableLayout();
+        _highlightList.ViewportChanged += (_, _) => UpdateTableLayout();
+        container.Add(
+            _titleLabel,
+            _authorLabel,
+            _summaryLabel,
+            _headerLabel,
+            _headerRuleLabel,
+            _highlightList,
+            _statusLabel,
+            _actionMenuFrame,
+            _deleteConfirmationFrame);
 
         _viewCreated = true;
+        UpdateTableLayout();
         UpdateViewState();
 
         return container;
@@ -576,9 +640,24 @@ public sealed class HighlightDetailScreen : IScreen
 
     private void UpdateViewState()
     {
+        if (_titleLabel is not null)
+        {
+            _titleLabel.Text = _bookTitle;
+        }
+
+        if (_authorLabel is not null)
+        {
+            _authorLabel.Text = $"by {_authorName}";
+        }
+
         if (_summaryLabel is not null)
         {
             _summaryLabel.Text = BuildSummaryText();
+        }
+
+        if (_headerLabel is not null)
+        {
+            _headerLabel.Text = FormatHeader(_tableLayout);
         }
 
         if (_highlightRows is not null)
@@ -641,12 +720,45 @@ public sealed class HighlightDetailScreen : IScreen
         }
     }
 
+    private void UpdateTableLayout()
+    {
+        if (!_viewCreated || _highlightList is null || _headerLabel is null || _headerRuleLabel is null)
+        {
+            return;
+        }
+
+        var availableWidth = Math.Max(_highlightList.Viewport.Width, _headerLabel.Viewport.Width);
+        if (availableWidth <= 0)
+        {
+            return;
+        }
+
+        var nextLayout = CalculateTableLayout(availableWidth);
+        if (nextLayout == _tableLayout && _headerRuleLabel.Text?.Length == availableWidth)
+        {
+            return;
+        }
+
+        _tableLayout = nextLayout;
+        _headerLabel.Text = FormatHeader(_tableLayout);
+        _headerRuleLabel.Text = new string('-', availableWidth);
+
+        if (_highlightRows is not null)
+        {
+            _highlightRows.Clear();
+            foreach (var row in BuildHighlightRows())
+            {
+                _highlightRows.Add(row);
+            }
+        }
+    }
+
     private string BuildSummaryText()
     {
         var highlightCount = _highlights.Count == 1 ? "1 highlight" : $"{_highlights.Count.ToString(CultureInfo.InvariantCulture)} highlights";
         var bookState = _isBookExcluded ? "excluded" : "included";
         var authorState = _isAuthorExcluded ? "excluded" : "included";
-        return $"{_bookTitle} by {_authorName}\n{highlightCount}  |  Book: {bookState}  |  Author: {authorState}";
+        return $"{highlightCount}  |  Book: {bookState}  |  Author: {authorState}";
     }
 
     private IEnumerable<string> BuildHighlightRows()
@@ -665,13 +777,14 @@ public sealed class HighlightDetailScreen : IScreen
 
     private string FormatHighlightRow(HighlightViewModel highlight)
     {
-        var text = Truncate(highlight.Text.ReplaceLineEndings(" "), 68);
-        var weight = (highlight.Weight ?? 3).ToString(CultureInfo.InvariantCulture).PadLeft(2);
+        var text = FitCell(highlight.Text.ReplaceLineEndings(" "), _tableLayout.HighlightWidth);
+        var weight = (highlight.Weight ?? 3).ToString(CultureInfo.InvariantCulture).PadLeft(_tableLayout.WeightWidth);
         var state = IsEffectivelyExcluded(highlight) ? "Excluded" : "Included";
-        return $"{text.PadRight(68)}  {weight}  {state}";
+        return $"{text}  {weight}  {FitCell(state, _tableLayout.StatusWidth)}";
     }
 
-    private static string FormatHeader() => $"{"Highlight".PadRight(68)}  WT  State";
+    private static string FormatHeader(TableLayout tableLayout)
+        => $"{FitCell("HIGHLIGHT", tableLayout.HighlightWidth)}  {FitCell("WEIGHT", tableLayout.WeightWidth)}  {FitCell("STATUS", tableLayout.StatusWidth)}";
 
     private void ApplyNavigation(ScreenResult result)
     {
@@ -728,18 +841,41 @@ public sealed class HighlightDetailScreen : IScreen
         }
     }
 
-    private static string Truncate(string value, int maxLength)
+    private static TableLayout CalculateTableLayout(int availableWidth)
     {
-        if (value.Length <= maxLength)
+        const int spacingWidth = 4;
+
+        var statusWidth = MinimumStateColumnWidth;
+        var highlightWidth = availableWidth - WeightColumnWidth - statusWidth - spacingWidth;
+        if (highlightWidth < MinimumHighlightColumnWidth)
         {
-            return value;
+            highlightWidth = Math.Max(0, availableWidth - WeightColumnWidth - statusWidth - spacingWidth);
         }
 
-        if (maxLength <= 3)
-        {
-            return value[..maxLength];
-        }
-
-        return value[..(maxLength - 3)] + "...";
+        return new TableLayout(
+            Math.Max(0, highlightWidth),
+            WeightColumnWidth,
+            statusWidth);
     }
+
+    private static string FitCell(string value, int width)
+    {
+        if (width <= 0)
+        {
+            return string.Empty;
+        }
+
+        if (value.Length <= width)
+        {
+            return value.PadRight(width);
+        }
+
+        if (width <= 3)
+        {
+            return value[..width];
+        }
+
+        return value[..(width - 3)] + "...";
+    }
+
 }
