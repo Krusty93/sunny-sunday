@@ -1,16 +1,20 @@
-﻿using Spectre.Console.Rendering;
+﻿using Terminal.Gui.ViewBase;
 
 namespace SunnySunday.Cli.Tui;
 
 public interface IScreen
 {
-    IRenderable Render();
+    View CreateView(Action<ScreenResult> navigate);
 
-    Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken cancellationToken);
+    View? CreateToolbarView(Action<ScreenResult> navigate) => null;
+
+    int ToolbarHeight => 0;
 
     Task InitializeAsync(CancellationToken cancellationToken);
 
-    string KeyHints { get; }
+    string Title { get; }
+
+    IReadOnlyList<(string Key, string Label)> KeyHints { get; }
 }
 
 public enum ScreenAction

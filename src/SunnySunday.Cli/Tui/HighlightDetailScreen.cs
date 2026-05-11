@@ -1,5 +1,6 @@
-﻿using Spectre.Console;
-using Spectre.Console.Rendering;
+﻿using Terminal.Gui.Drivers;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using SunnySunday.Cli.Infrastructure;
 using SunnySunday.Cli.Tui.ViewModels;
 
@@ -11,28 +12,64 @@ public sealed class HighlightDetailScreen(BookViewModel book, SunnyHttpClient cl
 
     public BookViewModel Book { get; } = book;
 
-    public string KeyHints => "[Esc] Back";
+    public string Title => $"Highlights - {Book.Title}";
+
+    public IReadOnlyList<(string Key, string Label)> KeyHints =>
+    [
+        ("Esc", "Back"),
+        ("Ctrl+C", "Quit")
+    ];
 
     public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public IRenderable Render()
-        => new Panel(new Markup($"[bold]{Markup.Escape(Book.Title)}[/]\n[grey]{Markup.Escape(Book.Author)}[/]\n\n[grey]Highlight detail screen is ready for the next implementation phase.[/]"))
+    public View CreateView(Action<ScreenResult> navigate)
+    {
+        var container = new View
         {
-            Header = new PanelHeader("Highlights")
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true
         };
 
-    public Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken cancellationToken)
-    {
-        if (key.Key == ConsoleKey.Escape)
+        var titleLabel = new Label
         {
-            return Task.FromResult(ScreenResult.Pop());
-        }
+            Text = Book.Title,
+            X = 0,
+            Y = 0
+        };
 
-        if (key.Key == ConsoleKey.C && key.Modifiers.HasFlag(ConsoleModifiers.Control))
+        var authorLabel = new Label
         {
-            return Task.FromResult(ScreenResult.Quit());
-        }
+            Text = Book.Author,
+            X = 0,
+            Y = 1
+        };
 
-        return Task.FromResult(ScreenResult.Stay());
+        var stubLabel = new Label
+        {
+            Text = "Highlight detail screen is ready for the next implementation phase.",
+            X = 0,
+            Y = 3
+        };
+
+        container.Add(titleLabel, authorLabel, stubLabel);
+
+        container.KeyDown += (_, key) =>
+        {
+            if (key.KeyCode == KeyCode.Esc)
+            {
+                navigate(ScreenResult.Pop());
+                key.Handled = true;
+            }
+            else if (key.KeyCode == (KeyCode.C | KeyCode.CtrlMask))
+            {
+                navigate(ScreenResult.Quit());
+                key.Handled = true;
+            }
+        };
+
+        return container;
     }
 }
