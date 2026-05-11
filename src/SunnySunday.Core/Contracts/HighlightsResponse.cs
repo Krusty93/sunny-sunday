@@ -1,4 +1,4 @@
-namespace SunnySunday.Core.Contracts;
+﻿namespace SunnySunday.Core.Contracts;
 
 /// <summary>
 /// Paginated list of highlights.

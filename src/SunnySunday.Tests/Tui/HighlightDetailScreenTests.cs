@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using RichardSzalay.MockHttp;
 using SunnySunday.Cli.Infrastructure;
 using SunnySunday.Cli.Tui;
@@ -8,6 +8,19 @@ namespace SunnySunday.Tests.Tui;
 
 public sealed class HighlightDetailScreenTests
 {
+    [Fact]
+    public void KeyHints_ExposeShowAndQuitWithoutCtrlC()
+    {
+        using var mockHttp = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
+        var screen = CreateScreen(new SunnyHttpClient(httpClient));
+
+        Assert.Contains(screen.KeyHints, hint => hint is ("Enter", "Show"));
+        Assert.Contains(screen.KeyHints, hint => hint is ("A", "Actions"));
+        Assert.Contains(screen.KeyHints, hint => hint is ("Q", "Quit"));
+        Assert.DoesNotContain(screen.KeyHints, hint => string.Equals(hint.Key, "Ctrl+C", StringComparison.OrdinalIgnoreCase));
+    }
+
     [Fact]
     public async Task HandleKeyAsync_NavigatesWithinBounds()
     {
@@ -34,7 +47,7 @@ public sealed class HighlightDetailScreenTests
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
         var screen = CreateScreen(new SunnyHttpClient(httpClient));
 
-        var result = await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        var result = await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
 
         Assert.Equal(ScreenAction.None, result.Action);
         Assert.True(screen.ActionMenuOpen);
@@ -47,7 +60,7 @@ public sealed class HighlightDetailScreenTests
         using var mockHttp = new MockHttpMessageHandler();
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
         var screen = CreateScreen(new SunnyHttpClient(httpClient));
-        await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
 
         var firstEscape = await screen.HandleKeyAsync(Key(ConsoleKey.Escape), CancellationToken.None);
         var secondEscape = await screen.HandleKeyAsync(Key(ConsoleKey.Escape), CancellationToken.None);
@@ -63,7 +76,7 @@ public sealed class HighlightDetailScreenTests
         using var mockHttp = new MockHttpMessageHandler();
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
         var screen = CreateScreen(new SunnyHttpClient(httpClient));
-        await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
 
         for (var index = 0; index < 10; index++)
         {
@@ -81,7 +94,7 @@ public sealed class HighlightDetailScreenTests
     }
 
     [Fact]
-    public async Task HandleKeyAsync_ModifyWeightCallsApiAndUpdatesSelection()
+    public async Task HandleKeyAsync_SetWeightOpensEditorAndAppliesExplicitValue()
     {
         using var mockHttp = new MockHttpMessageHandler();
         mockHttp.Expect(HttpMethod.Put, "http://localhost/highlights/11/weight")
@@ -90,12 +103,66 @@ public sealed class HighlightDetailScreenTests
 
         var screen = CreateScreen(new SunnyHttpClient(httpClient));
 
+        await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
         await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        Assert.True(screen.WeightEditorOpen);
+
+        await screen.HandleKeyAsync(Key(ConsoleKey.D5, '5'), CancellationToken.None);
         await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
 
         Assert.False(screen.ActionMenuOpen);
-        Assert.Equal(4, screen.Highlights[0].Weight);
+        Assert.False(screen.WeightEditorOpen);
+        Assert.Equal(5, screen.Highlights[0].Weight);
         mockHttp.VerifyNoOutstandingExpectation();
+    }
+
+    [Fact]
+    public async Task HandleKeyAsync_EscapeCancelsWeightEditorWithoutChangingWeight()
+    {
+        using var mockHttp = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
+
+        var screen = CreateScreen(new SunnyHttpClient(httpClient));
+
+        await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
+        await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        await screen.HandleKeyAsync(Key(ConsoleKey.D5, '5'), CancellationToken.None);
+
+        var result = await screen.HandleKeyAsync(Key(ConsoleKey.Escape), CancellationToken.None);
+
+        Assert.Equal(ScreenAction.None, result.Action);
+        Assert.False(screen.WeightEditorOpen);
+        Assert.Null(screen.Highlights[0].Weight);
+    }
+
+    [Fact]
+    public async Task HandleKeyAsync_SShowOpensPreviewAndEscapeClosesItBeforePopping()
+    {
+        using var mockHttp = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
+        var screen = CreateScreen(new SunnyHttpClient(httpClient));
+
+        var showResult = await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        var firstEscape = await screen.HandleKeyAsync(Key(ConsoleKey.Escape), CancellationToken.None);
+        var secondEscape = await screen.HandleKeyAsync(Key(ConsoleKey.Escape), CancellationToken.None);
+
+        Assert.Equal(ScreenAction.None, showResult.Action);
+        Assert.True(screen.PreviewText is null);
+        Assert.Equal(ScreenAction.None, firstEscape.Action);
+        Assert.False(screen.HighlightPreviewOpen);
+        Assert.Equal(ScreenAction.Pop, secondEscape.Action);
+    }
+
+    [Fact]
+    public async Task HandleKeyAsync_QQuitsScreen()
+    {
+        using var mockHttp = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
+        var screen = CreateScreen(new SunnyHttpClient(httpClient));
+
+        var result = await screen.HandleKeyAsync(Key(ConsoleKey.Q, 'q'), CancellationToken.None);
+
+        Assert.Equal(ScreenAction.Quit, result.Action);
     }
 
     [Fact]
@@ -108,7 +175,7 @@ public sealed class HighlightDetailScreenTests
 
         var screen = CreateScreen(new SunnyHttpClient(httpClient));
 
-        await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
         await screen.HandleKeyAsync(Key(ConsoleKey.DownArrow), CancellationToken.None);
         await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
 
@@ -127,7 +194,7 @@ public sealed class HighlightDetailScreenTests
 
         var screen = CreateScreen(new SunnyHttpClient(httpClient));
 
-        await screen.HandleKeyAsync(Key(ConsoleKey.Enter), CancellationToken.None);
+        await screen.HandleKeyAsync(Key(ConsoleKey.A, 'a'), CancellationToken.None);
         for (var index = 0; index < 4; index++)
         {
             await screen.HandleKeyAsync(Key(ConsoleKey.DownArrow), CancellationToken.None);

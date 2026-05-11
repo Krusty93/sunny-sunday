@@ -13,8 +13,8 @@ public sealed class SettingsScreen(SunnyHttpClient client) : IScreen
 
     public IReadOnlyList<(string Key, string Label)> KeyHints =>
     [
-        ("Esc", "Back"),
-        ("Ctrl+C", "Quit")
+        ("Esc", "Go Back"),
+        ("Q", "Quit")
     ];
 
     public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -45,6 +45,11 @@ public sealed class SettingsScreen(SunnyHttpClient client) : IScreen
             if (key.KeyCode == KeyCode.Esc)
             {
                 navigate(ScreenResult.Pop());
+                key.Handled = true;
+            }
+            else if (key.AsRune.Value is 'q' or 'Q' || key.KeyCode == KeyCode.Q)
+            {
+                navigate(ScreenResult.Quit());
                 key.Handled = true;
             }
             else if (key.KeyCode == (KeyCode.C | KeyCode.CtrlMask))
