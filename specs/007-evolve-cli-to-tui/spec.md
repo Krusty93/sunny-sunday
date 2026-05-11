@@ -3,7 +3,7 @@
 **Feature Branch**: `007-evolve-cli-to-tui`  
 **Created**: 2026-05-09  
 **Status**: Draft  
-**Input**: User request: "Evolve the current sunny CLI (Spectre.Console) into a complete Terminal User Interface (TUI) to provide a richer, more guided, end-to-end user experience. The existing CLI command interface must be preserved — the TUI is an additional mode that activates when no command is given."
+**Input**: User request: "Evolve the current sunny CLI (Spectre.Console.Cli) into a complete Terminal User Interface (TUI) to provide a richer, more guided, end-to-end user experience. The existing CLI command interface must be preserved — the TUI is an additional mode that activates when no command is given."
 
 ## User Scenarios & Testing
 
@@ -140,18 +140,18 @@ A search bar allows the user to filter the book list table by typing a query. Th
 
 ---
 
-### User Story 8 — TUI Rendering Approach with Spectre.Console (Priority: P1)
+### User Story 8 — TUI Rendering Approach with Terminal.Gui (Priority: P1)
 
-The TUI is built using Spectre.Console's Live rendering, Layout, Panel, and Table APIs — not a full TUI framework. The application manages a custom render loop that listens for keyboard input and re-renders the screen layout on each interaction. This approach works within Spectre.Console's capabilities without introducing a new dependency.
+The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a native event loop, composable views, keyboard input dispatch, and layout engine. The application uses Terminal.Gui's `Application`, `Window`, `FrameView`, and `View` types to compose screens. Spectre.Console.Cli is still used exclusively for CLI command routing; Terminal.Gui handles only TUI rendering.
 
-**Why this priority**: The rendering approach is foundational — every TUI user story depends on a viable rendering strategy. Using Spectre.Console avoids adding a new framework but requires a custom render loop pattern.
+**Why this priority**: The rendering approach is foundational — every TUI user story depends on a viable rendering strategy. Terminal.Gui provides a built-in event loop, proper screen management, and widget composition that avoids the complexity and limitations of a custom render loop.
 
 **Independent Test**: Launch the TUI and verify that the screen renders correctly with panels and layout. Press keys and verify the screen updates without flickering or corruption.
 
 **Acceptance Scenarios**:
 
-1. **Given** Spectre.Console is the only UI library used, **When** the TUI starts, **Then** the screen is composed using Spectre.Console's Layout API with distinct regions (banner, status bar, content area).
-2. **Given** the TUI is running, **When** the user presses a key, **Then** the content area updates without full-screen flicker (using Spectre.Console's Live rendering for controlled updates).
+1. **Given** Terminal.Gui is the TUI framework, **When** the TUI starts, **Then** the screen is composed using Terminal.Gui's `Window` and `FrameView` types with distinct regions (banner, status bar, content area).
+2. **Given** the TUI is running, **When** the user presses a key, **Then** the content area updates without full-screen flicker (using Terminal.Gui's native event loop for controlled updates).
 3. **Given** the TUI is running, **When** the terminal is resized, **Then** the layout adjusts gracefully to the new terminal dimensions.
 4. **Given** the TUI is running, **When** the user presses `Q` or `Ctrl+C`, **Then** the TUI exits cleanly, restoring the terminal to its original state.
 
@@ -187,8 +187,8 @@ The TUI is built using Spectre.Console's Live rendering, Layout, Panel, and Tabl
 - **FR-007-12a**: Settings page MUST support sending a simple plain-text test email via `POST /settings/test-email` to verify SMTP configuration.
 - **FR-007-12b**: Settings page MUST support triggering a recap via `POST /dev/recap/trigger`, but ONLY when the .NET environment is `Development`. This option MUST be hidden in non-Development environments.
 - **FR-007-13**: TUI MUST provide a client-side search bar (activated by `/`) that filters the book list by title, author, and highlight text (case-insensitive).
-- **FR-007-14**: TUI MUST be built exclusively with Spectre.Console — no new UI framework dependencies.
-- **FR-007-15**: TUI MUST use Spectre.Console's Layout and Live rendering APIs for screen composition and flicker-free updates.
+- **FR-007-14**: TUI MUST use Terminal.Gui v2 as the TUI rendering framework. Spectre.Console.Cli continues to be used for CLI command routing when arguments are provided.
+- **FR-007-15**: TUI MUST use Terminal.Gui's `Application`, `Window`, `FrameView`, and `View` APIs for screen composition and event-driven rendering.
 - **FR-007-16**: TUI MUST provide visible key hints on each screen showing available actions and navigation shortcuts.
 - **FR-007-16a**: TUI MUST support a refresh action (`R` key) on every screen that re-fetches data from the server and re-renders the current screen without navigating away.
 - **FR-007-17**: TUI MUST exit cleanly on `Q` or `Ctrl+C`, restoring the terminal state.
@@ -219,8 +219,8 @@ The TUI is built using Spectre.Console's Live rendering, Layout, Panel, and Tabl
 
 ## Assumptions
 
-- Spectre.Console 0.55.0 (already in the project) supports the Layout, Live, Panel, Table, and FigletText APIs needed for TUI composition.
-- Spectre.Console does NOT provide a built-in event loop or persistent input handling; the TUI will implement a custom render loop using `Console.ReadKey` and `AnsiConsole.Live` for controlled re-rendering.
+- Terminal.Gui v2 (added as a new NuGet dependency) provides the event loop, input dispatch, widget composition, and layout engine needed for TUI rendering.
+- Spectre.Console.Cli continues to handle CLI command routing unchanged; Terminal.Gui is used exclusively for the TUI mode.
 - The REST API surface from features 004 and 005 is mostly sufficient for TUI functionality. One new endpoint is required: `POST /settings/test-email` to send a simple plain-text test email for SMTP verification. This missing API is documented as a comment on issue #188.
 - All data displayed in the TUI (books, highlights, settings) is fetched via existing REST endpoints and cached client-side for the duration of the TUI session.
 - Single-user architecture — no concurrent TUI sessions modifying the same server.

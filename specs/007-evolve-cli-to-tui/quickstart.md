@@ -14,9 +14,9 @@
 
 ---
 
-## No New Dependencies
+## New Dependency: Terminal.Gui
 
-All TUI functionality uses Spectre.Console 0.55.0 (already referenced in `SunnySunday.Cli.csproj`). No new NuGet packages are required.
+The TUI uses **Terminal.Gui 2.1.0** (added to `SunnySunday.Cli.csproj`) as the TUI rendering framework. Spectre.Console.Cli is retained for CLI command routing. `dotnet restore` fetches the package automatically on first build.
 
 ---
 

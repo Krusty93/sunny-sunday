@@ -5,18 +5,18 @@
 
 ## Summary
 
-Evolve the existing `sunny` CLI into a dual-mode application: when invoked without arguments, it launches a persistent interactive TUI built exclusively with Spectre.Console's `Layout`, `LiveDisplay`, `Panel`, `Table`, and `FigletText` APIs. When invoked with arguments, the existing `CommandApp` processes commands identically to today. The TUI provides a branded splash screen, always-visible status chrome, a navigable book list, highlight detail management, settings editing, and client-side search. One targeted server-side addition supports the TUI: a dedicated `POST /settings/test-email` endpoint for plain-text SMTP verification.
+Evolve the existing `sunny` CLI into a dual-mode application: when invoked without arguments, it launches a persistent interactive TUI built with Terminal.Gui v2. When invoked with arguments, the existing Spectre.Console.Cli `CommandApp` processes commands identically to today. The TUI provides a branded splash screen, always-visible status chrome, a navigable book list, highlight detail management, settings editing, and client-side search. One targeted server-side addition supports the TUI: a dedicated `POST /settings/test-email` endpoint for plain-text SMTP verification.
 
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (`net10.0` TFM)
-**Primary Dependencies**: Spectre.Console 0.55.0 (already in project) — `Layout`, `LiveDisplay`, `Panel`, `Table`, `FigletText`, `Markup`. No new UI framework.
+**Primary Dependencies**: Terminal.Gui 2.1.0 (new dependency) — `Application`, `Window`, `FrameView`, `View`, `Label`, `TableView`. Spectre.Console.Cli (already in project) continues to be used for CLI command routing.
 **Storage**: N/A — TUI is stateless; all data fetched from server REST API and cached in memory for the session.
 **Testing**: xUnit (existing `SunnySunday.Tests` project) — test data/logic layer, not rendering.
 **Target Platform**: Cross-platform CLI (Windows, macOS, Linux) — interactive terminals with ≥80×24.
 **Project Type**: CLI application with one supporting server endpoint addition
 **Performance Goals**: TUI startup < 3s (SC-007-01), search filtering < 200ms (SC-007-07), book list scrolling smooth with 100+ books (SC-007-05).
-**Constraints**: No new NuGet UI dependencies (FR-007-14). No changes to existing API endpoints (FR-007-18). One new server endpoint required: `POST /settings/test-email` (documented on #188). Single-user MVP. Custom render loop — Spectre.Console is NOT a TUI framework.
+**Constraints**: Terminal.Gui 2.1.0 added as a new NuGet dependency for TUI rendering (supersedes FR-007-14). No changes to existing API endpoints (FR-007-18). One new server endpoint required: `POST /settings/test-email` (documented on #188). Single-user MVP. Terminal.Gui provides a native event loop — no custom render loop needed.
 **Scale/Scope**: Single user, 3 screens, ~12 new source files in `Tui/` folder, 1 server endpoint addition, ~7 new test files.
 
 ## Constitution Check
@@ -32,13 +32,13 @@ Evolve the existing `sunny` CLI into a dual-mode application: when invoked witho
 | V. Tests Ship with Code | **PASS** | Unit tests for data/logic layer included per phase |
 | VI. Simplicity / YAGNI | **PASS** | No new frameworks, no new projects, no local caching beyond session |
 | Tech: C# / .NET 10 only | **PASS** | All new code is C# |
-| Tech: Spectre.Console | **PASS** | All TUI rendering via Spectre.Console APIs |
+| Tech: Terminal.Gui (TUI) | **PASS** | All TUI rendering via Terminal.Gui v2 APIs; Spectre.Console.Cli retained for CLI routing |
 | Tech: REST HTTP + JSON | **PASS** | TUI uses existing `SunnyHttpClient` methods |
 | Tech: Docker distribution | **PASS** | TUI runs in Docker with `-it` flag |
 | Exclusion: No web UI | **PASS** | TUI is terminal-based, not web |
 | Exclusion: No auth for MVP | **PASS** | No authentication added |
 
-**Post-design re-check**: All gates pass. No new NuGet packages introduced. Three new methods added to `SunnyHttpClient` (using existing HTTP infrastructure). `SunnyJsonContext` extended with two types for trimming compatibility. One new server-side endpoint (`POST /settings/test-email`) identified and documented on #188.
+**Post-design re-check**: All gates pass. Terminal.Gui 2.1.0 added as a new NuGet dependency to provide the event loop, widget system, and layout engine for TUI rendering. Spectre.Console.Cli is retained for CLI command routing. Three new methods added to `SunnyHttpClient` (using existing HTTP infrastructure). `SunnyJsonContext` extended with two types for trimming compatibility. One new server-side endpoint (`POST /settings/test-email`) identified and documented on #188.
 
 ## Project Structure
 
@@ -114,10 +114,10 @@ No constitution violations. No complexity justification needed.
 - [ ] T001 Create `src/SunnySunday.Cli/Tui/ViewModels/BookViewModel.cs`: record with `Title`, `Author`, `HighlightCount`, `IReadOnlyList<HighlightViewModel> Highlights`. Add static factory method `FromHighlights(IEnumerable<HighlightItemDto> items) → List<BookViewModel>` that groups by `(BookTitle, AuthorName)`. Namespace `SunnySunday.Cli.Tui.ViewModels`.
 - [ ] T002 Create `src/SunnySunday.Cli/Tui/ViewModels/HighlightViewModel.cs`: record with `Id`, `Text`, `BookTitle`, `AuthorName`, `IsExcluded`, `Weight`. Namespace `SunnySunday.Cli.Tui.ViewModels`.
 - [ ] T003 Create `src/SunnySunday.Cli/Tui/TuiApp.cs`: the main orchestrator class. Constructor takes `SunnyHttpClient`, `string serverUrl`, `string version`. Key responsibilities:
-  1. Build a Spectre `Layout` with three rows: Chrome, Content, KeyHints.
+  1. Initialize Terminal.Gui `Application` and create the root `Window`.
   2. Manage a `Stack<IScreen>` — push initial screen on startup.
-  3. Run the render loop: `AnsiConsole.Live(layout).StartAsync(async ctx => { while (!ct.IsCancellationRequested) { render current screen → layout["Content"]; ctx.Refresh(); key = Console.ReadKey(true); result = await currentScreen.HandleKeyAsync(key, ct); handle Push/Pop/Quit; } })`.
-  4. Set `Console.TreatControlCAsInput = true` on start, restore on exit.
+  3. Use Terminal.Gui's event loop (`Application.Run`) with `IScreen.CreateView()` producing `View` instances that are swapped into the content `FrameView` on navigation.
+  4. Handle `Q` and `Ctrl+C` via Terminal.Gui key bindings to stop `Application.Run` cleanly.
   5. Handle terminal size check: if < 80×24, display resize message instead of content.
   Public method: `Task RunAsync(CancellationToken ct)`.
 - [ ] T004 Modify `src/SunnySunday.Cli/Program.cs`: add TUI mode detection **before** `CommandApp` creation. Logic: if `args.Length == 0 && !Console.IsInputRedirected`, create `TuiApp` and call `RunAsync`. If `args.Length == 0 && Console.IsInputRedirected`, fall through to `CommandApp` (shows help). If `args.Length > 0`, fall through to `CommandApp` (existing behavior). Import `SunnySunday.Cli.Tui` namespace.
@@ -134,16 +134,16 @@ No constitution violations. No complexity justification needed.
 
 **Purpose**: Build the persistent header region (`StatusChrome`) that appears on every TUI screen: Figlet banner, version, server connection status, and Kindle email warning.
 
-- [ ] T009 Create `src/SunnySunday.Cli/Tui/StatusChrome.cs`: class that produces the chrome `IRenderable`. Constructor takes `string serverUrl`, `string version`. Methods:
+- [ ] T009 Create `src/SunnySunday.Cli/Tui/StatusChrome.cs`: class that produces the chrome `View`. Constructor takes `string serverUrl`, `string version`. Methods:
   1. `async Task RefreshAsync(SunnyHttpClient client, CancellationToken ct)` — calls `PingAsync` (`GET /`) to check connection (HTTP 200 = connected). If connected, calls `GetSettingsAsync` to check `KindleEmailConfigured`. Catches `HttpRequestException` → sets disconnected state.
-  2. `IRenderable Render()` — builds a `Rows` renderable containing:
-     - `FigletText("SunnySunday")` with accent color. If terminal width < 60, fall back to `Markup("[bold]SunnySunday[/]")`.
-     - Version line: `Markup($"v{version}")`.
+  2. `View Render()` — builds a Terminal.Gui `View` containing:
+     - ASCII art "SUNNY" banner with colored `Label` rows.
+     - Version line.
      - Connection status: green `● Connected to {url}` or red `● Disconnected — cannot reach {url}`.
      - Conditional warning: yellow `⚠ Kindle email not configured — recaps cannot be delivered` (only if `KindleEmailConfigured == false`).
   Properties: `bool IsConnected`, `bool KindleEmailConfigured`.
-- [ ] T010 Wire `StatusChrome` into `TuiApp.cs`: create `StatusChrome` in constructor, call `RefreshAsync` on startup and after each failed API call. Assign `StatusChrome.Render()` to `layout["Chrome"]` on each refresh cycle.
-- [ ] T011 Add key hint bar rendering to `TuiApp.cs`: assign `new Markup(currentScreen.KeyHints)` to `layout["KeyHints"]` on each refresh. Style with dim/grey markup.
+- [ ] T010 Wire `StatusChrome` into `TuiApp.cs`: create `StatusChrome` in constructor, call `RefreshAsync` on startup and after each failed API call. Add the chrome `View` to the root window layout.
+- [ ] T011 Add key hint bar rendering to `TuiApp.cs`: render a footer `View` with key hint labels sourced from `currentScreen.KeyHints`. Style with dim/grey color.
 
 **Checkpoint**: TUI displays Figlet banner, version, connection status, and (if applicable) Kindle email warning. These persist when navigating between screens.
 
@@ -155,7 +155,7 @@ No constitution violations. No complexity justification needed.
 
 - [ ] T012 Create `src/SunnySunday.Cli/Tui/BookListScreen.cs`: implements `IScreen`. State: `List<BookViewModel> books`, `List<BookViewModel> filteredBooks`, `int selectedIndex`, `bool isSearchActive`, `string searchQuery`.
   1. `InitializeAsync`: fetch all highlights from server (paginate through `GetHighlightsAsync` until all loaded), group into `BookViewModel` list via `BookViewModel.FromHighlights()`. Also fetch exclusions and weights to enrich `HighlightViewModel.IsExcluded` and `Weight` fields.
-  2. `Render()`: build a Spectre `Table` with columns Title, Author, Highlights. Highlight the selected row with a distinct style (e.g., `[bold on blue]`). If search is active, show search input line above table. If no books, show empty state message: "No highlights found. Run `sunny sync` to import."
+  2. `Render()`: build a Terminal.Gui `TableView` with columns Title, Author, Highlights. Highlight the selected row with a distinct style. If search is active, show search input above table. If no books, show empty state message: "No highlights found. Run `sunny sync` to import."
   3. `HandleKeyAsync`: `↑` = decrement selectedIndex (clamp), `↓` = increment (clamp), `Enter` = return `Push(new HighlightDetailScreen(selectedBook))`, `S` = return `Push(new SettingsScreen())`, `/` = activate search mode, `R` = refresh (re-fetch data from server and re-render), `Q` = return `Quit`, `Ctrl+C` = return `Quit`.
   4. `KeyHints`: `"[↑↓] Navigate · [Enter] View · [S] Settings · [/] Search · [R] Refresh · [Q] Quit"`.
   Constructor takes `SunnyHttpClient`.
