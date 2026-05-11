@@ -64,7 +64,6 @@ jobs:
             --runtime ${{ matrix.rid }} \
             --self-contained true \
             -p:PublishSingleFile=true \
-            -p:PublishTrimmed=true \
             --output publish/${{ matrix.rid }}
 
       - name: Rename Binary
