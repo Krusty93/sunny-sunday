@@ -48,4 +48,21 @@ public sealed class DevMailDeliveryService : IMailDeliveryService
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(quit: true, cancellationToken);
     }
+
+    public async Task SendTestEmailAsync(string toAddress, CancellationToken cancellationToken = default)
+    {
+        using var message = new MimeMessage();
+        message.From.Add(new MailboxAddress("Sunny Sunday", "sunny-sunday"));
+        message.To.Add(MailboxAddress.Parse(toAddress));
+        message.Subject = "Sunny Sunday - Test Email";
+        message.Body = new TextPart("plain")
+        {
+            Text = "This is a test email from Sunny Sunday. If you received this, your SMTP configuration is working correctly."
+        };
+
+        using var client = new SmtpClient();
+        await client.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.None, cancellationToken);
+        await client.SendAsync(message, cancellationToken);
+        await client.DisconnectAsync(quit: true, cancellationToken);
+    }
 }

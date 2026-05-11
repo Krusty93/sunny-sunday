@@ -74,6 +74,37 @@ public static partial class SettingsEndpoints
         .Produces<SettingsResponse>(StatusCodes.Status200OK)
         .ProducesValidationProblem(StatusCodes.Status422UnprocessableEntity);
 
+        app.MapPost("/settings/test-email", async ([FromServices] UserRepository userRepo, [FromServices] IMailDeliveryService mailService) =>
+        {
+            var userId = await userRepo.EnsureUserAsync();
+            var user = await userRepo.GetByIdAsync(userId);
+
+            if (string.IsNullOrWhiteSpace(user.KindleEmail))
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { { "kindleEmail", ["Kindle email must be configured before sending a test email."] } },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            try
+            {
+                await mailService.SendTestEmailAsync(user.KindleEmail);
+                return Results.Ok(new { message = "Test email sent successfully." });
+            }
+            catch (Exception ex) when (ex is MailKit.Net.Smtp.SmtpCommandException or MailKit.Net.Smtp.SmtpProtocolException or System.Net.Sockets.SocketException or IOException)
+            {
+                return Results.Problem(
+                    detail: ex.Message,
+                    title: "SMTP delivery failed.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
+        })
+        .WithSummary("Send a plain-text test email.")
+        .WithDescription("Sends a simple verification email to the configured Kindle email address without generating a recap.")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem(StatusCodes.Status422UnprocessableEntity)
+        .ProducesProblem(StatusCodes.Status502BadGateway);
+
         return app;
     }
 

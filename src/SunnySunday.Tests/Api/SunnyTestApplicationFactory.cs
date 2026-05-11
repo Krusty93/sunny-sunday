@@ -11,9 +11,11 @@ namespace SunnySunday.Tests.Api;
 public sealed class SunnyTestApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection _connection;
+    private readonly Action<IWebHostBuilder>? _configureWebHost;
 
-    public SunnyTestApplicationFactory()
+    public SunnyTestApplicationFactory(Action<IWebHostBuilder>? configureWebHost = null)
     {
+        _configureWebHost = configureWebHost;
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
         using var pragma = _connection.CreateCommand();
@@ -53,6 +55,8 @@ public sealed class SunnyTestApplicationFactory : WebApplicationFactory<Program>
         });
 
         builder.UseEnvironment("Testing");
+
+        _configureWebHost?.Invoke(builder);
     }
 
     protected override void Dispose(bool disposing)
