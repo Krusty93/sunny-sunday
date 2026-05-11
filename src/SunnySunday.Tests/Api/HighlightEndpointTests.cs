@@ -55,9 +55,37 @@ public sealed class HighlightEndpointTests : IDisposable
         Assert.NotNull(result);
         var item = result.Items.First();
         Assert.True(item.Id > 0);
+        Assert.True(item.BookId > 0);
+        Assert.True(item.AuthorId > 0);
         Assert.NotEmpty(item.Text);
         Assert.NotEmpty(item.BookTitle);
         Assert.NotEmpty(item.AuthorName);
+    }
+
+    [Fact]
+    public async Task DeleteHighlight_RemovesStoredHighlight()
+    {
+        await SeedHighlightsAsync();
+
+        var beforeDelete = await _client.GetFromJsonAsync<HighlightsResponse>("/highlights");
+        var highlightId = beforeDelete!.Items[0].Id;
+
+        var deleteResponse = await _client.DeleteAsync($"/highlights/{highlightId}");
+
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var afterDelete = await _client.GetFromJsonAsync<HighlightsResponse>("/highlights");
+        Assert.NotNull(afterDelete);
+        Assert.Equal(beforeDelete.Total - 1, afterDelete.Total);
+        Assert.DoesNotContain(afterDelete.Items, item => item.Id == highlightId);
+    }
+
+    [Fact]
+    public async Task DeleteHighlight_UnknownId_Returns404()
+    {
+        var response = await _client.DeleteAsync("/highlights/999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]

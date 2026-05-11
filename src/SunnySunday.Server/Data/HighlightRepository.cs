@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using SunnySunday.Core.Contracts;
 
@@ -24,7 +24,7 @@ public sealed class HighlightRepository(IDbConnection connection)
 
         var itemSql = hasFilter
             ? """
-              SELECT h.id AS Id, h.text AS Text, b.title AS BookTitle, a.name AS AuthorName
+              SELECT h.id AS Id, b.id AS BookId, a.id AS AuthorId, h.text AS Text, b.title AS BookTitle, a.name AS AuthorName
               FROM highlights h
               INNER JOIN books b ON b.id = h.book_id
               INNER JOIN authors a ON a.id = b.author_id
@@ -34,7 +34,7 @@ public sealed class HighlightRepository(IDbConnection connection)
               LIMIT @PageSize OFFSET @Offset
               """
             : """
-              SELECT h.id AS Id, h.text AS Text, b.title AS BookTitle, a.name AS AuthorName
+              SELECT h.id AS Id, b.id AS BookId, a.id AS AuthorId, h.text AS Text, b.title AS BookTitle, a.name AS AuthorName
               FROM highlights h
               INNER JOIN books b ON b.id = h.book_id
               INNER JOIN authors a ON a.id = b.author_id
@@ -55,5 +55,14 @@ public sealed class HighlightRepository(IDbConnection connection)
             PageSize = pageSize,
             Items = items.AsList()
         };
+    }
+
+    public async Task<bool> DeleteHighlightAsync(int userId, int highlightId)
+    {
+        var affectedRows = await connection.ExecuteAsync(
+            "DELETE FROM highlights WHERE id = @HighlightId AND user_id = @UserId",
+            new { HighlightId = highlightId, UserId = userId });
+
+        return affectedRows > 0;
     }
 }

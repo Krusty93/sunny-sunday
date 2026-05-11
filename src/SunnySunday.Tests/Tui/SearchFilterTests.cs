@@ -73,19 +73,27 @@ public sealed class SearchFilterTests
         return
         [
             new BookViewModel(
+                10,
+                100,
                 "The Hobbit",
                 "J.R.R. Tolkien",
                 2,
+                false,
+                false,
                 [
-                    new HighlightViewModel(1, "In a hole in the ground there lived a hobbit.", "The Hobbit", "J.R.R. Tolkien", false, null),
-                    new HighlightViewModel(2, "Bag End was a comfortable tunnel.", "The Hobbit", "J.R.R. Tolkien", false, null)
+                    new HighlightViewModel(1, 10, 100, "In a hole in the ground there lived a hobbit.", "The Hobbit", "J.R.R. Tolkien", false, null),
+                    new HighlightViewModel(2, 10, 100, "Bag End was a comfortable tunnel.", "The Hobbit", "J.R.R. Tolkien", false, null)
                 ]),
             new BookViewModel(
+                20,
+                200,
                 "Foundation",
                 "Isaac Asimov",
                 1,
+                false,
+                false,
                 [
-                    new HighlightViewModel(3, "Violence is the last refuge of the incompetent, but probability guides the plan.", "Foundation", "Isaac Asimov", false, null)
+                    new HighlightViewModel(3, 20, 200, "Violence is the last refuge of the incompetent, but probability guides the plan.", "Foundation", "Isaac Asimov", false, null)
                 ])
         ];
     }

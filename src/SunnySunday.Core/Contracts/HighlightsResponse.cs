@@ -37,6 +37,16 @@ public sealed record HighlightItemDto
     public int Id { get; set; }
 
     /// <summary>
+    /// Book identifier.
+    /// </summary>
+    public int BookId { get; set; }
+
+    /// <summary>
+    /// Author identifier.
+    /// </summary>
+    public int AuthorId { get; set; }
+
+    /// <summary>
     /// Full highlight text.
     /// </summary>
     public string Text { get; set; } = string.Empty;
