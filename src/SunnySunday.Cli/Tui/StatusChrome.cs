@@ -90,7 +90,9 @@ public sealed class StatusChrome(string serverUrl, string version)
         {
             Text = $"SunnySunday v{version}",
             X = 1,
-            Y = 0
+            Y = 0,
+            Width = Dim.Fill(1),
+            TextAlignment = Alignment.End
         };
         versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), bg)));
 
@@ -99,7 +101,8 @@ public sealed class StatusChrome(string serverUrl, string version)
             Text = $"⟳ Checking...  {serverUrl}",
             X = 1,
             Y = 1,
-            Width = Dim.Fill()
+            Width = Dim.Fill(1),
+            TextAlignment = Alignment.End
         };
 
         _warningLabel = new Label
@@ -107,7 +110,8 @@ public sealed class StatusChrome(string serverUrl, string version)
             Text = string.Empty,
             X = 1,
             Y = 2,
-            Width = Dim.Fill()
+            Width = Dim.Fill(1),
+            TextAlignment = Alignment.End
         };
 
         infoFrame.Add(versionLabel, _connectionLabel, _warningLabel);

@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using SunnySunday.Cli.Infrastructure;
@@ -71,7 +72,7 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
                 Y = Pos.Center()
             };
             container.Add(emptyLabel);
-            SetupContainerKeyBindings(container, null, null, navigate);
+            SetupContainerKeyBindings(container, null, navigate, null, null);
             // Views are owned by the container hierarchy
             return container;
         }
@@ -120,44 +121,66 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
             }
         };
 
-        searchField.TextChanged += (_, args) =>
+        void RefreshVisibleBooks()
         {
-            _searchQuery = searchField.Text ?? string.Empty;
-            ApplyFilter();
             displayItems.Clear();
             foreach (var item in _filteredBooks.Select(FormatBookRow))
             {
                 displayItems.Add(item);
             }
 
-            if (_filteredBooks.Count > 0 && listView.SelectedItem >= _filteredBooks.Count)
+            if (_filteredBooks.Count > 0)
             {
-                listView.SelectedItem = _filteredBooks.Count - 1;
+                listView.SelectedItem = Math.Min(_selectedIndex, _filteredBooks.Count - 1);
             }
+            else
+            {
+                _selectedIndex = 0;
+            }
+        }
+
+        void SetSearchLayout(bool searchActive)
+        {
+            searchField.Visible = searchActive;
+            headerLabel.Y = searchActive ? 1 : 0;
+            listView.Y = searchActive ? 2 : 1;
+        }
+
+        void ActivateSearchUi()
+        {
+            SetSearchLayout(true);
+            searchField.Text = string.Empty;
+            RefreshVisibleBooks();
+            searchField.SetFocus();
+        }
+
+        void DeactivateSearchUi()
+        {
+            DeactivateSearch();
+            SetSearchLayout(false);
+            searchField.Text = string.Empty;
+            RefreshVisibleBooks();
+            listView.SetFocus();
+        }
+
+        searchField.TextChanged += (_, args) =>
+        {
+            _searchQuery = searchField.Text ?? string.Empty;
+            ApplyFilter();
+            RefreshVisibleBooks();
         };
 
         searchField.KeyDown += (_, key) =>
         {
             if (key.KeyCode == KeyCode.Esc)
             {
-                DeactivateSearch();
-                searchField.Visible = false;
-                searchField.Text = string.Empty;
-                headerLabel.Y = 0;
-                listView.Y = 1;
-                displayItems.Clear();
-                foreach (var item in _filteredBooks.Select(FormatBookRow))
-                {
-                    displayItems.Add(item);
-                }
-
-                listView.SetFocus();
+                DeactivateSearchUi();
                 key.Handled = true;
             }
         };
 
         container.Add(searchField, headerLabel, listView);
-        SetupContainerKeyBindings(container, listView, searchField, navigate);
+        SetupContainerKeyBindings(container, listView, navigate, RefreshVisibleBooks, ActivateSearchUi);
 
         if (_isSearchActive)
         {
@@ -206,58 +229,96 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         return _filteredBooks[_selectedIndex];
     }
 
-    private void SetupContainerKeyBindings(View container, ListView? listView, TextField? searchField, Action<ScreenResult> navigate)
+    private void SetupContainerKeyBindings(
+        View container,
+        ListView? listView,
+        Action<ScreenResult> navigate,
+        Action? refreshVisibleBooks,
+        Action? activateSearchUi)
     {
-        container.KeyDown += (_, key) =>
+        void HandleGlobalKey(Key key)
         {
+            if (key.Handled)
+            {
+                return;
+            }
+
             if (_isSearchActive)
             {
                 return;
             }
 
-            switch (key.KeyCode)
+            var shortcutKey = GetShortcutKey(key);
+            if (shortcutKey is null)
             {
-                case KeyCode.Q:
-                    navigate(ScreenResult.Quit());
-                    key.Handled = true;
-                    break;
-
-                case KeyCode.S:
-                    navigate(ScreenResult.Push(new SettingsScreen(_client)));
-                    key.Handled = true;
-                    break;
-
-                case KeyCode.R:
-                    _ = Task.Run(async () =>
-                    {
-                        await InitializeAsync(CancellationToken.None);
-                    });
-                    key.Handled = true;
-                    break;
+                return;
             }
 
-            if (key.AsRune.Value == '/')
+            if (TryHandleShortcutKey(shortcutKey.Value, navigate, refreshVisibleBooks, activateSearchUi))
             {
-                ActivateSearch();
-                if (searchField is not null && listView is not null)
-                {
-                    searchField.Visible = true;
-                    searchField.Text = string.Empty;
-                    listView.Y = 2;
-                    searchField.SetFocus();
-                }
-
                 key.Handled = true;
             }
-        };
+        }
+
+        container.KeyDown += (_, key) => HandleGlobalKey(key);
 
         if (listView is not null)
         {
+            listView.KeyDown += (_, key) => HandleGlobalKey(key);
+
             listView.ValueChanged += (_, args) =>
             {
                 _selectedIndex = listView.SelectedItem ?? 0;
             };
         }
+    }
+
+    public bool TryHandleShortcutKey(
+        char shortcutKey,
+        Action<ScreenResult> navigate,
+        Action? refreshVisibleBooks,
+        Action? activateSearchUi)
+    {
+        switch (char.ToLowerInvariant(shortcutKey))
+        {
+            case 'q':
+                navigate(ScreenResult.Quit());
+                return true;
+
+            case 's':
+                navigate(ScreenResult.Push(new SettingsScreen(_client)));
+                return true;
+
+            case 'r':
+                InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+                refreshVisibleBooks?.Invoke();
+                return true;
+
+            case '/':
+                ActivateSearch();
+                activateSearchUi?.Invoke();
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private static char? GetShortcutKey(Key key)
+    {
+        return key.AsRune.Value switch
+        {
+            >= 'a' and <= 'z' => (char)key.AsRune.Value,
+            >= 'A' and <= 'Z' => char.ToLowerInvariant((char)key.AsRune.Value),
+            '/' => '/',
+            _ => key.KeyCode switch
+            {
+                KeyCode.Q => 'q',
+                KeyCode.R => 'r',
+                KeyCode.S => 's',
+                _ => null
+            }
+        };
     }
 
     private static string FormatHeader()

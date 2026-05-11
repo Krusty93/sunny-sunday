@@ -67,6 +67,85 @@ public sealed class BookListScreenTests : IDisposable
         Assert.Contains(foundation.Highlights, highlight => highlight.Id == 2 && highlight.Weight is null);
     }
 
+    [Fact]
+    public async Task TryHandleShortcutKey_Q_RequestsQuit()
+    {
+        var screen = await CreateScreenAsync();
+        ScreenResult? result = null;
+
+        var handled = screen.TryHandleShortcutKey('q', navigate => result = navigate, null, null);
+
+        Assert.True(handled);
+        Assert.NotNull(result);
+        Assert.Equal(ScreenAction.Quit, result!.Action);
+    }
+
+    [Fact]
+    public async Task TryHandleShortcutKey_Slash_ActivatesSearchMode()
+    {
+        var screen = await CreateScreenAsync();
+        var activatedSearchUi = false;
+
+        var handled = screen.TryHandleShortcutKey('/', _ => { }, null, () => activatedSearchUi = true);
+
+        Assert.True(handled);
+        Assert.True(screen.IsSearchActive);
+        Assert.True(activatedSearchUi);
+    }
+
+    [Fact]
+    public async Task TryHandleShortcutKey_R_ReinitializesBooks()
+    {
+        const string initialItemsJson = """
+            [
+              {
+                "id": 1,
+                "text": "Psychohistory is built on large numbers.",
+                "bookTitle": "Foundation",
+                "authorName": "Isaac Asimov"
+              }
+            ]
+            """;
+
+        using var mockHttp = new MockHttpMessageHandler(BackendDefinitionBehavior.Always);
+
+        mockHttp.Expect(HttpMethod.Get, "http://localhost:5000/highlights?page=1&pageSize=100")
+            .Respond("application/json", $$"""
+                {
+                  "total": 1,
+                  "page": 1,
+                  "pageSize": 100,
+                  "items": {{initialItemsJson}}
+                }
+                """);
+
+        mockHttp.Expect(HttpMethod.Get, "http://localhost:5000/highlights?page=1&pageSize=100")
+            .Respond("application/json", """
+                {
+                  "total": 0,
+                  "page": 1,
+                  "pageSize": 100,
+                  "items": []
+                }
+                """);
+
+        ConfigureSupplementaryEndpoints(mockHttp);
+
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("http://localhost:5000");
+
+        var screen = new BookListScreen(new SunnyHttpClient(httpClient));
+        await screen.InitializeAsync(CancellationToken.None);
+
+        var refreshedVisibleBooks = false;
+        var handled = screen.TryHandleShortcutKey('r', _ => { }, () => refreshedVisibleBooks = true, null);
+
+        Assert.True(handled);
+        Assert.Empty(screen.Books);
+        Assert.True(refreshedVisibleBooks);
+        mockHttp.VerifyNoOutstandingExpectation();
+    }
+
     private async Task<BookListScreen> CreateScreenAsync(int total = 3, string? itemsJson = null)
     {
         itemsJson ??= """
@@ -102,7 +181,19 @@ public sealed class BookListScreenTests : IDisposable
                 }
                 """);
 
-        _mockHttp.When(HttpMethod.Get, "http://localhost:5000/exclusions")
+        ConfigureSupplementaryEndpoints(_mockHttp);
+
+        var httpClient = _mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("http://localhost:5000");
+
+        var screen = new BookListScreen(new SunnyHttpClient(httpClient));
+        await screen.InitializeAsync(CancellationToken.None);
+        return screen;
+    }
+
+    private static void ConfigureSupplementaryEndpoints(MockHttpMessageHandler mockHttp)
+    {
+        mockHttp.When(HttpMethod.Get, "http://localhost:5000/exclusions")
             .Respond("application/json", """
                 {
                   "highlights": [],
@@ -117,7 +208,7 @@ public sealed class BookListScreenTests : IDisposable
                 }
                 """);
 
-        _mockHttp.When(HttpMethod.Get, "http://localhost:5000/highlights/weights")
+        mockHttp.When(HttpMethod.Get, "http://localhost:5000/highlights/weights")
             .Respond("application/json", """
                 [
                   {
@@ -128,12 +219,5 @@ public sealed class BookListScreenTests : IDisposable
                   }
                 ]
                 """);
-
-        var httpClient = _mockHttp.ToHttpClient();
-        httpClient.BaseAddress = new Uri("http://localhost:5000");
-
-        var screen = new BookListScreen(new SunnyHttpClient(httpClient));
-        await screen.InitializeAsync(CancellationToken.None);
-        return screen;
     }
 }
