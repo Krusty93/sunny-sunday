@@ -8,29 +8,27 @@
 
 ## Research Tasks & Findings
 
-### 1. Spectre.Console TUI Rendering Strategy (Custom Render Loop)
+### 1. TUI Rendering Strategy (Terminal.Gui v2)
 
-**Decision**: Build a custom render loop using `AnsiConsole.Live` + `Console.ReadKey(true)` to create a persistent interactive TUI within Spectre.Console
+**Decision**: Use Terminal.Gui v2 (`Terminal.Gui` NuGet package, version 2.1.0) as the TUI framework
 
 **Rationale**:
-- Spectre.Console 0.55.0 provides `Layout`, `Panel`, `Table`, `FigletText`, and `LiveDisplay` — all the building blocks needed for a persistent TUI.
-- Spectre.Console does **not** provide a built-in event loop, persistent keyboard input handling, or screen management. These must be implemented manually.
-- The pattern: `AnsiConsole.Live(rootLayout).StartAsync(async ctx => { while (!quit) { key = Console.ReadKey(true); handle(key); ctx.Refresh(); } })`.
-- `LiveDisplay` manages cursor positioning and differential updates, minimizing flicker. The `ctx.Refresh()` call triggers a re-render of the entire layout tree.
-- `Layout` provides split regions (e.g., top = chrome, center = content, bottom = key hints). Each region can be independently updated by swapping its `IRenderable` content.
-- Terminal raw mode is entered implicitly when using `Console.ReadKey(true)` (intercept mode — keys are not echoed).
+- Terminal.Gui v2 provides a native event loop (`Application.Run`), widget system (`View`, `Window`, `FrameView`, `Label`, `TableView`), and layout engine — removing the need for a custom render loop entirely.
+- `IScreen.CreateView()` returns a Terminal.Gui `View` that is mounted into a `FrameView` on screen push/pop. The framework handles all re-rendering, cursor management, and keyboard dispatch.
+- Screen transitions (push/pop) are implemented by replacing the content `FrameView`'s subview and calling `Application.Refresh()`.
+- Terminal.Gui v2 provides correct handling of `Ctrl+C`, terminal resize, and raw/cooked mode across all target platforms (Windows, macOS, Linux).
+- The `Application.Create()` → `_app.Init()` → `Application.Run(topLevel)` → `Application.Shutdown()` lifecycle integrates cleanly with `async/await` by running the event loop on the main thread.
 
 **Key implementation details**:
-- `Console.ReadKey(true)` is blocking — the render loop runs on the main thread, alternating between waiting for input and refreshing.
-- `Ctrl+C` must be handled explicitly: set `Console.TreatControlCAsInput = true` at TUI start, restore on exit.
-- `CancellationTokenSource` for coordinating shutdown — signal cancellation on `Q` or `Ctrl+C`, then exit the loop.
-- Screen transitions: each "screen" produces an `IRenderable` for the content area. Switching screens = swapping the content panel in the layout.
+- `Application.Create()` + `_app.Init()` set up the terminal driver before any view is created.
+- Each `IScreen` produces a `View` via `CreateView(Action<ScreenResult> navigate)` and optionally a toolbar `View` via `CreateToolbarView(...)`.
+- Navigation callbacks (`navigate(ScreenResult.Push(...))`, `navigate(ScreenResult.Pop())`) are invoked from within view key handlers.
+- `Application.Shutdown()` is called in a `finally` block to guarantee terminal restoration on exit.
 
 **Alternatives considered**:
-- **Terminal.Gui**: Full TUI framework with event loop, widgets, and layout engine. However, adding it violates FR-007-14 (Spectre.Console only) and constitution principle VI (YAGNI). It would also conflict with Spectre's ANSI output.
-- **gui.cs**: Same as Terminal.Gui (renamed). Same concerns apply.
-- **Spectre.Console `Prompt`-based flow**: Using sequential prompts (SelectionPrompt, TextPrompt) for each screen. Simpler but does not provide a persistent layout with always-visible chrome — each prompt clears the screen. Rejected for not meeting US-2 (persistent banner).
-- **Raw ANSI escape codes**: Full control but enormous effort and fragile cross-platform behavior. Spectre.Console already abstracts this.
+- **Spectre.Console custom render loop**: `AnsiConsole.Live` + `Console.ReadKey(true)`. Spectre.Console does not provide a built-in event loop, keyboard dispatch, or widget system. A fully custom render loop would be required, adding significant complexity for scrolling, focus management, and modal overlays. Rejected in favour of Terminal.Gui.
+- **Spectre.Console `Prompt`-based flow**: Sequential `SelectionPrompt` / `TextPrompt` screens. Does not support a persistent layout with always-visible chrome (each prompt clears the screen). Rejected for not meeting US-2.
+- **Raw ANSI escape codes**: Full control but enormous effort and fragile cross-platform behaviour. Terminal.Gui already abstracts this.
 
 ---
 
@@ -55,21 +53,24 @@
 
 ### 3. Screen Architecture Pattern
 
-**Decision**: Define an `IScreen` interface with `Render()` returning `IRenderable` and `HandleKeyAsync()` returning a screen transition result. The `TuiApp` orchestrator manages a screen stack.
+**Decision**: Define an `IScreen` interface with `CreateView(Action<ScreenResult>)` returning a Terminal.Gui `View` and a `navigate` callback for screen transitions. The `TuiApp` orchestrator manages a screen stack.
 
 **Rationale**:
 - Each TUI page (book list, highlight detail, settings) has distinct layout, data, and key bindings. An interface-based approach provides clean separation.
-- The screen stack pattern supports `Esc` = pop (go back) naturally. Pushing a new screen overlays the previous; popping restores it.
+- The screen stack pattern supports `Esc` = pop (go back) naturally. Pushing a new screen replaces the content frame; popping restores the previous view.
 - Screens own their data fetching and state. The orchestrator only manages transitions and the chrome.
-- This pattern is testable: screens can be unit-tested by calling `HandleKeyAsync` with synthetic `ConsoleKeyInfo` values and asserting the returned transition or state change.
+- This pattern is testable: screens can be unit-tested by verifying state mutations triggered by key bindings registered on the view.
 
-**Interface shape**:
+**Interface shape** (as implemented):
 ```csharp
 interface IScreen
 {
-    IRenderable Render();
-    Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken ct);
-    Task InitializeAsync(CancellationToken ct); // data loading on screen entry
+    View CreateView(Action<ScreenResult> navigate);
+    View? CreateToolbarView(Action<ScreenResult> navigate) => null;
+    int ToolbarHeight => 0;
+    Task InitializeAsync(CancellationToken cancellationToken);
+    string Title { get; }
+    IReadOnlyList<(string Key, string Label)> KeyHints { get; }
 }
 
 enum ScreenAction { None, Push, Pop, Quit }
