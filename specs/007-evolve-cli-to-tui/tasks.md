@@ -75,9 +75,9 @@
 
 **Purpose**: Add the missing server endpoint required by the TUI settings page to verify SMTP configuration with a plain-text test email. Covers US5 (Test Email Verification Endpoint).
 
-- [ ] T021 [US5] Update `src/SunnySunday.Server/Services/IMailDeliveryService.cs` to add a plain-text test email contract, and implement it in `src/SunnySunday.Server/Services/MailDeliveryService.cs` and `src/SunnySunday.Server/Services/DevMailDeliveryService.cs` without recap attachments.
-- [ ] T022 [P] [US5] Update `src/SunnySunday.Server/Endpoints/SettingsEndpoints.cs` to add `POST /settings/test-email` with success, validation, and SMTP failure handling.
-- [ ] T023 [P] [US5] Create `src/SunnySunday.Tests/Api/SettingsTestEmailEndpointTests.cs` covering successful send, missing Kindle email, and SMTP failure.
+- [X] T021 [US5] Update `src/SunnySunday.Server/Services/IMailDeliveryService.cs` to add a plain-text test email contract, and implement it in `src/SunnySunday.Server/Services/MailDeliveryService.cs` and `src/SunnySunday.Server/Services/DevMailDeliveryService.cs` without recap attachments.
+- [X] T022 [P] [US5] Update `src/SunnySunday.Server/Endpoints/SettingsEndpoints.cs` to add `POST /settings/test-email` with success, validation, and SMTP failure handling.
+- [X] T023 [P] [US5] Create `src/SunnySunday.Tests/Api/SettingsTestEmailEndpointTests.cs` covering successful send, missing Kindle email, and SMTP failure.
 
 **Checkpoint**: `POST /settings/test-email` is implemented and tested before the TUI settings screen consumes it.
 

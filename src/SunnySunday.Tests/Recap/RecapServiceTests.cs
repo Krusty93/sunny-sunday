@@ -217,4 +217,7 @@ internal sealed class FakeMailDeliveryService : IMailDeliveryService
 
         return Task.CompletedTask;
     }
+
+    public Task SendTestEmailAsync(string toAddress, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
 }
