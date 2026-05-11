@@ -52,7 +52,7 @@ public sealed class SettingsScreen : IScreen
         _isDevelopment = isDevelopment;
     }
 
-    public string Title => "Settings";
+    public string Title => "";
 
     public int SelectedField => _selectedField;
 
@@ -103,23 +103,11 @@ public sealed class SettingsScreen : IScreen
         headerLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
             new Color(110, 200, 255), StatusChrome.Background)));
 
-        var ruleLabel = new Label
-        {
-            X = HorizontalPadding,
-            Y = 1,
-            Width = Dim.Fill(HorizontalPadding * 2),
-            Height = 1,
-            Text = new string('─', 60),
-            CanFocus = false
-        };
-        ruleLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Color(60, 100, 140), StatusChrome.Background)));
-
         _fieldRows = new System.Collections.ObjectModel.ObservableCollection<string>();
         _fieldList = new ShortcutListView
         {
             X = HorizontalPadding,
-            Y = 3,
+            Y = 2,
             Width = Dim.Fill(HorizontalPadding * 2),
             Height = Dim.Fill(3),
             CanFocus = true
@@ -190,7 +178,7 @@ public sealed class SettingsScreen : IScreen
 
         container.KeyDown += async (_, key) => await HandleContainerKeyDownAsync(key).ConfigureAwait(false);
 
-        container.Add(headerLabel, ruleLabel, _fieldList, _editPromptLabel, _editField, _editOverlay, _statusLabel);
+        container.Add(headerLabel, _fieldList, _editPromptLabel, _editField, _editOverlay, _statusLabel);
 
         _viewCreated = true;
         UpdateViewState();
