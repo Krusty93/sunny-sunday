@@ -1,16 +1,16 @@
-﻿using Spectre.Console.Rendering;
+﻿using Terminal.Gui.ViewBase;
 
 namespace SunnySunday.Cli.Tui;
 
 public interface IScreen
 {
-    IRenderable Render();
-
-    Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken cancellationToken);
+    View CreateView(Action<ScreenResult> navigate);
 
     Task InitializeAsync(CancellationToken cancellationToken);
 
-    string KeyHints { get; }
+    string Title { get; }
+
+    IReadOnlyList<(string Key, string Label)> KeyHints { get; }
 }
 
 public enum ScreenAction

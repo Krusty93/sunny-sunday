@@ -1,19 +1,13 @@
-﻿using Spectre.Console;
-using Spectre.Console.Rendering;
+﻿using Terminal.Gui.Drawing;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using SunnySunday.Cli.Infrastructure;
 
 namespace SunnySunday.Cli.Tui;
 
-/// <summary>
-/// Produces the persistent header region rendered above every TUI screen.
-/// Shows a Figlet banner, version, server connection status, and an optional
-/// Kindle email configuration warning.
-/// </summary>
 public sealed class StatusChrome(string serverUrl, string version)
 {
-    private const string BannerText = "SUNNY";
-    private const string SundayText = "sunday";
-    private static readonly string[] BannerLines =
+    private static readonly string[] LogoLines =
     [
         "███████╗██╗   ██╗███╗   ██╗███╗   ██╗██╗   ██╗",
         "██╔════╝██║   ██║████╗  ██║████╗  ██║╚██╗ ██╔╝",
@@ -22,30 +16,106 @@ public sealed class StatusChrome(string serverUrl, string version)
         "███████║╚██████╔╝██║ ╚████║██║ ╚████║   ██║   ",
         "╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝   ╚═╝   ",
     ];
-    private static readonly Color[] BannerLineColors =
-    [
-        Color.Blue1,
-        Color.DodgerBlue1,
-        Color.DeepSkyBlue1,
-        Color.Aqua,
-        Color.White,
-        Color.DeepSkyBlue1,
-    ];
-    // sunday rendered via FigletText for readability at ~1/3 SUNNY height
-    private static readonly Color SundayColor = new(166, 238, 255);
-    private static readonly Color SeparatorColor = new(100, 200, 240);
 
-    private Color _bannerColor = Color.DeepSkyBlue1;
-    private int _bannerRevealWidth = BannerLines.Max(line => line.Length);
-    private int _sundayCharCount = SundayText.Length;
+    private static readonly string SundayLine = "                              s u n d a y";
+    private static readonly int LogoTextWidth = LogoLines.Max(l => l.Length);
+
+    public static readonly Color Background = new(30, 30, 30);
+
+    public const int LogoHeight = 8; // 6 logo + sunday + separator
+
+    private Label? _connectionLabel;
+    private Label? _warningLabel;
 
     public bool IsConnected { get; private set; }
     public bool KindleEmailConfigured { get; private set; }
 
-    /// <summary>
-    /// Refreshes connection and settings state from the server.
-    /// Safe to call after any failed API call to update the chrome status.
-    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the parent container hierarchy")]
+    public View CreateView()
+    {
+        var bg = Background;
+
+        var container = new View
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = LogoHeight
+        };
+        container.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, bg)));
+
+        for (var i = 0; i < LogoLines.Length; i++)
+        {
+            var logoLabel = new Label
+            {
+                Text = LogoLines[i],
+                X = 1,
+                Y = i
+            };
+            logoLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(0, 191, 255), bg)));
+            container.Add(logoLabel);
+        }
+
+        var sundayLabel = new Label
+        {
+            Text = SundayLine,
+            X = 1,
+            Y = LogoLines.Length
+        };
+        sundayLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(166, 238, 255), bg)));
+        container.Add(sundayLabel);
+
+        var separatorLabel = new Label
+        {
+            Text = new string('─', 300),
+            X = 0,
+            Y = LogoLines.Length + 1,
+            Width = Dim.Fill()
+        };
+        separatorLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(60, 60, 60), bg)));
+        container.Add(separatorLabel);
+
+        var infoFrame = new FrameView
+        {
+            Title = "Status",
+            X = LogoTextWidth + 3,
+            Y = 1,
+            Width = Dim.Fill(1),
+            Height = 5,
+            BorderStyle = LineStyle.Rounded
+        };
+        infoFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(80, 85, 90), bg)));
+
+        var versionLabel = new Label
+        {
+            Text = $"SunnySunday v{version}",
+            X = 1,
+            Y = 0
+        };
+        versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), bg)));
+
+        _connectionLabel = new Label
+        {
+            Text = $"⟳ Checking...  {serverUrl}",
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill()
+        };
+
+        _warningLabel = new Label
+        {
+            Text = string.Empty,
+            X = 1,
+            Y = 2,
+            Width = Dim.Fill()
+        };
+
+        infoFrame.Add(versionLabel, _connectionLabel, _warningLabel);
+        container.Add(infoFrame);
+
+        return container;
+    }
+
     public async Task RefreshAsync(SunnyHttpClient client, CancellationToken ct = default)
     {
         try
@@ -68,131 +138,32 @@ public sealed class StatusChrome(string serverUrl, string version)
         }
     }
 
-    /// <summary>
-    /// Plays the startup animation inside the active TUI live session.
-    /// The banner is written one character at a time with a high-contrast blue-to-cyan ramp.
-    /// </summary>
-    public async Task PlayStartupAnimationAsync(Action refresh, CancellationToken ct = default)
+    public void UpdateLabels()
     {
-        ArgumentNullException.ThrowIfNull(refresh);
+        var bg = Background;
 
-        var palette = new[]
+        if (_connectionLabel is not null)
         {
-            Color.Blue1,
-            Color.DodgerBlue1,
-            Color.DeepSkyBlue1,
-            Color.Aqua,
-            Color.DeepSkyBlue1,
-        };
+            _connectionLabel.Text = IsConnected
+                ? $"● Connected  {serverUrl}"
+                : $"● Disconnected  {serverUrl}";
 
-        try
+            _connectionLabel.SetScheme(IsConnected
+                ? new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(0, 200, 0), bg))
+                : new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(255, 0, 0), bg)));
+        }
+
+        if (_warningLabel is not null)
         {
-            _bannerRevealWidth = 0;
-            _sundayCharCount = 0;
-            var maxWidth = BannerLines.Max(line => line.Length);
-
-            for (var width = 1; width <= maxWidth; width += 2)
+            if (KindleEmailConfigured)
             {
-                ct.ThrowIfCancellationRequested();
-                _bannerRevealWidth = Math.Min(width, maxWidth);
-                _bannerColor = palette[Math.Min((width - 1) / 4, palette.Length - 1)];
-                refresh();
-                await Task.Delay(55, ct).ConfigureAwait(false);
+                _warningLabel.Text = string.Empty;
             }
-
-            _bannerRevealWidth = maxWidth;
-            _bannerColor = Color.DeepSkyBlue1;
-            refresh();
-
-            for (var charIndex = 1; charIndex <= SundayText.Length; charIndex++)
+            else
             {
-                ct.ThrowIfCancellationRequested();
-                _sundayCharCount = charIndex;
-                refresh();
-                await Task.Delay(50, ct).ConfigureAwait(false);
+                _warningLabel.Text = "⚠ Kindle email not configured";
+                _warningLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(255, 255, 0), bg)));
             }
         }
-        catch (OperationCanceledException)
-        {
-            // user quit before animation finished — safe to ignore
-        }
     }
-
-    public IRenderable Render()
-    {
-        IRenderable banner = Console.WindowWidth >= 60
-            ? BuildWideBanner()
-            : BuildCompactBanner();
-
-        var connectionStatus = IsConnected
-            ? new Markup("[green]● Connected[/]")
-            : new Markup("[red]● Disconnected[/]");
-
-        List<IRenderable> rows =
-        [
-            banner,
-            new Markup($"[grey]v{Markup.Escape(version)}[/]  [grey]{Markup.Escape(serverUrl)}[/]"),
-            connectionStatus,
-        ];
-
-        if (!KindleEmailConfigured)
-        {
-            rows.Add(new Markup("[yellow]⚠ Kindle email not configured — go to Settings to set it up.[/]"));
-        }
-
-        return new Rows(rows);
-    }
-
-    private Markup BuildCompactBanner()
-    {
-        var maxWidth = BannerLines.Max(line => line.Length);
-        var visibleChars = Math.Max(1, (int)Math.Ceiling((double)_bannerRevealWidth / maxWidth * BannerText.Length));
-        var visibleText = BannerText[..Math.Min(visibleChars, BannerText.Length)];
-        var colorName = ToMarkupColor(_bannerColor);
-        var sundayMarkup = _sundayCharCount > 0
-            ? $"\n[italic #A6EEFF]{SundayText[..Math.Min(_sundayCharCount, SundayText.Length)]}[/]"
-            : string.Empty;
-
-        return new Markup($"[bold {colorName}]{Markup.Escape(visibleText)}[/]{sundayMarkup}");
-    }
-
-    private Rows BuildWideBanner()
-    {
-        var renderables = new List<IRenderable>(BannerLines.Length + 2);
-        var edgeColor = ToMarkupColor(_bannerColor);
-
-        for (var index = 0; index < BannerLines.Length; index++)
-        {
-            var line = BannerLines[index];
-            var visibleWidth = Math.Min(_bannerRevealWidth, line.Length);
-            var baseColor = ToMarkupColor(BannerLineColors[index]);
-
-            if (visibleWidth <= 0)
-            {
-                renderables.Add(new Markup(string.Empty));
-                continue;
-            }
-
-            var edgeStart = Math.Max(0, visibleWidth - 2);
-            var stableSegment = line[..edgeStart];
-            var leadingEdge = line[edgeStart..visibleWidth];
-
-            renderables.Add(new Markup(
-                $"[{baseColor}]{Markup.Escape(stableSegment)}[/][bold {edgeColor}]{Markup.Escape(leadingEdge)}[/]"));
-        }
-
-        if (_sundayCharCount > 0)
-        {
-            var partialSunday = SundayText[..Math.Min(_sundayCharCount, SundayText.Length)];
-            renderables.Add(new FigletText(partialSunday).Color(SundayColor));
-            var separatorWidth = BannerLines.Max(line => line.Length);
-            renderables.Add(new Markup($"[{ToMarkupColor(SeparatorColor)}]{new string('─', separatorWidth)}[/]"));
-        }
-
-        return new Rows(renderables);
-    }
-
-    private static string ToMarkupColor(Color color)
-        => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-
 }

@@ -1,5 +1,6 @@
-﻿using Spectre.Console;
-using Spectre.Console.Rendering;
+﻿using Terminal.Gui.Drivers;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using SunnySunday.Cli.Infrastructure;
 
 namespace SunnySunday.Cli.Tui;
@@ -8,28 +9,51 @@ public sealed class SettingsScreen(SunnyHttpClient client) : IScreen
 {
     private readonly SunnyHttpClient _client = client;
 
-    public string KeyHints => "[Esc] Back";
+    public string Title => "Settings";
+
+    public IReadOnlyList<(string Key, string Label)> KeyHints =>
+    [
+        ("Esc", "Back"),
+        ("Ctrl+C", "Quit")
+    ];
 
     public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public IRenderable Render()
-        => new Panel(new Markup("[grey]Settings screen is ready for the next implementation phase.[/]"))
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the parent container hierarchy")]
+    public View CreateView(Action<ScreenResult> navigate)
+    {
+        var container = new View
         {
-            Header = new PanelHeader("Settings")
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true
         };
 
-    public Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken cancellationToken)
-    {
-        if (key.Key == ConsoleKey.Escape)
+        var stubLabel = new Label
         {
-            return Task.FromResult(ScreenResult.Pop());
-        }
+            Text = "Settings screen is ready for the next implementation phase.",
+            X = Pos.Center(),
+            Y = Pos.Center()
+        };
 
-        if (key.Key == ConsoleKey.C && key.Modifiers.HasFlag(ConsoleModifiers.Control))
+        container.Add(stubLabel);
+
+        container.KeyDown += (_, key) =>
         {
-            return Task.FromResult(ScreenResult.Quit());
-        }
+            if (key.KeyCode == KeyCode.Esc)
+            {
+                navigate(ScreenResult.Pop());
+                key.Handled = true;
+            }
+            else if (key.KeyCode == (KeyCode.C | KeyCode.CtrlMask))
+            {
+                navigate(ScreenResult.Quit());
+                key.Handled = true;
+            }
+        };
 
-        return Task.FromResult(ScreenResult.Stay());
+        return container;
     }
 }

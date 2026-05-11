@@ -1,5 +1,4 @@
 ﻿using RichardSzalay.MockHttp;
-using Spectre.Console;
 using SunnySunday.Cli.Infrastructure;
 using SunnySunday.Cli.Tui;
 
@@ -12,61 +11,47 @@ public sealed class BookListScreenTests : IDisposable
     public void Dispose() => _mockHttp.Dispose();
 
     [Fact]
-    public async Task HandleKeyAsync_DownAndUp_MoveSelectionWithinBounds()
+    public async Task MoveSelection_DownAndUp_MovesWithinBounds()
     {
         var screen = await CreateScreenAsync();
 
-        await screen.HandleKeyAsync(new ConsoleKeyInfo('\0', ConsoleKey.DownArrow, false, false, false), CancellationToken.None);
-        await screen.HandleKeyAsync(new ConsoleKeyInfo('\0', ConsoleKey.DownArrow, false, false, false), CancellationToken.None);
+        screen.MoveSelection(1);
+        screen.MoveSelection(1);
 
         Assert.Equal(1, screen.SelectedIndex);
 
-        await screen.HandleKeyAsync(new ConsoleKeyInfo('\0', ConsoleKey.UpArrow, false, false, false), CancellationToken.None);
-        await screen.HandleKeyAsync(new ConsoleKeyInfo('\0', ConsoleKey.UpArrow, false, false, false), CancellationToken.None);
+        screen.MoveSelection(-1);
+        screen.MoveSelection(-1);
 
         Assert.Equal(0, screen.SelectedIndex);
     }
 
     [Fact]
-    public async Task HandleKeyAsync_Enter_PushesHighlightDetailScreen()
+    public async Task GetSelectedBook_ReturnsFirstBookByDefault()
     {
         var screen = await CreateScreenAsync();
 
-        var result = await screen.HandleKeyAsync(new ConsoleKeyInfo('\r', ConsoleKey.Enter, false, false, false), CancellationToken.None);
+        var selected = screen.GetSelectedBook();
 
-        Assert.Equal(ScreenAction.Push, result.Action);
-        var detailScreen = Assert.IsType<HighlightDetailScreen>(result.Next);
-        Assert.Equal("Foundation", detailScreen.Book.Title);
+        Assert.NotNull(selected);
+        Assert.Equal("Foundation", selected.Title);
     }
 
     [Fact]
-    public async Task HandleKeyAsync_Q_ReturnsQuit()
+    public async Task ActivateSearch_SetsSearchModeActive()
     {
         var screen = await CreateScreenAsync();
 
-        var result = await screen.HandleKeyAsync(new ConsoleKeyInfo('q', ConsoleKey.Q, false, false, false), CancellationToken.None);
-
-        Assert.Equal(ScreenAction.Quit, result.Action);
-    }
-
-    [Fact]
-    public async Task HandleKeyAsync_Slash_ActivatesSearchMode()
-    {
-        var screen = await CreateScreenAsync();
-
-        await screen.HandleKeyAsync(new ConsoleKeyInfo('/', ConsoleKey.Oem2, false, false, false), CancellationToken.None);
+        screen.ActivateSearch();
 
         Assert.True(screen.IsSearchActive);
     }
 
     [Fact]
-    public async Task Render_NoBooksLoaded_ReturnsEmptyStatePanel()
+    public async Task EmptyBookList_HasNoFilteredBooks()
     {
         var screen = await CreateScreenAsync(total: 0, itemsJson: "[]");
 
-        var renderable = screen.Render();
-
-        Assert.IsType<Panel>(renderable);
         Assert.Empty(screen.Books);
         Assert.Empty(screen.FilteredBooks);
     }

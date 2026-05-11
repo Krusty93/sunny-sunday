@@ -1,6 +1,8 @@
-﻿using System.Globalization;
-using Spectre.Console;
-using Spectre.Console.Rendering;
+﻿using System.Collections.ObjectModel;
+using System.Globalization;
+using Terminal.Gui.Drivers;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using SunnySunday.Cli.Infrastructure;
 using SunnySunday.Cli.Tui.ViewModels;
 
@@ -26,7 +28,17 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
     public string SearchQuery => _searchQuery;
 
-    public string KeyHints => "[↑↓] Navigate · [Enter] View · [S] Settings · [/] Search · [R] Refresh · [Q] Quit";
+    public string Title => "Books";
+
+    public IReadOnlyList<(string Key, string Label)> KeyHints =>
+    [
+        ("↑↓", "Navigate"),
+        ("Enter", "View"),
+        ("S", "Settings"),
+        ("/", "Search"),
+        ("R", "Refresh"),
+        ("Q", "Quit")
+    ];
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -38,90 +50,226 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         ApplyFilter();
     }
 
-    public IRenderable Render()
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the parent container hierarchy")]
+    public View CreateView(Action<ScreenResult> navigate)
     {
-        var body = BuildBody();
-        if (!_isSearchActive)
+        var container = new View
         {
-            return body;
-        }
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true
+        };
 
-        return new Rows(BuildSearchPrompt(), body);
-    }
-
-    public async Task<ScreenResult> HandleKeyAsync(ConsoleKeyInfo key, CancellationToken cancellationToken)
-    {
-        if (HandleSearchModeKey(key))
+        if (_filteredBooks.Count == 0 && !_isSearchActive)
         {
-            return ScreenResult.Stay();
-        }
-
-        switch (key.Key)
-        {
-            case ConsoleKey.UpArrow:
-                MoveSelection(-1);
-                return ScreenResult.Stay();
-            case ConsoleKey.DownArrow:
-                MoveSelection(1);
-                return ScreenResult.Stay();
-            case ConsoleKey.Enter:
-                return GetSelectedBook() is { } selectedBook
-                    ? ScreenResult.Push(new HighlightDetailScreen(selectedBook, _client))
-                    : ScreenResult.Stay();
-            case ConsoleKey.S:
-                return ScreenResult.Push(new SettingsScreen(_client));
-            case ConsoleKey.R:
-                await InitializeAsync(cancellationToken).ConfigureAwait(false);
-                return ScreenResult.Stay();
-            case ConsoleKey.Q:
-                return ScreenResult.Quit();
-            case ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control):
-                return ScreenResult.Quit();
-            default:
-                if (key.KeyChar == '/')
-                {
-                    _isSearchActive = true;
-                    ApplyFilter();
-                }
-
-                return ScreenResult.Stay();
-        }
-    }
-
-    private bool HandleSearchModeKey(ConsoleKeyInfo key)
-    {
-        if (!_isSearchActive)
-        {
-            return false;
-        }
-
-        if (key.Key == ConsoleKey.Escape)
-        {
-            _isSearchActive = false;
-            _searchQuery = string.Empty;
-            ApplyFilter();
-            return true;
-        }
-
-        if (key.Key == ConsoleKey.Backspace)
-        {
-            if (_searchQuery.Length > 0)
+            var emptyLabel = new Label
             {
-                _searchQuery = _searchQuery[..^1];
-                ApplyFilter();
+                Text = "No books imported yet. Run `sunny sync` to import.",
+                X = Pos.Center(),
+                Y = Pos.Center()
+            };
+            container.Add(emptyLabel);
+            SetupContainerKeyBindings(container, null, null, navigate);
+            // Views are owned by the container hierarchy
+            return container;
+        }
+
+        var searchField = new TextField
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Visible = _isSearchActive,
+            Text = _searchQuery
+        };
+
+        var headerLabel = new Label
+        {
+            Text = FormatHeader(),
+            X = 0,
+            Y = _isSearchActive ? 1 : 0,
+            Width = Dim.Fill()
+        };
+
+        var displayItems = new ObservableCollection<string>(
+            _filteredBooks.Select(FormatBookRow));
+
+        var listView = new ListView
+        {
+            X = 0,
+            Y = _isSearchActive ? 2 : 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true
+        };
+        listView.SetSource(displayItems);
+
+        if (_filteredBooks.Count > 0)
+        {
+            listView.SelectedItem = Math.Min(_selectedIndex, _filteredBooks.Count - 1);
+        }
+
+        listView.Accepting += (_, args) =>
+        {
+            var selected = GetSelectedBook();
+            if (selected is not null)
+            {
+                navigate(ScreenResult.Push(new HighlightDetailScreen(selected, _client)));
+            }
+        };
+
+        searchField.TextChanged += (_, args) =>
+        {
+            _searchQuery = searchField.Text ?? string.Empty;
+            ApplyFilter();
+            displayItems.Clear();
+            foreach (var item in _filteredBooks.Select(FormatBookRow))
+            {
+                displayItems.Add(item);
             }
 
-            return true;
-        }
+            if (_filteredBooks.Count > 0 && listView.SelectedItem >= _filteredBooks.Count)
+            {
+                listView.SelectedItem = _filteredBooks.Count - 1;
+            }
+        };
 
-        if (key.KeyChar != '/' && !char.IsControl(key.KeyChar) && key.Modifiers == 0)
+        searchField.KeyDown += (_, key) =>
         {
-            _searchQuery += key.KeyChar;
-            ApplyFilter();
-            return true;
+            if (key.KeyCode == KeyCode.Esc)
+            {
+                DeactivateSearch();
+                searchField.Visible = false;
+                searchField.Text = string.Empty;
+                headerLabel.Y = 0;
+                listView.Y = 1;
+                displayItems.Clear();
+                foreach (var item in _filteredBooks.Select(FormatBookRow))
+                {
+                    displayItems.Add(item);
+                }
+
+                listView.SetFocus();
+                key.Handled = true;
+            }
+        };
+
+        container.Add(searchField, headerLabel, listView);
+        SetupContainerKeyBindings(container, listView, searchField, navigate);
+
+        if (_isSearchActive)
+        {
+            searchField.SetFocus();
+        }
+        else
+        {
+            listView.SetFocus();
         }
 
-        return false;
+        return container;
+    }
+
+    public void MoveSelection(int delta)
+    {
+        if (_filteredBooks.Count == 0)
+        {
+            _selectedIndex = 0;
+            return;
+        }
+
+        _selectedIndex = Math.Clamp(_selectedIndex + delta, 0, _filteredBooks.Count - 1);
+    }
+
+    public void ActivateSearch()
+    {
+        _isSearchActive = true;
+        ApplyFilter();
+    }
+
+    public void DeactivateSearch()
+    {
+        _isSearchActive = false;
+        _searchQuery = string.Empty;
+        ApplyFilter();
+    }
+
+    public BookViewModel? GetSelectedBook()
+    {
+        if (_filteredBooks.Count == 0)
+        {
+            return null;
+        }
+
+        _selectedIndex = Math.Clamp(_selectedIndex, 0, _filteredBooks.Count - 1);
+        return _filteredBooks[_selectedIndex];
+    }
+
+    private void SetupContainerKeyBindings(View container, ListView? listView, TextField? searchField, Action<ScreenResult> navigate)
+    {
+        container.KeyDown += (_, key) =>
+        {
+            if (_isSearchActive)
+            {
+                return;
+            }
+
+            switch (key.KeyCode)
+            {
+                case KeyCode.Q:
+                    navigate(ScreenResult.Quit());
+                    key.Handled = true;
+                    break;
+
+                case KeyCode.S:
+                    navigate(ScreenResult.Push(new SettingsScreen(_client)));
+                    key.Handled = true;
+                    break;
+
+                case KeyCode.R:
+                    _ = Task.Run(async () =>
+                    {
+                        await InitializeAsync(CancellationToken.None);
+                    });
+                    key.Handled = true;
+                    break;
+            }
+
+            if (key.AsRune.Value == '/')
+            {
+                ActivateSearch();
+                if (searchField is not null && listView is not null)
+                {
+                    searchField.Visible = true;
+                    searchField.Text = string.Empty;
+                    listView.Y = 2;
+                    searchField.SetFocus();
+                }
+
+                key.Handled = true;
+            }
+        };
+
+        if (listView is not null)
+        {
+            listView.ValueChanged += (_, args) =>
+            {
+                _selectedIndex = listView.SelectedItem ?? 0;
+            };
+        }
+    }
+
+    private static string FormatHeader()
+    {
+        return $"{"Title",-40} {"Author",-30} {"Highlights",10}";
+    }
+
+    private static string FormatBookRow(BookViewModel book)
+    {
+        var title = book.Title.Length > 38 ? book.Title[..35] + "..." : book.Title;
+        var author = book.Author.Length > 28 ? book.Author[..25] + "..." : book.Author;
+        return $"{title,-40} {author,-30} {book.HighlightCount.ToString(CultureInfo.InvariantCulture),10}";
     }
 
     private async Task<List<SunnySunday.Core.Contracts.HighlightItemDto>> LoadAllHighlightsAsync(CancellationToken cancellationToken)
@@ -185,64 +333,6 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
     private static string CreateBookKey(string title, string author) => $"{title}|{author}";
 
-    private IRenderable BuildBody()
-    {
-        if (_filteredBooks.Count == 0)
-        {
-            var message = _isSearchActive && !string.IsNullOrWhiteSpace(_searchQuery)
-                ? $"[yellow]No results matching '{Markup.Escape(_searchQuery)}'.[/]"
-                : "[grey]No books imported yet.[/]";
-
-            return new Panel(new Markup(message))
-            {
-                Header = new PanelHeader("Books")
-            };
-        }
-
-        var table = new Table()
-            .Border(TableBorder.Rounded)
-            .Expand();
-        table.AddColumn("Title");
-        table.AddColumn("Author");
-        table.AddColumn(new TableColumn("Highlights").RightAligned());
-
-        for (var index = 0; index < _filteredBooks.Count; index++)
-        {
-            var book = _filteredBooks[index];
-            var isSelected = index == _selectedIndex;
-
-            table.AddRow(
-                new Markup(FormatCell(book.Title, isSelected)),
-                new Markup(FormatCell(book.Author, isSelected)),
-                new Markup(FormatCell(book.HighlightCount.ToString(CultureInfo.InvariantCulture), isSelected)));
-        }
-
-        return table;
-    }
-
-    private IRenderable BuildSearchPrompt()
-    {
-        var query = string.IsNullOrEmpty(_searchQuery) ? string.Empty : Markup.Escape(_searchQuery);
-        return new Markup($"[grey]Search:[/] [white]{query}[/]");
-    }
-
-    private static string FormatCell(string value, bool isSelected)
-    {
-        var escaped = Markup.Escape(value);
-        return isSelected ? $"[black on yellow]{escaped}[/]" : escaped;
-    }
-
-    private void MoveSelection(int delta)
-    {
-        if (_filteredBooks.Count == 0)
-        {
-            _selectedIndex = 0;
-            return;
-        }
-
-        _selectedIndex = Math.Clamp(_selectedIndex + delta, 0, _filteredBooks.Count - 1);
-    }
-
     private void ApplyFilter()
     {
         _filteredBooks = _isSearchActive
@@ -256,15 +346,5 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         }
 
         _selectedIndex = Math.Clamp(_selectedIndex, 0, _filteredBooks.Count - 1);
-    }
-
-    private BookViewModel? GetSelectedBook()
-    {
-        if (_filteredBooks.Count == 0)
-        {
-            return null;
-        }
-
-        return _filteredBooks[_selectedIndex];
     }
 }
