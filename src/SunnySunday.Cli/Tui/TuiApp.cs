@@ -7,6 +7,8 @@ namespace SunnySunday.Cli.Tui;
 
 public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client, string serverUrl, string version)
 {
+    private const int SplashTopPadding = 1;
+
     private static readonly string[] SplashLines =
     [
         "███████╗██╗   ██╗███╗   ██╗███╗   ██╗██╗   ██╗",
@@ -17,7 +19,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         "╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝   ╚═╝   ",
     ];
 
-    private static readonly string SundayText = "                              s u n d a y";
+    private static readonly string SundayText = "s u n d a y";
 
     private static readonly Color[] LineColors =
     [
@@ -111,42 +113,75 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         };
         splashWindow.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background)));
 
+        var maxWidth = SplashLines.Max(line => line.Length);
+        var splashContentWidth = Math.Max(maxWidth, SundayText.Length);
+
+        var splashContent = new View
+        {
+            X = 0,
+            Y = SplashTopPadding,
+            Width = splashContentWidth,
+            Height = SplashLines.Length + 3,
+            CanFocus = false
+        };
+        splashWindow.Add(splashContent);
+
+        void CenterSplashContent()
+        {
+            var viewportWidth = splashWindow.Viewport.Width;
+            if (viewportWidth <= 0)
+            {
+                return;
+            }
+
+            splashContent.X = Math.Max(0, (viewportWidth - splashContentWidth) / 2);
+        }
+
+        splashWindow.ViewportChanged += (_, _) => CenterSplashContent();
+
         var labels = new Label[SplashLines.Length];
         for (var i = 0; i < SplashLines.Length; i++)
         {
             labels[i] = new Label
             {
                 Text = string.Empty,
-                X = Pos.Center(),
-                Y = Pos.Center() - SplashLines.Length / 2 + i - 1
+                X = 0,
+                Y = i,
+                Width = splashContentWidth,
+                TextAlignment = Alignment.Center
             };
             labels[i].SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(LineColors[i], StatusChrome.Background)));
-            splashWindow.Add(labels[i]);
+            splashContent.Add(labels[i]);
         }
 
         var sundayLabel = new Label
         {
             Text = string.Empty,
-            X = Pos.Center(),
-            Y = Pos.Center() + SplashLines.Length / 2
+            X = 0,
+            Y = SplashLines.Length,
+            Width = splashContentWidth,
+            TextAlignment = Alignment.Center
         };
         sundayLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(166, 238, 255), StatusChrome.Background)));
-        splashWindow.Add(sundayLabel);
+        splashContent.Add(sundayLabel);
 
         var versionLabel = new Label
         {
             Text = string.Empty,
-            X = Pos.Center(),
-            Y = Pos.Center() + SplashLines.Length / 2 + 2
+            X = 0,
+            Y = SplashLines.Length + 2,
+            Width = splashContentWidth,
+            TextAlignment = Alignment.Center
         };
         versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), StatusChrome.Background)));
-        splashWindow.Add(versionLabel);
+        splashContent.Add(versionLabel);
 
         var token = _app.Begin(splashWindow);
 
         try
         {
-            var maxWidth = SplashLines.Max(line => line.Length);
+            CenterSplashContent();
+            _app.LayoutAndDraw(true);
 
             for (var width = 2; width <= maxWidth; width += 2)
             {
@@ -180,7 +215,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
             versionLabel.Text = $"v{version}";
             _app.LayoutAndDraw(true);
-            await Task.Delay(800, ct).ConfigureAwait(false);
+            await Task.Delay(500, ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
