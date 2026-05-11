@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace SunnySunday.Cli.Infrastructure;
@@ -16,8 +15,6 @@ public sealed class TypeRegistrar(IServiceProvider services) : ITypeRegistrar
 
     public ITypeResolver Build() => new TypeResolver(services, _registrations, _instances, _factories);
 
-    [UnconditionalSuppressMessage("Trimming", "IL2067",
-        Justification = "Types registered by Spectre.Console.Cli are preserved via TrimMode=partial.")]
     public void Register(Type service, Type implementation)
         => _registrations[service] = implementation;
 
