@@ -22,7 +22,8 @@ public enum ScreenAction
     None,
     Push,
     Pop,
-    Quit
+    Quit,
+    Reload
 }
 
 public sealed record ScreenResult(ScreenAction Action, IScreen? Next = null)
@@ -34,4 +35,6 @@ public sealed record ScreenResult(ScreenAction Action, IScreen? Next = null)
     public static ScreenResult Pop() => new(ScreenAction.Pop);
 
     public static ScreenResult Quit() => new(ScreenAction.Quit);
+
+    public static ScreenResult Reload() => new(ScreenAction.Reload);
 }

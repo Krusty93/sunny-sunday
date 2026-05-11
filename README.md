@@ -13,6 +13,9 @@ Existing solutions deliver periodic recaps only via mobile or web apps. Sunny Su
 3. A recap document is sent to your Kindle email address via Amazon's Send-to-Kindle service
 4. Open the recap on your Kindle like any other document
 
+> **TUI mode**: Running `sunny` with no arguments in an interactive terminal opens a full-screen TUI.  
+> Browse your books, manage settings, and verify SMTP configuration — all without leaving the terminal.
+
 ## Getting started
 
 ### 1. Connect your Kindle device
@@ -177,6 +180,7 @@ That's it. Your first recap will arrive on the next scheduled delivery (default:
 
 |                   Command                       |              Description                  |
 |-------------------------------------------------|-------------------------------------------|
+| `sunny`                                         | Open interactive TUI (no args, interactive terminal) |
 | `sunny sync [path]`                             | Import highlights from `My Clippings.txt` |
 | `sunny status`                                  | Show server status and next recap         |
 | `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule                        |
