@@ -31,6 +31,9 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
     private FrameView? _searchFrame;
     private SearchTextField? _searchField;
     private Label? _searchPlaceholder;
+    private string? _errorMessage;
+    private Label? _errorLabel;
+    private bool _viewHasBooksList;
 
     public IReadOnlyList<BookViewModel> Books => _books;
 
@@ -150,11 +153,21 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        var highlights = await LoadAllHighlightsAsync(cancellationToken).ConfigureAwait(false);
-        var exclusions = await _client.GetExclusionsAsync(cancellationToken).ConfigureAwait(false);
-        var weights = await _client.GetWeightsAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var highlights = await LoadAllHighlightsAsync(cancellationToken).ConfigureAwait(false);
+            var exclusions = await _client.GetExclusionsAsync(cancellationToken).ConfigureAwait(false);
+            var weights = await _client.GetWeightsAsync(cancellationToken).ConfigureAwait(false);
 
-        _books = EnrichBooks(BookViewModel.FromHighlights(highlights), exclusions, weights);
+            _books = EnrichBooks(BookViewModel.FromHighlights(highlights), exclusions, weights);
+            _errorMessage = null;
+        }
+        catch (HttpRequestException)
+        {
+            _books = [];
+            _errorMessage = "Cannot reach server. Check the connection.";
+        }
+
         ApplyFilter();
     }
 
@@ -172,17 +185,45 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
 
         if (_filteredBooks.Count == 0 && !_isSearchActive)
         {
-            var emptyLabel = new Label
+            _viewHasBooksList = false;
+
+            if (_errorMessage is null)
             {
-                Text = "No books imported yet. Run `sunny sync` to import.",
+                var emptyLabel = new Label
+                {
+                    Text = "No books imported yet. Run `sunny sync` to import.",
+                    X = Pos.Center(),
+                    Y = Pos.Center()
+                };
+                container.Add(emptyLabel);
+            }
+
+            _errorLabel = new Label
+            {
+                Text = _errorMessage ?? string.Empty,
+                Visible = _errorMessage is not null,
                 X = Pos.Center(),
                 Y = Pos.Center()
             };
-            container.Add(emptyLabel);
-            SetupContainerKeyBindings(container, null, navigate, null, null);
+            _errorLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
+                new Terminal.Gui.Drawing.Color(255, 100, 100), StatusChrome.Background)));
+            container.Add(_errorLabel);
+
+            void RefreshEmpty()
+            {
+                if (_errorLabel is not null)
+                {
+                    _errorLabel.Text = _errorMessage ?? string.Empty;
+                    _errorLabel.Visible = _errorMessage is not null;
+                }
+            }
+
+            SetupContainerKeyBindings(container, null, navigate, RefreshEmpty, null);
             // Views are owned by the container hierarchy
             return container;
         }
+
+        _viewHasBooksList = true;
 
         var tableLayout = CalculateTableLayout(DefaultTableWidth);
 
@@ -259,6 +300,8 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
             {
                 _selectedIndex = 0;
             }
+
+            UpdateErrorLabel();
         }
 
         void UpdateTableLayout()
@@ -364,6 +407,15 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
         _selectedIndex = Math.Clamp(_selectedIndex + delta, 0, _filteredBooks.Count - 1);
     }
 
+    private void UpdateErrorLabel()
+    {
+        if (_errorLabel is not null)
+        {
+            _errorLabel.Text = _errorMessage ?? string.Empty;
+            _errorLabel.Visible = _errorMessage is not null;
+        }
+    }
+
     public void ActivateSearch()
     {
         _isSearchActive = true;
@@ -445,8 +497,19 @@ public sealed class BookListScreen(SunnyHttpClient client) : IScreen
                 return true;
 
             case 'r':
+                var hadBooksView = _viewHasBooksList;
                 InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
-                refreshVisibleBooks?.Invoke();
+                if (hadBooksView || _filteredBooks.Count == 0)
+                {
+                    // Stay in current view branch: update existing view content
+                    refreshVisibleBooks?.Invoke();
+                }
+                else
+                {
+                    // Recovered from empty/error state — reload view to show books
+                    navigate(ScreenResult.Reload());
+                }
+
                 return true;
 
             case '/':

@@ -40,8 +40,6 @@ Kindle / My Clippings.txt                              │
   - Manage user settings via CLI commands (schedule, count, weights, exclusions)
   - Display server status
 
-#### Parsing subsystem (`SunnySunday.Cli/Parsing/`)
-
 Responsible for transforming raw Kindle export text into structured data before syncing to the server.
 
 - **Entry point**: `ClippingsParser.ParseAsync(string filePath, ILogger? logger = null)` — file-path overload; `ClippingsParser.ParseAsync(TextReader, ILogger? logger = null)` — streaming overload for testability
@@ -50,12 +48,17 @@ Responsible for transforming raw Kindle export text into structured data before 
   - `ParsedBook` — `(Title, Author?, IReadOnlyList<ParsedHighlight> Highlights)`
   - `ParsedHighlight` — `(Text, Location?, AddedOn?)`
 - **Design decisions**:
-  - Pure static class — no state, no DI, no side effects beyond optional `ILogger`
   - Streaming: reads lines one-by-one via `ReadLineAsync()`; no full file in memory
   - Skip-and-warn: malformed entries are skipped with an `ILogger.LogWarning`; never throws
   - Deduplication: `HashSet<(Title, Author, Text)>` — exact case-sensitive match, first occurrence kept
   - Notes as highlights: entries of type "Note" are emitted as highlights with `[my note] ` prefix on their text
   - Bookmarks: entries of type "Bookmark" are silently dropped
+
+#### TUI subsystem (`SunnySunday.Cli/Tui/`)
+
+When invoked with no arguments in an interactive terminal (`sunny`), the client enters **TUI mode** — a full-screen terminal UI powered by [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui) (v2).
+
+**Dual-mode launch** (`Program.cs`): if `args.Length == 0 && !Console.IsInputRedirected`, `TuiApp.RunAsync()` is called; otherwise the Spectre.Console `CommandApp` handles the sub-command (e.g. `sunny sync`).
 
 ### Server (`sunny-server`)
 
@@ -152,6 +155,7 @@ LIMIT @count
 | `GET` | `/status` | Server status, next recap, highlight stats |
 | `GET` | `/settings` | Read current settings |
 | `PUT` | `/settings` | Update settings |
+| `POST` | `/settings/test-email` | Send a plain-text test email to the configured Kindle address |
 | `POST` | `/highlights/{id}/exclude` | Exclude a highlight |
 | `DELETE` | `/highlights/{id}/exclude` | Re-include a highlight |
 | `POST` | `/books/{id}/exclude` | Exclude a book |
@@ -197,6 +201,13 @@ This keeps the client protocol small, explicit, and aligned with the quickstart 
 src/SunnySunday.Core/
 └── Contracts/          # Shared request/response DTOs for CLI and server
 
+src/SunnySunday.Cli/
+├── Commands/           # Spectre.Console CLI sub-commands (sync, status, config, …)
+├── Infrastructure/     # HTTP client, resilience, Kindle detector
+├── Parsing/            # My Clippings.txt parser
+├── Tui/                # Terminal.Gui TUI (TuiApp, screens, StatusChrome, …)
+└── Program.cs          # Dual-mode entry point (TUI or CLI)
+
 src/SunnySunday.Server/
 ├── Data/               # Dapper repositories over SQLite
 ├── Endpoints/          # Minimal API endpoint modules
@@ -206,8 +217,11 @@ src/SunnySunday.Server/
 
 src/SunnySunday.Tests/
 ├── Api/                # End-to-end HTTP integration tests via WebApplicationFactory
+├── Cli/                # CLI command tests
 ├── Infrastructure/     # Database/bootstrap tests
-└── Parsing/            # CLI parser tests
+├── Parsing/            # CLI parser tests
+├── Recap/              # Recap service tests
+└── Tui/                # TUI logic tests (mode detection, search, screen key handling)
 ```
 
 ---

@@ -50,7 +50,8 @@ public sealed class StatusChrome(string serverUrl, string version)
             {
                 Text = LogoLines[i],
                 X = 1,
-                Y = i
+                Y = i,
+                Width = Dim.Fill(1)
             };
             logoLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(0, 191, 255), bg)));
             container.Add(logoLabel);
@@ -121,6 +122,12 @@ public sealed class StatusChrome(string serverUrl, string version)
         container.Add(infoFrame);
 
         return container;
+    }
+
+    public void SetDisconnected()
+    {
+        IsConnected = false;
+        KindleEmailConfigured = false;
     }
 
     public async Task RefreshAsync(SunnyHttpClient client, CancellationToken ct = default)

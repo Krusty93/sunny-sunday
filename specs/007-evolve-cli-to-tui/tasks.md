@@ -98,12 +98,12 @@
 
 **Purpose**: Handle edge cases (terminal size, disconnected server, non-interactive terminal), update architecture docs, and run full test suite.
 
-- [ ] T026 [P] Implement terminal size check in `src/SunnySunday.Cli/Tui/TuiApp.cs`: on startup, check `Application.Screen.Bounds`. If below 80×24, render a centered message: "Terminal too small. Please resize to at least 80×24." instead of the normal layout.
-- [ ] T027 [P] Update `docs/ARCHITECTURE.md` and `README.md`: add the TUI architecture section and refresh the repository-level project presentation so the README reflects CLI mode, TUI mode, and SMTP verification capabilities.
-- [ ] T028 [P] Implement graceful server disconnection handling in TUI screens: when any `SunnyHttpClient` call throws `HttpRequestException` during a TUI action, catch it, update `StatusChrome.IsConnected = false`, and display an inline error message in the content area (e.g., "Cannot reach server. Check connection."). Do not crash the TUI.
-- [ ] T029 [P] Verify ASCII art banner in `src/SunnySunday.Cli/Tui/StatusChrome.cs` renders correctly at narrow terminal widths; confirm that the banner truncates gracefully without errors when the terminal is narrower than the banner width.
-- [ ] T030 Implement clean exit in `src/SunnySunday.Cli/Tui/TuiApp.cs`: on quit (`Q` or `Ctrl+C`), call `Application.RequestStop()` and ensure `Application.Shutdown()` is called in the `finally` block to restore terminal state cleanly.
-- [ ] T031 Run full test suite: `dotnet test src/SunnySunday.slnx`. Confirm no regressions across all existing parser, API, CLI, infrastructure, recap, and settings test-email API tests. All new TUI tests pass.
+- [X] T026 [P] Implement terminal size check in `src/SunnySunday.Cli/Tui/TuiApp.cs`: on startup, check `Application.Screen.Bounds`. If below 80×24, render a centered message: "Terminal too small. Please resize to at least 80×24." instead of the normal layout.
+- [X] T027 [P] Update `docs/ARCHITECTURE.md` and `README.md`: add the TUI architecture section and refresh the repository-level project presentation so the README reflects CLI mode, TUI mode, and SMTP verification capabilities.
+- [X] T028 [P] Implement graceful server disconnection handling in TUI screens: when any `SunnyHttpClient` call throws `HttpRequestException` during a TUI action, catch it, update `StatusChrome.IsConnected = false`, and display an inline error message in the content area (e.g., "Cannot reach server. Check connection."). Do not crash the TUI.
+- [X] T029 [P] Verify ASCII art banner in `src/SunnySunday.Cli/Tui/StatusChrome.cs` renders correctly at narrow terminal widths; confirm that the banner truncates gracefully without errors when the terminal is narrower than the banner width.
+- [X] T030 Implement clean exit in `src/SunnySunday.Cli/Tui/TuiApp.cs`: on quit (`Q` or `Ctrl+C`), call `Application.RequestStop()` and ensure `Application.Shutdown()` is called in the `finally` block to restore terminal state cleanly.
+- [X] T031 Run full test suite: `dotnet test src/SunnySunday.slnx`. Confirm no regressions across all existing parser, API, CLI, infrastructure, recap, and settings test-email API tests. All new TUI tests pass.
 
 **Checkpoint**: All edge cases handled. Architecture docs updated. Full test suite green. TUI is feature-complete per spec.
 

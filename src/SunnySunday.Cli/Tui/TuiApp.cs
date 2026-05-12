@@ -48,7 +48,15 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         if (_screens.Count == 0)
         {
             var initialScreen = new BookListScreen(_client);
-            await initialScreen.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await initialScreen.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (HttpRequestException)
+            {
+                _chrome.SetDisconnected();
+            }
+
             _screens.Push(initialScreen);
         }
 
@@ -57,6 +65,15 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
         try
         {
+            // T026: Check minimum terminal size before starting the normal layout
+            var cols = Console.IsOutputRedirected ? 80 : Console.WindowWidth;
+            var rows = Console.IsOutputRedirected ? 24 : Console.WindowHeight;
+            if (cols < 80 || rows < 24)
+            {
+                await ShowTooSmallAsync().ConfigureAwait(false);
+                return;
+            }
+
             await RunSplashAsync(cancellationToken).ConfigureAwait(false);
 
             _window = new Window
@@ -107,6 +124,27 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
             _window?.Dispose();
             (_app as IDisposable)?.Dispose();
         }
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the splash window")]
+    private Task ShowTooSmallAsync()
+    {
+        if (_app is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        using var win = new Window { BorderStyle = LineStyle.None };
+        win.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background)));
+
+        var line1 = new Label { Text = "Terminal too small.", X = Pos.Center(), Y = Pos.AnchorEnd(4) };
+        var line2 = new Label { Text = "Please resize to at least 80\u00d724 and restart.", X = Pos.Center(), Y = Pos.AnchorEnd(3) };
+        var line3 = new Label { Text = "Press any key to exit.", X = Pos.Center(), Y = Pos.AnchorEnd(2) };
+        line3.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), StatusChrome.Background)));
+        win.Add(line1, line2, line3);
+        win.KeyDown += (_, _) => _app!.RequestStop();
+        _app.Run(win);
+        return Task.CompletedTask;
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the splash window")]
@@ -246,10 +284,22 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         {
             case ScreenAction.None:
                 return;
+            case ScreenAction.Reload:
+                ShowCurrentScreen();
+                return;
             case ScreenAction.Push when result.Next is not null:
                 _ = Task.Run(async () =>
                 {
-                    await result.Next.InitializeAsync(CancellationToken.None);
+                    try
+                    {
+                        await result.Next.InitializeAsync(CancellationToken.None);
+                    }
+                    catch (HttpRequestException)
+                    {
+                        _chrome.SetDisconnected();
+                        _app?.Invoke(() => _chrome.UpdateLabels());
+                    }
+
                     _app?.Invoke(() =>
                     {
                         _screens.Push(result.Next);

@@ -599,48 +599,55 @@ public sealed class HighlightDetailScreen : IScreen
 
     private async Task<ScreenResult> RefreshAsync(CancellationToken cancellationToken)
     {
-        var highlights = new List<HighlightItemDto>();
-        var page = 1;
-
-        while (true)
+        try
         {
-            var response = await _client.GetHighlightsAsync(page, DetailPageSize, query: null, cancellationToken).ConfigureAwait(false);
-            highlights.AddRange(response.Items.Where(item => item.BookId == _bookId));
+            var highlights = new List<HighlightItemDto>();
+            var page = 1;
 
-            if (response.Page * response.PageSize >= response.Total)
+            while (true)
             {
-                break;
+                var response = await _client.GetHighlightsAsync(page, DetailPageSize, query: null, cancellationToken).ConfigureAwait(false);
+                highlights.AddRange(response.Items.Where(item => item.BookId == _bookId));
+
+                if (response.Page * response.PageSize >= response.Total)
+                {
+                    break;
+                }
+
+                page++;
             }
 
-            page++;
+            var exclusions = await _client.GetExclusionsAsync(cancellationToken).ConfigureAwait(false);
+            var weights = await _client.GetWeightsAsync(cancellationToken).ConfigureAwait(false);
+            var excludedHighlightIds = exclusions.Highlights.Select(highlight => highlight.Id).ToHashSet();
+            var weightLookup = weights.ToDictionary(weight => weight.Id, weight => weight.Weight);
+
+            _highlights.Clear();
+            _highlights.AddRange(highlights.Select(item => new HighlightViewModel(
+                item.Id,
+                item.BookId,
+                item.AuthorId,
+                item.Text,
+                item.BookTitle,
+                item.AuthorName,
+                excludedHighlightIds.Contains(item.Id),
+                weightLookup.TryGetValue(item.Id, out var weight) ? weight : null)));
+
+            _isBookExcluded = exclusions.Books.Any(book => book.Id == _bookId);
+            _isAuthorExcluded = exclusions.Authors.Any(author => author.Id == _authorId);
+            SelectedIndex = Math.Clamp(SelectedIndex, 0, Math.Max(0, _highlights.Count - 1));
+            ActionMenuIndex = Math.Clamp(ActionMenuIndex, 0, Math.Max(0, GetActionLabels().Count - 1));
+            ActionMenuOpen = false;
+            WeightEditorOpen = false;
+            DeleteConfirmationOpen = false;
+            HighlightPreviewOpen = false;
+            _previewText = null;
+            _statusMessage = $"Reloaded {_highlights.Count.ToString(CultureInfo.InvariantCulture)} highlight(s).";
         }
-
-        var exclusions = await _client.GetExclusionsAsync(cancellationToken).ConfigureAwait(false);
-        var weights = await _client.GetWeightsAsync(cancellationToken).ConfigureAwait(false);
-        var excludedHighlightIds = exclusions.Highlights.Select(highlight => highlight.Id).ToHashSet();
-        var weightLookup = weights.ToDictionary(weight => weight.Id, weight => weight.Weight);
-
-        _highlights.Clear();
-        _highlights.AddRange(highlights.Select(item => new HighlightViewModel(
-            item.Id,
-            item.BookId,
-            item.AuthorId,
-            item.Text,
-            item.BookTitle,
-            item.AuthorName,
-            excludedHighlightIds.Contains(item.Id),
-            weightLookup.TryGetValue(item.Id, out var weight) ? weight : null)));
-
-        _isBookExcluded = exclusions.Books.Any(book => book.Id == _bookId);
-        _isAuthorExcluded = exclusions.Authors.Any(author => author.Id == _authorId);
-        SelectedIndex = Math.Clamp(SelectedIndex, 0, Math.Max(0, _highlights.Count - 1));
-        ActionMenuIndex = Math.Clamp(ActionMenuIndex, 0, Math.Max(0, GetActionLabels().Count - 1));
-        ActionMenuOpen = false;
-        WeightEditorOpen = false;
-        DeleteConfirmationOpen = false;
-        HighlightPreviewOpen = false;
-        _previewText = null;
-        _statusMessage = $"Reloaded {_highlights.Count.ToString(CultureInfo.InvariantCulture)} highlight(s).";
+        catch (HttpRequestException)
+        {
+            _statusMessage = "Cannot reach server. Check the connection.";
+        }
 
         return ScreenResult.Stay();
     }
