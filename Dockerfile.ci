@@ -4,9 +4,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /src
 COPY src/ .
-RUN dotnet restore SunnySunday.slnx
+RUN dotnet restore Relego.slnx
 
 FROM base AS build
-RUN dotnet build SunnySunday.slnx \
+RUN dotnet build Relego.slnx \
     --no-restore \
     --configuration Release

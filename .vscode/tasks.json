@@ -2,12 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build: SunnySunday.Cli",
+            "label": "build: Relego.Cli",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/SunnySunday.Cli/SunnySunday.Cli.csproj",
+                "${workspaceFolder}/src/Relego.Cli/Relego.Cli.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -15,12 +15,12 @@
             "group": "build"
         },
         {
-            "label": "build: SunnySunday.Server",
+            "label": "build: Relego.Server",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/SunnySunday.Server/SunnySunday.Server.csproj",
+                "${workspaceFolder}/src/Relego.Server/Relego.Server.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
