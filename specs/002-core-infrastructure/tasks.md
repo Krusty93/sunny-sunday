@@ -13,7 +13,7 @@
 
 **Purpose**: Ensure the devcontainer runs .NET 10 and the repository has the correct .NET-specific ignore rules before any source file is created.
 
-- [X] T000a Switch `.devcontainer/devcontainer.json` base image from `mcr.microsoft.com/devcontainers/base:trixie` to `mcr.microsoft.com/devcontainers/dotnet:1-10.0` and set `name` to `Sunny Sunday`; keep all other features and extensions unchanged — rebuild the devcontainer after this change
+- [X] T000a Switch `.devcontainer/devcontainer.json` base image from `mcr.microsoft.com/devcontainers/base:trixie` to `mcr.microsoft.com/devcontainers/dotnet:1-10.0` and set `name` to `Relego`; keep all other features and extensions unchanged — rebuild the devcontainer after this change
 - [X] T000b Generate the standard .NET `.gitignore` at repository root via `dotnet new gitignore` (covers `bin/`, `obj/`, `*.user`, `*.suo`, NuGet fallback folders, etc.)
 
 ---
@@ -22,12 +22,12 @@
 
 **Purpose**: Create the .NET 10 solution file and project scaffolding.
 
-- [X] T001 Create `src/SunnySunday.slnx` solution file in the `src/` directory with `dotnet new sln -n SunnySunday -o src`
-- [X] T002 Create `src/SunnySunday.Core/SunnySunday.Core.csproj` as a class library targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/SunnySunday.slnx`
-- [X] T003 [P] Create `src/SunnySunday.Server/SunnySunday.Server.csproj` as a web application targeting `net10.0` (SDK: `Microsoft.NET.Sdk.Web`); add to `src/SunnySunday.slnx`
-- [X] T004 [P] Create `src/SunnySunday.Cli/SunnySunday.Cli.csproj` as a console app targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/SunnySunday.slnx`; add stub `Program.cs`
-- [X] T005 [P] Create `src/SunnySunday.Tests/SunnySunday.Tests.csproj` as an xUnit test project targeting `net10.0` with packages: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`; add to `src/SunnySunday.slnx`
-- [X] T006 ~~Add all four projects to `src/SunnySunday.slnx` via `dotnet sln add`~~ — superseded: each project (T002–T005) adds itself to the solution in its own task
+- [X] T001 Create `src/Relego.slnx` solution file in the `src/` directory with `dotnet new sln -n Relego -o src`
+- [X] T002 Create `src/Relego.Core/Relego.Core.csproj` as a class library targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/Relego.slnx`
+- [X] T003 [P] Create `src/Relego.Server/Relego.Server.csproj` as a web application targeting `net10.0` (SDK: `Microsoft.NET.Sdk.Web`); add to `src/Relego.slnx`
+- [X] T004 [P] Create `src/Relego.Cli/Relego.Cli.csproj` as a console app targeting `net10.0` (SDK: `Microsoft.NET.Sdk`); add to `src/Relego.slnx`; add stub `Program.cs`
+- [X] T005 [P] Create `src/Relego.Tests/Relego.Tests.csproj` as an xUnit test project targeting `net10.0` with packages: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`; add to `src/Relego.slnx`
+- [X] T006 ~~Add all four projects to `src/Relego.slnx` via `dotnet sln add`~~ — superseded: each project (T002–T005) adds itself to the solution in its own task
 
 ---
 
@@ -37,10 +37,10 @@
 
 **⚠️ CRITICAL**: T007–T010 must complete before US1/US2/US3 implementation tasks.
 
-- [X] T007 Add project reference `SunnySunday.Core` → in `SunnySunday.Server.csproj`
-- [X] T008 [P] Add project reference `SunnySunday.Core` → in `SunnySunday.Cli.csproj`
-- [X] T009 Add project references `SunnySunday.Core`, `SunnySunday.Server`, `SunnySunday.Cli` → in `SunnySunday.Tests.csproj`
-- [X] T010 [P] Add NuGet packages to `SunnySunday.Server.csproj`: `Microsoft.Data.Sqlite`, `Serilog`, `Serilog.Sinks.File`, `Serilog.Sinks.SQLite`, `Serilog.Extensions.Hosting`
+- [X] T007 Add project reference `Relego.Core` → in `Relego.Server.csproj`
+- [X] T008 [P] Add project reference `Relego.Core` → in `Relego.Cli.csproj`
+- [X] T009 Add project references `Relego.Core`, `Relego.Server`, `Relego.Cli` → in `Relego.Tests.csproj`
+- [X] T010 [P] Add NuGet packages to `Relego.Server.csproj`: `Microsoft.Data.Sqlite`, `Serilog`, `Serilog.Sinks.File`, `Serilog.Sinks.SQLite`, `Serilog.Extensions.Hosting`
 
 **Checkpoint**: All project references and packages restored — user story implementation can begin.
 
@@ -52,38 +52,38 @@
 
 **Independent Test**: `dotnet build` exits 0 on a fresh clone; `dotnet test` exits 0.
 
-- [X] T011 [US1] Create `src/SunnySunday.Core/Models/Highlight.cs` — plain C# class with properties: `Id`, `UserId`, `BookId`, `Text`, `Weight`, `Excluded`, `LastSeen`, `DeliveryCount`, `CreatedAt`
-- [X] T012 [P] [US1] Create `src/SunnySunday.Core/Models/Book.cs` — plain C# class with properties: `Id`, `UserId`, `AuthorId`, `Title`
-- [X] T013 [P] [US1] Create `src/SunnySunday.Core/Models/Author.cs` — plain C# class with properties: `Id`, `Name`
-- [X] T014 [P] [US1] Create `src/SunnySunday.Core/Models/User.cs` — plain C# class with properties: `Id`, `KindleEmail`, `CreatedAt`
-- [X] T015 [P] [US1] Create `src/SunnySunday.Core/Models/Settings.cs` — plain C# class with properties: `UserId`, `Schedule`, `DeliveryDay`, `DeliveryTime`, `Count`
-- [X] T016 [US1] Create `src/SunnySunday.Cli/Program.cs` — minimal entry point using `Spectre.Console`; add `Spectre.Console` NuGet to `SunnySunday.Cli.csproj`; no commands yet, just application host bootstrap
+- [X] T011 [US1] Create `src/Relego.Core/Models/Highlight.cs` — plain C# class with properties: `Id`, `UserId`, `BookId`, `Text`, `Weight`, `Excluded`, `LastSeen`, `DeliveryCount`, `CreatedAt`
+- [X] T012 [P] [US1] Create `src/Relego.Core/Models/Book.cs` — plain C# class with properties: `Id`, `UserId`, `AuthorId`, `Title`
+- [X] T013 [P] [US1] Create `src/Relego.Core/Models/Author.cs` — plain C# class with properties: `Id`, `Name`
+- [X] T014 [P] [US1] Create `src/Relego.Core/Models/User.cs` — plain C# class with properties: `Id`, `KindleEmail`, `CreatedAt`
+- [X] T015 [P] [US1] Create `src/Relego.Core/Models/Settings.cs` — plain C# class with properties: `UserId`, `Schedule`, `DeliveryDay`, `DeliveryTime`, `Count`
+- [X] T016 [US1] Create `src/Relego.Cli/Program.cs` — minimal entry point using `Spectre.Console`; add `Spectre.Console` NuGet to `Relego.Cli.csproj`; no commands yet, just application host bootstrap
 - [X] T017 [US1] Verify `dotnet build` exits 0 with no errors and no warnings across all four projects
 
 ---
 
 ## Phase 4: User Story 2 — SQLite Schema Initialized on Server Startup (Priority: P2)
 
-**Goal**: Server creates `sunny.db` with all 7 domain tables on first run; idempotent on restart.
+**Goal**: Server creates `relego.db` with all 7 domain tables on first run; idempotent on restart.
 
-**Independent Test**: Run server against empty volume → `sqlite3 /data/sunny.db .tables` shows all 7 tables.
+**Independent Test**: Run server against empty volume → `sqlite3 /data/relego.db .tables` shows all 7 tables.
 
-- [X] T018 [US2] Create `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` — service with `ApplyAsync(string dbPath)` method that executes all `CREATE TABLE IF NOT EXISTS` DDL statements using `Microsoft.Data.Sqlite`
+- [X] T018 [US2] Create `src/Relego.Server/Infrastructure/Database/SchemaBootstrap.cs` — service with `ApplyAsync(string dbPath)` method that executes all `CREATE TABLE IF NOT EXISTS` DDL statements using `Microsoft.Data.Sqlite`
 - [X] T019 [US2] Implement the full DDL in `SchemaBootstrap.cs` for all 7 tables: `users`, `authors`, `books`, `highlights`, `excluded_books`, `excluded_authors`, `settings` (exact DDL from `data-model.md`)
-- [X] T020 [US2] Create `src/SunnySunday.Server/Program.cs` — minimal ASP.NET Core host; DB path hardcoded to `.data/sunny.db`; call `SchemaBootstrap.ApplyAsync()` before `app.Run()` (Serilog will be wired before this step in T023, so DB errors will be logged)
+- [X] T020 [US2] Create `src/Relego.Server/Program.cs` — minimal ASP.NET Core host; DB path hardcoded to `.data/relego.db`; call `SchemaBootstrap.ApplyAsync()` before `app.Run()` (Serilog will be wired before this step in T023, so DB errors will be logged)
 - [X] T021 [US2] Verify idempotency: running `SchemaBootstrap.ApplyAsync()` twice on the same database produces no errors (covered by `CREATE TABLE IF NOT EXISTS` semantics)
 
 ---
 
 ## Phase 5: User Story 3 — Serilog Writes Structured Logs (Priority: P3)
 
-**Goal**: All log entries written to daily rolling file under `/data/logs/` AND to the `Logs` table in `sunny.db`.
+**Goal**: All log entries written to daily rolling file under `/data/logs/` AND to the `Logs` table in `relego.db`.
 
 **Independent Test**: Start server, make one HTTP request, verify log file exists and `SELECT COUNT(*) FROM Logs` > 0.
 
-- [X] T022 [US3] Create `src/SunnySunday.Server/Infrastructure/Logging/SerilogConfiguration.cs` — static helper `ConfigureLogging(WebApplicationBuilder builder, string dbPath)` that: (1) calls `Directory.CreateDirectory(".data/logs")` to ensure the log directory exists before Serilog initializes, (2) configures Serilog with file sink (`.data/logs/sunny-.log`, rolling interval daily, minimum level `Information`) and SQLite sink (`dbPath`, table `Logs`, minimum level `Warning`); both paths are hardcoded constants — no env var
-- [X] T023 [US3] Wire `SerilogConfiguration.ConfigureLogging()` into `src/SunnySunday.Server/Program.cs` — call it as the **first operation** on the host builder, before `SchemaBootstrap.ApplyAsync()`, so that DB initialization errors are captured in both log sinks; use `UseSerilog()` on the host builder
-- [X] T024 [US3] Emit a startup log entry (`Information` level) in `Program.cs` after schema bootstrap completes: `"Sunny Sunday server started. Database: {DbPath}"` — verifies both sinks are wired before any HTTP request
+- [X] T022 [US3] Create `src/Relego.Server/Infrastructure/Logging/SerilogConfiguration.cs` — static helper `ConfigureLogging(WebApplicationBuilder builder, string dbPath)` that: (1) calls `Directory.CreateDirectory(".data/logs")` to ensure the log directory exists before Serilog initializes, (2) configures Serilog with file sink (`.data/logs/relego-.log`, rolling interval daily, minimum level `Information`) and SQLite sink (`dbPath`, table `Logs`, minimum level `Warning`); both paths are hardcoded constants — no env var
+- [X] T023 [US3] Wire `SerilogConfiguration.ConfigureLogging()` into `src/Relego.Server/Program.cs` — call it as the **first operation** on the host builder, before `SchemaBootstrap.ApplyAsync()`, so that DB initialization errors are captured in both log sinks; use `UseSerilog()` on the host builder
+- [X] T024 [US3] Emit a startup log entry (`Information` level) in `Program.cs` after schema bootstrap completes: `"Relego server started. Database: {DbPath}"` — verifies both sinks are wired before any HTTP request
 
 ---
 
@@ -113,7 +113,7 @@ T024 → T025, T026, T027
 ## Parallel Execution Examples
 
 **After T010 completes**, these groups can proceed in parallel:
-- T011 + T012 + T013 + T014 + T015 (all domain model files in `SunnySunday.Core/Models/` — no interdependencies)
+- T011 + T012 + T013 + T014 + T015 (all domain model files in `Relego.Core/Models/` — no interdependencies)
 - T007 + T008 (project references — different files)
 
 **After T017 (US1 complete)**, these groups can proceed in parallel:

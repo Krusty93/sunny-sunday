@@ -1,9 +1,9 @@
-# Sunny Sunday Constitution
+# Relego Constitution
 
 ## Core Principles
 
 ### I. Client/Server Separation
-The system is split into two independently deployable components: a client CLI (`sunny`) and a server (`sunny-server`). The client handles on-demand user interactions (sync, settings). The server handles all automated operations (scheduling, recap generation, email delivery). Neither component shall take over the responsibilities of the other.
+The system is split into two independently deployable components: a client CLI (`relego`) and a server (`relego-server`). The client handles on-demand user interactions (sync, settings). The server handles all automated operations (scheduling, recap generation, email delivery). Neither component shall take over the responsibilities of the other.
 
 ### II. CLI-First, No GUI
 All user interactions happen via the CLI. No web UI, no interactive configuration files. Settings are stored server-side and managed exclusively through CLI commands. Error messages must be actionable — every error tells the user what went wrong and how to fix it.
@@ -23,7 +23,7 @@ MVP supports one user, no indexes, no authentication. Do not add multi-user supp
 ## Technology Constraints
 
 - **Language:** C# / .NET 10 — no mixing of languages or runtimes
-- **Storage:** SQLite at `/data/sunny.db` — no second database container
+- **Storage:** SQLite at `/data/relego.db` — no second database container
 - **Logging:** Serilog with file sink and SQLite sink — no raw `Console.WriteLine` for diagnostic output
 - **Email:** MailKit + user-provided SMTP — no third-party email SaaS
 - **Scheduling:** Quartz.NET — no custom scheduler implementations

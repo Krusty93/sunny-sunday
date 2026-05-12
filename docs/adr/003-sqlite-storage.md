@@ -14,12 +14,12 @@ Alternatives considered:
 
 ## Decision
 
-Use **SQLite** stored as a single file in the Docker volume (`/data/sunny.db`). No secondary database container required.
+Use **SQLite** stored as a single file in the Docker volume (`/data/relego.db`). No secondary database container required.
 
 ## Consequences
 
 - Zero configuration for the user — data persists in the Docker volume automatically.
-- Single file makes backup trivial: copy `/data/sunny.db`.
+- Single file makes backup trivial: copy `/data/relego.db`.
 - SQLite's write lock is not a concern for MVP (single user) or family-scale use (2–10 users with infrequent writes).
 - **No indexes are added for MVP** (single user). The following indexes will be added post-MVP when multi-user support is introduced:
   - `CREATE INDEX idx_highlights_user ON highlights(user_id)`

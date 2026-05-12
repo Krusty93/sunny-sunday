@@ -8,7 +8,7 @@
 
 This feature does **not** introduce new database tables. All tables were defined in feature 002 (core-infrastructure) and already exist via `SchemaBootstrap`. This feature introduces:
 
-1. **Request/Response DTOs** — API contract types in `SunnySunday.Core/Contracts/`
+1. **Request/Response DTOs** — API contract types in `Relego.Core/Contracts/`
 2. **Data access layer** — Repository-style classes using Dapper against the existing schema
 
 ## Existing Database Schema (reference)
@@ -25,7 +25,7 @@ settings         (user_id, schedule, delivery_day, delivery_time, count)
 
 ## Existing Domain Models (reference)
 
-Located in `SunnySunday.Server/Models/`:
+Located in `Relego.Server/Models/`:
 
 - `Highlight` — `Id, UserId, BookId, Text, Weight, Excluded, LastSeen, DeliveryCount, CreatedAt`
 - `Book` — `Id, UserId, AuthorId, Title`
@@ -37,7 +37,7 @@ Located in `SunnySunday.Server/Models/`:
 
 ## API Contract Types (DTOs)
 
-All DTOs live in `SunnySunday.Core/Contracts/`, shared between Server and CLI. Both projects already reference `SunnySunday.Core`.
+All DTOs live in `Relego.Core/Contracts/`, shared between Server and CLI. Both projects already reference `Relego.Core`.
 
 ### Sync Contracts
 
@@ -192,7 +192,7 @@ Returned in the list from `GET /highlights/weights`.
 ## Mapping: Parser Output → Sync Request → Database
 
 ```
-CLI side (SunnySunday.Cli — references SunnySunday.Core.Contracts directly):
+CLI side (Relego.Cli — references Relego.Core.Contracts directly):
   ParseResult.Books[]           →  SyncRequest.Books[]
   ParsedBook.Title              →  SyncBookRequest.Title
   ParsedBook.Author             →  SyncBookRequest.Author
@@ -211,7 +211,7 @@ Server side (sync endpoint):
 ## File Layout
 
 ```
-src/SunnySunday.Server/
+src/Relego.Server/
 ├── Contracts/
 │   ├── SyncRequest.cs
 │   ├── SyncResponse.cs
@@ -236,7 +236,7 @@ src/SunnySunday.Server/
 │   └── WeightRepository.cs
 └── Program.cs                      # Updated: DI registrations + MapGroup calls
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 └── Api/
     ├── SyncEndpointTests.cs
     ├── StatusEndpointTests.cs

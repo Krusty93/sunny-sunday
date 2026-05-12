@@ -5,13 +5,13 @@
 
 ## Summary
 
-Scaffold the .NET 10 solution with four projects (`SunnySunday.Core`, `SunnySunday.Server`, `SunnySunday.Cli`, `SunnySunday.Tests`), define shared domain models in Core, create the SQLite schema idempotently on server startup using plain SQL scripts, and wire Serilog with file-rolling and SQLite sinks. No business logic, no REST endpoints, no CLI commands.
+Scaffold the .NET 10 solution with four projects (`Relego.Core`, `Relego.Server`, `Relego.Cli`, `Relego.Tests`), define shared domain models in Core, create the SQLite schema idempotently on server startup using plain SQL scripts, and wire Serilog with file-rolling and SQLite sinks. No business logic, no REST endpoints, no CLI commands.
 
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (net10.0 TFM)
 **Primary Dependencies**: Microsoft.Data.Sqlite (schema bootstrap), Serilog + Serilog.Sinks.File + Serilog.Sinks.SQLite (logging), Spectre.Console (CLI host — no commands yet)
-**Storage**: SQLite at `/data/sunny.db` (single file, Docker volume)
+**Storage**: SQLite at `/data/relego.db` (single file, Docker volume)
 **Testing**: xUnit — no test content in this feature; project must compile and `dotnet test` must exit 0
 **Target Platform**: Linux (Docker container) for server; macOS/Linux/Windows for client CLI
 **Project Type**: Multi-project .NET solution (library + web service + CLI + test host)
@@ -29,7 +29,7 @@ Scaffold the .NET 10 solution with four projects (`SunnySunday.Core`, `SunnySund
 | II. CLI-First, No GUI | PASS | No web UI added; Spectre.Console referenced but no commands yet |
 | III. Zero-Config Onboarding | PASS | Schema auto-created on startup — zero manual DB setup required |
 | IV. Local Processing Only | PASS | No external services touched in this feature |
-| V. Tests Ship with Code | PASS | SunnySunday.Tests project included; compilation gate verified by CI |
+| V. Tests Ship with Code | PASS | Relego.Tests project included; compilation gate verified by CI |
 | VI. Simplicity Over Premature Generalization | PASS | Plain SQL over EF Core Migrations; no indexes; no Repository pattern |
 | Tech: .NET 10 | PASS | net10.0 TFM in all projects |
 | Tech: Serilog file + SQLite sinks | PASS | Both sinks configured in server startup |
@@ -55,33 +55,33 @@ specs/002-core-infrastructure/
 
 ```text
 src/
-├── SunnySunday.slnx
-├── SunnySunday.Core/
-│   ├── SunnySunday.Core.csproj
+├── Relego.slnx
+├── Relego.Core/
+│   ├── Relego.Core.csproj
 │   └── Models/
 │       ├── Highlight.cs
 │       ├── Book.cs
 │       ├── Author.cs
 │       ├── User.cs
 │       └── Settings.cs
-├── SunnySunday.Server/
-│   ├── SunnySunday.Server.csproj
+├── Relego.Server/
+│   ├── Relego.Server.csproj
 │   ├── Program.cs
 │   └── Infrastructure/
 │       ├── Database/
 │       │   └── SchemaBootstrap.cs
 │       └── Logging/
 │           └── SerilogConfiguration.cs
-├── SunnySunday.Cli/
-│   ├── SunnySunday.Cli.csproj
+├── Relego.Cli/
+│   ├── Relego.Cli.csproj
 │   └── Program.cs
-└── SunnySunday.Tests/
-    ├── SunnySunday.Tests.csproj
+└── Relego.Tests/
+    ├── Relego.Tests.csproj
     └── Infrastructure/
         └── SchemaBootstrapTests.cs
 ```
 
-**Structure Decision**: Multi-project solution under `src/`. `SunnySunday.Core` is a class library with no dependencies. Server and CLI reference Core. Tests reference all three. This matches the constitution's Client/Server Separation principle and enables independent deployment of server (Docker) and CLI (single-file binary).
+**Structure Decision**: Multi-project solution under `src/`. `Relego.Core` is a class library with no dependencies. Server and CLI reference Core. Tests reference all three. This matches the constitution's Client/Server Separation principle and enables independent deployment of server (Docker) and CLI (single-file binary).
 
 ## Complexity Tracking
 

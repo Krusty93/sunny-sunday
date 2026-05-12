@@ -52,14 +52,14 @@
 
 ### 4. .NET 10 project SDK for Server: `Microsoft.NET.Sdk.Web` vs `Microsoft.NET.Sdk`
 
-**Decision**: `Microsoft.NET.Sdk.Web` for `SunnySunday.Server`.
+**Decision**: `Microsoft.NET.Sdk.Web` for `Relego.Server`.
 
 **Rationale**:
 - REST API server will use ASP.NET Core Minimal APIs (feature 004). Scaffolding with `.Web` SDK now avoids a project file change later.
 - Adds `IWebHostEnvironment`, `IHostedService`, and `IHostApplicationBuilder` integration out of the box.
 - No cost for a project that will become an API server.
 
-**Implementation note**: `SunnySunday.Core` uses `Microsoft.NET.Sdk` (class library). `SunnySunday.Cli` uses `Microsoft.NET.Sdk` (console app). `SunnySunday.Tests` uses `Microsoft.NET.Sdk` (xUnit test project).
+**Implementation note**: `Relego.Core` uses `Microsoft.NET.Sdk` (class library). `Relego.Cli` uses `Microsoft.NET.Sdk` (console app). `Relego.Tests` uses `Microsoft.NET.Sdk` (xUnit test project).
 
 ---
 

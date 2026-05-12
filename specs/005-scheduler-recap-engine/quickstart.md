@@ -9,18 +9,18 @@
 
 - .NET 10 SDK installed (`dotnet --version` → `10.x`)
 - Repository cloned and on branch `005-scheduler-recap-engine` (or `task/TXXX-*` task branch)
-- Solution builds cleanly from `main`: `dotnet build src/SunnySunday.slnx`
+- Solution builds cleanly from `main`: `dotnet build src/Relego.slnx`
 - A configured SMTP account (Gmail app password, Outlook, or any SMTP relay) for manual delivery testing
 
 ---
 
 ## New Dependencies
 
-### Server project (`SunnySunday.Server.csproj`)
+### Server project (`Relego.Server.csproj`)
 
 ```bash
-dotnet add src/SunnySunday.Server package Quartz.Extensions.Hosting
-dotnet add src/SunnySunday.Server package MailKit
+dotnet add src/Relego.Server package Quartz.Extensions.Hosting
+dotnet add src/Relego.Server package MailKit
 ```
 
 ---
@@ -29,7 +29,7 @@ dotnet add src/SunnySunday.Server package MailKit
 
 SMTP credentials are **not** stored in the database. Configure them via `appsettings.Development.json` locally or environment variables in Docker.
 
-### Local development (`src/SunnySunday.Server/appsettings.Development.json`)
+### Local development (`src/Relego.Server/appsettings.Development.json`)
 
 ```json
 {
@@ -61,10 +61,10 @@ environment:
 
 ```bash
 # Build the entire solution
-dotnet build src/SunnySunday.slnx
+dotnet build src/Relego.slnx
 
 # Run the server (Development mode — Swagger UI enabled)
-dotnet run --project src/SunnySunday.Server
+dotnet run --project src/Relego.Server
 ```
 
 On startup the server will:
@@ -80,13 +80,13 @@ Server listens on `http://localhost:5000` by default.
 
 ```bash
 # All tests
-dotnet test src/SunnySunday.slnx
+dotnet test src/Relego.slnx
 
 # Only recap engine tests (selection, EPUB, retry)
-dotnet test src/SunnySunday.Tests --filter "FullyQualifiedName~Recap"
+dotnet test src/Relego.Tests --filter "FullyQualifiedName~Recap"
 
 # Only updated endpoint tests
-dotnet test src/SunnySunday.Tests --filter "FullyQualifiedName~Api"
+dotnet test src/Relego.Tests --filter "FullyQualifiedName~Api"
 ```
 
 ---
@@ -235,8 +235,8 @@ To inspect a generated EPUB without sending it to a Kindle device:
 To reset `last_seen` and `delivery_count` on all highlights during development (forces all highlights to rank as "never seen"):
 
 ```bash
-sqlite3 .data/sunny.db "UPDATE highlights SET last_seen = NULL, delivery_count = 0;"
-sqlite3 .data/sunny.db "DELETE FROM recap_jobs;"
+sqlite3 .data/relego.db "UPDATE highlights SET last_seen = NULL, delivery_count = 0;"
+sqlite3 .data/relego.db "DELETE FROM recap_jobs;"
 ```
 
 ---

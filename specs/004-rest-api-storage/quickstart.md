@@ -7,22 +7,22 @@
 
 - .NET 10 SDK installed (verify: `dotnet --version`)
 - Repository cloned and on the `004-rest-api-storage` branch
-- Solution builds: `dotnet build src/SunnySunday.slnx`
+- Solution builds: `dotnet build src/Relego.slnx`
 
 ## New Dependencies
 
-### Server project (`SunnySunday.Server.csproj`)
+### Server project (`Relego.Server.csproj`)
 
 ```bash
-cd src/SunnySunday.Server
+cd src/Relego.Server
 dotnet add package Dapper
 dotnet add package Swashbuckle.AspNetCore
 ```
 
-### Test project (`SunnySunday.Tests.csproj`)
+### Test project (`Relego.Tests.csproj`)
 
 ```bash
-cd src/SunnySunday.Tests
+cd src/Relego.Tests
 dotnet add package Microsoft.AspNetCore.Mvc.Testing
 ```
 
@@ -30,10 +30,10 @@ dotnet add package Microsoft.AspNetCore.Mvc.Testing
 
 ```bash
 # Build everything
-dotnet build src/SunnySunday.slnx
+dotnet build src/Relego.slnx
 
 # Run the server
-dotnet run --project src/SunnySunday.Server
+dotnet run --project src/Relego.Server
 
 # Server listens on http://localhost:5000 (or as configured in launchSettings.json)
 ```
@@ -42,10 +42,10 @@ dotnet run --project src/SunnySunday.Server
 
 ```bash
 # All tests
-dotnet test src/SunnySunday.slnx
+dotnet test src/Relego.slnx
 
 # Only API integration tests
-dotnet test src/SunnySunday.Tests --filter "FullyQualifiedName~Api"
+dotnet test src/Relego.Tests --filter "FullyQualifiedName~Api"
 ```
 
 ## Swagger UI (Development only)
@@ -155,14 +155,14 @@ curl http://localhost:5000/highlights/weights
 ## Project Structure
 
 ```
-src/SunnySunday.Server/
+src/Relego.Server/
 ├── Contracts/          # Request/response DTOs
 ├── Data/               # Dapper-based data access
 ├── Endpoints/          # Minimal API endpoint groups
 ├── Infrastructure/     # Existing: Database/, Logging/
 └── Program.cs          # Composition root
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 ├── Api/                # Integration tests (WebApplicationFactory)
 ├── Infrastructure/     # Existing schema tests
 └── Parsing/            # Existing parser tests

@@ -9,14 +9,14 @@
 
 - .NET 10 SDK installed (`dotnet --version` → `10.x`)
 - Repository cloned and on branch `007-evolve-cli-to-tui` (or `task/TXXX-*` task branch)
-- Solution builds cleanly from `main`: `dotnet build src/SunnySunday.slnx`
-- A running `sunny-server` instance (for manual end-to-end testing)
+- Solution builds cleanly from `main`: `dotnet build src/Relego.slnx`
+- A running `relego-server` instance (for manual end-to-end testing)
 
 ---
 
 ## New Dependency: Terminal.Gui
 
-The TUI uses **Terminal.Gui 2.1.0** (added to `SunnySunday.Cli.csproj`) as the TUI rendering framework. Spectre.Console.Cli is retained for CLI command routing. `dotnet restore` fetches the package automatically on first build.
+The TUI uses **Terminal.Gui 2.1.0** (added to `Relego.Cli.csproj`) as the TUI rendering framework. Spectre.Console.Cli is retained for CLI command routing. `dotnet restore` fetches the package automatically on first build.
 
 ---
 
@@ -25,14 +25,14 @@ The TUI uses **Terminal.Gui 2.1.0** (added to `SunnySunday.Cli.csproj`) as the T
 ### Build the entire solution
 
 ```bash
-dotnet build src/SunnySunday.slnx
+dotnet build src/Relego.slnx
 ```
 
 ### Run in TUI mode (no arguments)
 
 ```bash
-export SUNNY_SERVER=http://localhost:5000
-dotnet run --project src/SunnySunday.Cli
+export RELEGO_SERVER=http://localhost:5000
+dotnet run --project src/Relego.Cli
 ```
 
 This launches the interactive TUI with the book list screen.
@@ -40,10 +40,10 @@ This launches the interactive TUI with the book list screen.
 ### Run in CLI mode (with arguments — unchanged)
 
 ```bash
-export SUNNY_SERVER=http://localhost:5000
-dotnet run --project src/SunnySunday.Cli -- sync /path/to/My\ Clippings.txt
-dotnet run --project src/SunnySunday.Cli -- status
-dotnet run --project src/SunnySunday.Cli -- config show
+export RELEGO_SERVER=http://localhost:5000
+dotnet run --project src/Relego.Cli -- sync /path/to/My\ Clippings.txt
+dotnet run --project src/Relego.Cli -- status
+dotnet run --project src/Relego.Cli -- config show
 ```
 
 All existing CLI commands continue to work identically.
@@ -52,10 +52,10 @@ All existing CLI commands continue to work identically.
 
 ```bash
 # TUI mode (interactive — requires -it)
-docker run --rm -it -e SUNNY_SERVER=http://host.docker.internal:5000 sunny
+docker run --rm -it -e RELEGO_SERVER=http://host.docker.internal:5000 relego
 
 # CLI mode
-docker run --rm -e SUNNY_SERVER=http://host.docker.internal:5000 sunny status
+docker run --rm -e RELEGO_SERVER=http://host.docker.internal:5000 relego status
 ```
 
 ---
@@ -65,13 +65,13 @@ docker run --rm -e SUNNY_SERVER=http://host.docker.internal:5000 sunny status
 ### All tests
 
 ```bash
-dotnet test src/SunnySunday.slnx
+dotnet test src/Relego.slnx
 ```
 
 ### TUI-specific tests only
 
 ```bash
-dotnet test src/SunnySunday.Tests --filter "FullyQualifiedName~Tui"
+dotnet test src/Relego.Tests --filter "FullyQualifiedName~Tui"
 ```
 
 ---
@@ -79,7 +79,7 @@ dotnet test src/SunnySunday.Tests --filter "FullyQualifiedName~Tui"
 ## Project Layout (new files)
 
 ```
-src/SunnySunday.Cli/
+src/Relego.Cli/
 ├── Program.cs                          ← MODIFIED: add TUI mode detection
 ├── Tui/
 │   ├── TuiApp.cs                       ← NEW: render loop orchestrator
@@ -96,7 +96,7 @@ src/SunnySunday.Cli/
 │   ├── SunnyHttpClient.cs              ← MODIFIED: add GetHighlightsAsync, DeleteHighlightAsync, PostTestRecapAsync
 │   └── SunnyJsonContext.cs             ← MODIFIED: add HighlightsResponse serialization
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 └── Tui/
     ├── ModeDetectionTests.cs           ← NEW: TUI vs CLI mode detection
     ├── BookGroupingTests.cs            ← NEW: highlight → book grouping

@@ -1,4 +1,4 @@
-# Developer Experience Design — Sunny Sunday
+# Developer Experience Design — Relego
 
 **Version:** 0.2 — Draft
 **Date:** 2026-03-31
@@ -8,10 +8,10 @@
 
 ## Overview
 
-Sunny Sunday consists of two components with distinct installation and usage patterns:
+Relego consists of two components with distinct installation and usage patterns:
 
-- **Server** (`sunny-server`) — Always-on Docker container deployed on a home server, NAS, or Raspberry Pi. Handles scheduling, spaced repetition, recap composition, and email delivery.
-- **Client CLI** (`sunny`) — Installed on the user's laptop. Used to sync highlights from `My Clippings.txt` and manage settings.
+- **Server** (`relego-server`) — Always-on Docker container deployed on a home server, NAS, or Raspberry Pi. Handles scheduling, spaced repetition, recap composition, and email delivery.
+- **Client CLI** (`relego`) — Installed on the user's laptop. Used to sync highlights from `My Clippings.txt` and manage settings.
 
 The guiding DX principle: **zero friction after a one-time setup**. Onboarding requires one Docker command, one environment variable, one sync command.
 
@@ -22,10 +22,10 @@ The guiding DX principle: **zero friction after a one-time setup**. Onboarding r
 ### Server
 
 ```sh
-docker network create sunnysunday
+docker network create relego
 
 docker run -d \
-  --name sunny-server \
+  --name relego-server \
   --restart unless-stopped \
   -e KINDLE_EMAIL=your-address@kindle.com \
   -e SMTP_HOST=smtp.example.com \
@@ -33,9 +33,9 @@ docker run -d \
   -e SMTP_USER=user@example.com \
   -e SMTP_PASSWORD=yourpassword \
   -p 8080:8080 \
-  -v sunny-data:/data \
-  --network sunnysunday \
-  ghcr.io/krusty93/sunnysunday.server:latest
+  -v relego-data:/data \
+  --network relego \
+  ghcr.io/krusty93/relego.server:latest
 ```
 
 That's it. The server is running and will start sending recaps on the default schedule (daily at 18:00 client's local time).
@@ -44,51 +44,51 @@ That's it. The server is running and will start sending recaps on the default sc
 
 **Option A — Docker (no install required):**
 ```sh
-docker run --rm -e SUNNY_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/sunnysunday.cli:latest <command>
+docker run --rm -e RELEGO_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/relego.cli:latest <command>
 ```
 
 **Option B — Download binary:**
 ```sh
 # macOS (Apple Silicon)
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/sunny-darwin-arm64 -o /usr/local/bin/sunny
-chmod +x /usr/local/bin/sunny
+curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/relego-darwin-arm64 -o /usr/local/bin/relego
+chmod +x /usr/local/bin/relego
 
 # macOS (Intel)
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/sunny-darwin-amd64 -o /usr/local/bin/sunny
-chmod +x /usr/local/bin/sunny
+curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/relego-darwin-amd64 -o /usr/local/bin/relego
+chmod +x /usr/local/bin/relego
 
 # Linux
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/sunny-linux-amd64 -o /usr/local/bin/sunny
-chmod +x /usr/local/bin/sunny
+curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/relego-linux-amd64 -o /usr/local/bin/relego
+chmod +x /usr/local/bin/relego
 
 # Windows (via winget)
-winget install Krusty93.SunnySunday
+winget install Krusty93.Relego
 ```
 
 ---
 
 ## Configuration
 
-All configuration is passed as environment variables to the server container. The client reads `SUNNY_SERVER` from the environment to locate the server.
+All configuration is passed as environment variables to the server container. The client reads `RELEGO_SERVER` from the environment to locate the server.
 
 ```sh
 docker run -d \
-  --name sunny-server \
+  --name relego-server \
   --restart unless-stopped \
   -e KINDLE_EMAIL=your-address@kindle.com \
   -p 8080:8080 \
-  -v sunny-data:/data \
-  ghcr.io/krusty93/sunnysunday.server:latest
+  -v relego-data:/data \
+  ghcr.io/krusty93/relego.server:latest
 ```
 
-The client automatically connects to `http://localhost:8080`. If your server runs on a different host or port, set `SUNNY_SERVER` on the client side:
+The client automatically connects to `http://localhost:8080`. If your server runs on a different host or port, set `RELEGO_SERVER` on the client side:
 
 ```sh
 # ~/.zshrc or ~/.bashrc (macOS/Linux)
-export SUNNY_SERVER=http://192.168.1.10:8080
+export RELEGO_SERVER=http://192.168.1.10:8080
 
 # Windows (PowerShell profile)
-$env:SUNNY_SERVER = "http://192.168.1.10:8080"
+$env:RELEGO_SERVER = "http://192.168.1.10:8080"
 ```
 
 No other configuration is required to get started.
@@ -99,13 +99,13 @@ No other configuration is required to get started.
 
 ```
 Step 1 — Deploy server (see above)
-Step 2 — Set SUNNY_SERVER in your shell profile
+Step 2 — Set RELEGO_SERVER in your shell profile
 Step 3 — Connect Kindle via USB
 Step 4 — Sync highlights
 ```
 
 ```sh
-sunny sync /Volumes/Kindle/documents/My\ Clippings.txt
+relego sync /Volumes/Kindle/documents/My\ Clippings.txt
 ```
 
 Expected output:
@@ -116,10 +116,10 @@ Expected output:
 → Next recap: Sunday, Apr 5 at 18:00
 ```
 
-If no path is specified, `sunny sync` auto-detects the Kindle mount path. If not found, it prompts the user:
+If no path is specified, `relego sync` auto-detects the Kindle mount path. If not found, it prompts the user:
 
 ```sh
-sunny sync
+relego sync
 ```
 
 ```
@@ -141,8 +141,8 @@ Total time to first recap: ~2 minutes.
 ### Sync new highlights (after connecting Kindle via USB)
 
 ```sh
-sunny sync          # Auto-detect Kindle mount path; prompts if not found
-sunny sync <path>   # Explicit path to My Clippings.txt
+relego sync          # Auto-detect Kindle mount path; prompts if not found
+relego sync <path>   # Explicit path to My Clippings.txt
 ```
 
 ---
@@ -152,59 +152,59 @@ sunny sync <path>   # Explicit path to My Clippings.txt
 ### Schedule
 
 ```sh
-sunny config schedule daily          # Send recap every day at 18:00 (default time)
-sunny config schedule daily 08:00    # Send recap every day at 08:00
-sunny config schedule weekly         # Send recap every Sunday at 18:00
-sunny config schedule weekly 20:00   # Send recap every Sunday at 20:00
-sunny config schedule show           # Print current schedule
+relego config schedule daily          # Send recap every day at 18:00 (default time)
+relego config schedule daily 08:00    # Send recap every day at 08:00
+relego config schedule weekly         # Send recap every Sunday at 18:00
+relego config schedule weekly 20:00   # Send recap every Sunday at 20:00
+relego config schedule show           # Print current schedule
 ```
 
 ### Exclude highlights / books / authors
 
 ```sh
 # Exclude a specific highlight by ID
-sunny exclude highlight <id>
+relego exclude highlight <id>
 
 # Exclude all highlights from a book
-sunny exclude book "The Pragmatic Programmer"
+relego exclude book "The Pragmatic Programmer"
 
 # Exclude all highlights from an author
-sunny exclude author "David Foster Wallace"
+relego exclude author "David Foster Wallace"
 
 # Re-include a previously excluded highlight
-sunny exclude remove highlight <id>
+relego exclude remove highlight <id>
 
 # Re-include a previously excluded book
-sunny exclude remove book "The Pragmatic Programmer"
+relego exclude remove book "The Pragmatic Programmer"
 
 # Re-include a previously excluded author
-sunny exclude remove author "David Foster Wallace"
+relego exclude remove author "David Foster Wallace"
 
 # List all exclusions
-sunny exclude list
+relego exclude list
 ```
 
 ### Highlight weights
 
 ```sh
 # Set weight for a highlight (default: 1, range: 1–5)
-sunny weight set <id> 3
+relego weight set <id> 3
 
 # Show weight distribution across highlights
-sunny weight list
+relego weight list
 ```
 
 ### Highlights per recap
 
 ```sh
-sunny config count 5      # Show 5 highlights per recap (default: 5, min: 1, max: 15)
-sunny config count show   # Print current setting
+relego config count 5      # Show 5 highlights per recap (default: 5, min: 1, max: 15)
+relego config count show   # Print current setting
 ```
 
 ### Status
 
 ```sh
-sunny status
+relego status
 ```
 
 ```
@@ -226,8 +226,8 @@ Errors are actionable — they tell the user exactly what to do.
 
 ```
 ✗ Cannot connect to server at http://192.168.1.10:8080
-  Is the server running? Check with: docker ps | grep sunny-server
-  Is SUNNY_SERVER set correctly? Current value: http://192.168.1.10:8080
+  Is the server running? Check with: docker ps | grep relego-server
+  Is RELEGO_SERVER set correctly? Current value: http://192.168.1.10:8080
 ```
 
 ### File not found
@@ -235,7 +235,7 @@ Errors are actionable — they tell the user exactly what to do.
 ```
 ✗ File not found: /Volumes/Kindle/documents/My Clippings.txt
   Is your Kindle connected via USB?
-  Looking for the file at a different path? Run: sunny sync <path>
+  Looking for the file at a different path? Run: relego sync <path>
 ```
 
 ### Email delivery failed
@@ -244,7 +244,7 @@ Errors are actionable — they tell the user exactly what to do.
 ✗ Failed to deliver recap to your-address@kindle.com
   Reason: SMTP authentication failed
   Check your KINDLE_EMAIL and SMTP settings on the server:
-    docker exec sunny-server env | grep SMTP
+    docker exec relego-server env | grep SMTP
 ```
 
 ### Empty clippings file
@@ -261,27 +261,27 @@ Errors are actionable — they tell the user exactly what to do.
 
 |                   Command                       |              Description                  |
 |-------------------------------------------------|-------------------------------------------|
-| `sunny sync [path]`                             | Import highlights from `My Clippings.txt` |
-| `sunny status`                                  | Show server status and next recap         |
-| `sunny config schedule <daily\|weekly> [HH:MM]` | Set recap schedule                        |
-| `sunny config schedule show`                    | Show current schedule                     |
-| `sunny config count show`                       | Show current highlights-per-recap setting |
-| `sunny config count <1-15>`                     | Set highlights per recap (default: 5)     |
-| `sunny config kindle-email <address>`           | Set the Kindle delivery email address     |
-| `sunny exclude highlight <id>`                  | Exclude a highlight from all recaps       |
-| `sunny exclude book <title>`                    | Exclude all highlights from a book        |
-| `sunny exclude author <name>`                   | Exclude all highlights from an author     |
-| `sunny exclude remove highlight <id>`           | Re-include a highlight                    |
-| `sunny exclude remove book <title>`             | Re-include a book                         |
-| `sunny exclude remove author <name>`            | Re-include an author                      |
-| `sunny exclude list`                            | List all exclusions                       |
-| `sunny weight set <id> <1-5>`                   | Set highlight weight                      |
-| `sunny weight list`                             | Show weighted highlights                  |
-| `sunny version`                                 | Print version                             |
+| `relego sync [path]`                             | Import highlights from `My Clippings.txt` |
+| `relego status`                                  | Show server status and next recap         |
+| `relego config schedule <daily\|weekly> [HH:MM]` | Set recap schedule                        |
+| `relego config schedule show`                    | Show current schedule                     |
+| `relego config count show`                       | Show current highlights-per-recap setting |
+| `relego config count <1-15>`                     | Set highlights per recap (default: 5)     |
+| `relego config kindle-email <address>`           | Set the Kindle delivery email address     |
+| `relego exclude highlight <id>`                  | Exclude a highlight from all recaps       |
+| `relego exclude book <title>`                    | Exclude all highlights from a book        |
+| `relego exclude author <name>`                   | Exclude all highlights from an author     |
+| `relego exclude remove highlight <id>`           | Re-include a highlight                    |
+| `relego exclude remove book <title>`             | Re-include a book                         |
+| `relego exclude remove author <name>`            | Re-include an author                      |
+| `relego exclude list`                            | List all exclusions                       |
+| `relego weight set <id> <1-5>`                   | Set highlight weight                      |
+| `relego weight list`                             | Show weighted highlights                  |
+| `relego version`                                 | Print version                             |
 
 ---
 
 ## Decisions
 
-- `sunny sync` auto-detects the Kindle mount path on macOS, Linux, and Windows. If not found, it prompts the user to enter the path interactively.
+- `relego sync` auto-detects the Kindle mount path on macOS, Linux, and Windows. If not found, it prompts the user to enter the path interactively.
 - Server authentication is not required — the server is assumed to be on a trusted local network.

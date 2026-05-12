@@ -22,5 +22,5 @@ labels: bug
 
 - OS:
 - Docker version: (`docker --version`)
-- sunny version: (`sunny version`)
+- relego version: (`relego version`)
 - SMTP provider (if relevant):

@@ -65,7 +65,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_recap_jobs_user_slot
 
 ### Updated: `Settings.cs`
 
-Location: `src/SunnySunday.Server/Models/Settings.cs`
+Location: `src/Relego.Server/Models/Settings.cs`
 
 Add `Timezone` property (default `"UTC"`):
 
@@ -83,7 +83,7 @@ public class Settings
 
 ### New: `RecapJobRecord.cs`
 
-Location: `src/SunnySunday.Server/Models/RecapJobRecord.cs`
+Location: `src/Relego.Server/Models/RecapJobRecord.cs`
 
 > **Naming note**: Class is `RecapJobRecord` (not `RecapJob`) to avoid collision with the Quartz `IJob` implementation class named `RecapJob`.
 
@@ -122,7 +122,7 @@ internal sealed record SelectionCandidate(
 
 ## API Contract Changes
 
-All changes are to existing types in `src/SunnySunday.Core/Contracts/`. No new contract files are required.
+All changes are to existing types in `src/Relego.Core/Contracts/`. No new contract files are required.
 
 ### Updated: `SettingsResponse`
 
@@ -170,7 +170,7 @@ Add last-recap fields to surface actionable failure reasons (FR-005-14, US-08 al
 
 ## SMTP Configuration (Server-Side Only — Not Persisted in DB)
 
-Located: `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs`
+Located: `src/Relego.Server/Infrastructure/Smtp/SmtpSettings.cs`
 
 Bound via `builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"))`.
 
@@ -196,7 +196,7 @@ SMTP_PASSWORD=app-specific-password
 
 ## Service Interfaces
 
-Located: `src/SunnySunday.Server/Services/`
+Located: `src/Relego.Server/Services/`
 
 ### `IMailDeliveryService`
 
@@ -271,7 +271,7 @@ Score computation and ranking occur in C# (not SQL), so that the `NeverSeenAge =
 ## Project Structure Additions
 
 ```
-src/SunnySunday.Server/
+src/Relego.Server/
 ├── Program.cs                                ← Updated: Quartz DI, SmtpSettings, new services
 ├── Infrastructure/
 │   ├── Database/
@@ -299,12 +299,12 @@ src/SunnySunday.Server/
     ├── SettingsEndpoints.cs                  ← Updated: Timezone field + SchedulerService call
     └── StatusEndpoints.cs                    ← Updated: NextRecap from SchedulerService
 
-src/SunnySunday.Core/Contracts/
+src/Relego.Core/Contracts/
 ├── SettingsResponse.cs                       ← Updated: +Timezone
 ├── UpdateSettingsRequest.cs                  ← Updated: +Timezone
 └── StatusResponse.cs                         ← Updated: +LastRecapStatus, +LastRecapError
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 ├── Api/
 │   ├── SettingsEndpointTests.cs              ← Updated: new timezone test cases
 │   └── StatusEndpointTests.cs                ← Updated: new NextRecap + last-recap field tests

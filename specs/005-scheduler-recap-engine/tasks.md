@@ -19,7 +19,7 @@
 
 **Purpose**: Add the shared and server-side dependencies needed for scheduling, SMTP delivery, and retries.
 
-- [X] T001 Create `src/PackageVersions.props` to declare `Polly` once for both client and server, then update `src/SunnySunday.Cli/SunnySunday.Cli.csproj` and `src/SunnySunday.Server/SunnySunday.Server.csproj` to consume that shared `Polly` version while adding `Quartz.Extensions.Hosting` and `MailKit` to the server; verify the solution still builds from `src/SunnySunday.slnx`.
+- [X] T001 Create `src/PackageVersions.props` to declare `Polly` once for both client and server, then update `src/Relego.Cli/Relego.Cli.csproj` and `src/Relego.Server/Relego.Server.csproj` to consume that shared `Polly` version while adding `Quartz.Extensions.Hosting` and `MailKit` to the server; verify the solution still builds from `src/Relego.slnx`.
 
 ---
 
@@ -29,13 +29,13 @@
 
 **⚠️ CRITICAL**: No user story work should start until this phase is complete.
 
-- [X] T002 Update `src/SunnySunday.Server/Infrastructure/Database/SchemaBootstrap.cs` to add the `recap_jobs` table and unique slot index, plus an idempotent `timezone` for the `settings` table in async bootstrap paths.
-- [X] T003 [P] Update `src/SunnySunday.Server/Models/Settings.cs` and `src/SunnySunday.Server/Data/SettingsRepository.cs` to persist `Timezone` with a default of `UTC` alongside the existing schedule fields.
-- [X] T004 [P] Create `src/SunnySunday.Server/Models/RecapJobRecord.cs`, `src/SunnySunday.Server/Services/SelectionCandidate.cs`, and `src/SunnySunday.Server/Data/RecapRepository.cs` for recap slot persistence, last-job lookup, candidate reads, and post-delivery highlight history updates.
-- [X] T005 [P] Update `src/SunnySunday.Core/Contracts/SettingsResponse.cs`, `src/SunnySunday.Core/Contracts/UpdateSettingsRequest.cs`, and `src/SunnySunday.Core/Contracts/StatusResponse.cs` to add `Timezone`, `LastRecapStatus`, and `LastRecapError` contract fields.
-- [X] T006 [P] Create `src/SunnySunday.Server/Infrastructure/Smtp/SmtpSettings.cs` and update `src/SunnySunday.Server/appsettings.Development.json` with `Smtp` settings for `Host`, `Port`, `Username`, and `Password`.
-- [X] T007 Update `src/SunnySunday.Server/Program.cs` to bind `SmtpSettings` from configuration and map the README-source environment variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD` onto that options model before feature service registration.
-- [X] T008 Update `src/SunnySunday.Tests/Api/SunnyTestApplicationFactory.cs` to apply the new schema shape in-memory and support replacing recap pipeline services during scheduler and delivery integration tests.
+- [X] T002 Update `src/Relego.Server/Infrastructure/Database/SchemaBootstrap.cs` to add the `recap_jobs` table and unique slot index, plus an idempotent `timezone` for the `settings` table in async bootstrap paths.
+- [X] T003 [P] Update `src/Relego.Server/Models/Settings.cs` and `src/Relego.Server/Data/SettingsRepository.cs` to persist `Timezone` with a default of `UTC` alongside the existing schedule fields.
+- [X] T004 [P] Create `src/Relego.Server/Models/RecapJobRecord.cs`, `src/Relego.Server/Services/SelectionCandidate.cs`, and `src/Relego.Server/Data/RecapRepository.cs` for recap slot persistence, last-job lookup, candidate reads, and post-delivery highlight history updates.
+- [X] T005 [P] Update `src/Relego.Core/Contracts/SettingsResponse.cs`, `src/Relego.Core/Contracts/UpdateSettingsRequest.cs`, and `src/Relego.Core/Contracts/StatusResponse.cs` to add `Timezone`, `LastRecapStatus`, and `LastRecapError` contract fields.
+- [X] T006 [P] Create `src/Relego.Server/Infrastructure/Smtp/SmtpSettings.cs` and update `src/Relego.Server/appsettings.Development.json` with `Smtp` settings for `Host`, `Port`, `Username`, and `Password`.
+- [X] T007 Update `src/Relego.Server/Program.cs` to bind `SmtpSettings` from configuration and map the README-source environment variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD` onto that options model before feature service registration.
+- [X] T008 Update `src/Relego.Tests/Api/SunnyTestApplicationFactory.cs` to apply the new schema shape in-memory and support replacing recap pipeline services during scheduler and delivery integration tests.
 
 **Checkpoint**: Schema, contracts, SMTP config binding, and shared test plumbing are ready. User stories can now proceed in dependency order.
 
@@ -49,15 +49,15 @@
 
 ### Tests for User Story 1
 
-- [X] T009 [P] [US1] Extend `src/SunnySunday.Tests/Api/SettingsEndpointTests.cs` and `src/SunnySunday.Tests/Api/StatusEndpointTests.cs` to cover timezone persistence, timezone validation failures, and UTC `nextRecap` serialization.
-- [X] T010 [P] [US1] Create `src/SunnySunday.Tests/Recap/SchedulerServiceTests.cs` to verify daily and weekly next-fire calculations, rescheduling after settings changes, and duplicate-slot behavior with deterministic inputs.
+- [X] T009 [P] [US1] Extend `src/Relego.Tests/Api/SettingsEndpointTests.cs` and `src/Relego.Tests/Api/StatusEndpointTests.cs` to cover timezone persistence, timezone validation failures, and UTC `nextRecap` serialization.
+- [X] T010 [P] [US1] Create `src/Relego.Tests/Recap/SchedulerServiceTests.cs` to verify daily and weekly next-fire calculations, rescheduling after settings changes, and duplicate-slot behavior with deterministic inputs.
 
 ### Implementation for User Story 1
 
-- [X] T011 [P] [US1] Create `src/SunnySunday.Server/Services/IRecapService.cs` and `src/SunnySunday.Server/Jobs/RecapJob.cs` so Quartz can invoke the recap pipeline and skip slots already marked delivered in `recap_jobs`.
-- [X] T012 [P] [US1] Create `src/SunnySunday.Server/Services/ISchedulerService.cs` and `src/SunnySunday.Server/Services/SchedulerService.cs` to translate `Settings` cadence, delivery time, and timezone into Quartz UTC triggers and expose the next fire time.
-- [X] T013 [US1] Update `src/SunnySunday.Server/Endpoints/SettingsEndpoints.cs` and `src/SunnySunday.Server/Endpoints/StatusEndpoints.cs` to validate `Timezone`, reschedule on `PUT /settings`, and serialize `NextRecap` in UTC.
-- [X] T014 [US1] Update `src/SunnySunday.Server/Program.cs` to register Quartz, `SchedulerService`, and `RecapJob`, and to schedule the initial trigger from persisted settings during server startup.
+- [X] T011 [P] [US1] Create `src/Relego.Server/Services/IRecapService.cs` and `src/Relego.Server/Jobs/RecapJob.cs` so Quartz can invoke the recap pipeline and skip slots already marked delivered in `recap_jobs`.
+- [X] T012 [P] [US1] Create `src/Relego.Server/Services/ISchedulerService.cs` and `src/Relego.Server/Services/SchedulerService.cs` to translate `Settings` cadence, delivery time, and timezone into Quartz UTC triggers and expose the next fire time.
+- [X] T013 [US1] Update `src/Relego.Server/Endpoints/SettingsEndpoints.cs` and `src/Relego.Server/Endpoints/StatusEndpoints.cs` to validate `Timezone`, reschedule on `PUT /settings`, and serialize `NextRecap` in UTC.
+- [X] T014 [US1] Update `src/Relego.Server/Program.cs` to register Quartz, `SchedulerService`, and `RecapJob`, and to schedule the initial trigger from persisted settings during server startup.
 
 **Checkpoint**: Scheduling is functional and independently testable with a fake recap pipeline.
 
@@ -71,11 +71,11 @@
 
 ### Tests for User Story 2
 
-- [X] T015 [P] [US2] Create `src/SunnySunday.Tests/Recap/HighlightSelectionServiceTests.cs` to cover age-plus-weight scoring, `last_seen = null` handling, recent-first tie breaks, exclusion filtering, and `count` limits.
+- [X] T015 [P] [US2] Create `src/Relego.Tests/Recap/HighlightSelectionServiceTests.cs` to cover age-plus-weight scoring, `last_seen = null` handling, recent-first tie breaks, exclusion filtering, and `count` limits.
 
 ### Implementation for User Story 2
 
-- [X] T016 [US2] Create `src/SunnySunday.Server/Services/HighlightSelectionService.cs` to compute `ageInDays`, rank `SelectionCandidate` records from `RecapRepository.SelectCandidatesAsync`, and return the top configured highlights.
+- [X] T016 [US2] Create `src/Relego.Server/Services/HighlightSelectionService.cs` to compute `ageInDays`, rank `SelectionCandidate` records from `RecapRepository.SelectCandidatesAsync`, and return the top configured highlights.
 
 **Checkpoint**: Candidate ranking is deterministic, tested, and ready for recap composition.
 
@@ -89,11 +89,11 @@
 
 ### Tests for User Story 4
 
-- [X] T017 [P] [US4] Create `src/SunnySunday.Tests/Recap/EpubComposerTests.cs` to verify EPUB structure, uncompressed `mimetype`, flat-list XHTML output, and source metadata rendering in input order.
+- [X] T017 [P] [US4] Create `src/Relego.Tests/Recap/EpubComposerTests.cs` to verify EPUB structure, uncompressed `mimetype`, flat-list XHTML output, and source metadata rendering in input order.
 
 ### Implementation for User Story 4
 
-- [X] T018 [US4] Create `src/SunnySunday.Server/Services/EpubComposer.cs` to build an EPUB 2 archive in memory with `mimetype`, `META-INF/container.xml`, `OEBPS/content.opf`, `OEBPS/toc.ncx`, and `OEBPS/highlights.xhtml` containing a flat `<ul>` of highlights.
+- [X] T018 [US4] Create `src/Relego.Server/Services/EpubComposer.cs` to build an EPUB 2 archive in memory with `mimetype`, `META-INF/container.xml`, `OEBPS/content.opf`, `OEBPS/toc.ncx`, and `OEBPS/highlights.xhtml` containing a flat `<ul>` of highlights.
 
 **Checkpoint**: EPUB generation is deterministic and validated independently from scheduling and SMTP.
 
@@ -107,14 +107,14 @@
 
 ### Tests for User Story 3
 
-- [X] T019 [P] [US3] Create `src/SunnySunday.Tests/Recap/RecapServiceTests.cs` to cover immediate success, transient retry then success, exhausted retries, no-eligible-highlight skips, and single history updates after confirmed delivery.
+- [X] T019 [P] [US3] Create `src/Relego.Tests/Recap/RecapServiceTests.cs` to cover immediate success, transient retry then success, exhausted retries, no-eligible-highlight skips, and single history updates after confirmed delivery.
 
 ### Implementation for User Story 3
 
-- [X] T020 [P] [US3] Create `src/SunnySunday.Server/Services/IMailDeliveryService.cs` and `src/SunnySunday.Server/Services/MailDeliveryService.cs` to send recap EPUB attachments through MailKit using `SmtpSettings.Username` and the mapped SMTP environment variables.
-- [X] T021 [P] [US3] Create `src/SunnySunday.Server/Infrastructure/Resilience/RecapDeliveryPolicy.cs` to define a Polly exponential backoff policy capped at 3 total attempts, with delay computation owned by the policy helper rather than hardcoded waits in application services.
-- [X] T022 [US3] Create `src/SunnySunday.Server/Services/RecapService.cs` to orchestrate candidate selection, EPUB composition, `recap_jobs` persistence, SMTP delivery through the Polly policy, and post-success `last_seen` plus `delivery_count` updates.
-- [X] T023 [US3] Update `src/SunnySunday.Server/Program.cs` and `src/SunnySunday.Server/Data/StatusRepository.cs` to register `IMailDeliveryService` and `RecapService`, and to expose `LastRecapStatus` plus `LastRecapError` from `recap_jobs` in status responses.
+- [X] T020 [P] [US3] Create `src/Relego.Server/Services/IMailDeliveryService.cs` and `src/Relego.Server/Services/MailDeliveryService.cs` to send recap EPUB attachments through MailKit using `SmtpSettings.Username` and the mapped SMTP environment variables.
+- [X] T021 [P] [US3] Create `src/Relego.Server/Infrastructure/Resilience/RecapDeliveryPolicy.cs` to define a Polly exponential backoff policy capped at 3 total attempts, with delay computation owned by the policy helper rather than hardcoded waits in application services.
+- [X] T022 [US3] Create `src/Relego.Server/Services/RecapService.cs` to orchestrate candidate selection, EPUB composition, `recap_jobs` persistence, SMTP delivery through the Polly policy, and post-success `last_seen` plus `delivery_count` updates.
+- [X] T023 [US3] Update `src/Relego.Server/Program.cs` and `src/Relego.Server/Data/StatusRepository.cs` to register `IMailDeliveryService` and `RecapService`, and to expose `LastRecapStatus` plus `LastRecapError` from `recap_jobs` in status responses.
 
 **Checkpoint**: End-to-end recap generation and delivery are reliable, retry-aware, and auditable.
 
@@ -126,7 +126,7 @@
 
 - [ ] T024 [P] Update `README.md`, `docs/DX.md`, and `docs/ARCHITECTURE.md` to document the recap pipeline, `recap_jobs`, timezone-aware scheduling, and the authoritative SMTP variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`.
 - [ ] T025 [P] Reconcile `specs/005-scheduler-recap-engine/quickstart.md` with the shipped configuration shape so local-development and Docker examples include the final SMTP settings and UTC scheduling expectations.
-- [ ] T026 Validate the feature against `specs/005-scheduler-recap-engine/quickstart.md` and run the regression suite from `src/SunnySunday.slnx`.
+- [ ] T026 Validate the feature against `specs/005-scheduler-recap-engine/quickstart.md` and run the regression suite from `src/Relego.slnx`.
 
 ---
 

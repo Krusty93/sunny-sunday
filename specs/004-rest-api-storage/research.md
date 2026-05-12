@@ -20,24 +20,24 @@
 - **Raw Microsoft.Data.Sqlite**: viable but verbose; every query needs 10+ lines of manual `SqliteParameter` creation and `SqliteDataReader` column access. High bug surface for typos.
 - **EF Core**: too heavy for a single-user SQLite app with 7 tables. Schema is already managed externally.
 
-**Package**: `Dapper` (latest stable, ~2.1.x) — add to `SunnySunday.Server.csproj`.
+**Package**: `Dapper` (latest stable, ~2.1.x) — add to `Relego.Server.csproj`.
 
 ---
 
 ### 2. API Contract Design: DTOs vs Domain Models
 
-**Decision**: Separate request/response DTOs in `SunnySunday.Core/Contracts/`, shared between Server and CLI
+**Decision**: Separate request/response DTOs in `Relego.Core/Contracts/`, shared between Server and CLI
 
 **Rationale**:
-- Domain models (`SunnySunday.Server.Models`) carry persistence concerns (auto-increment IDs, FK columns, internal state like `DeliveryCount`). Exposing them directly leaks internal schema to the API surface.
+- Domain models (`Relego.Server.Models`) carry persistence concerns (auto-increment IDs, FK columns, internal state like `DeliveryCount`). Exposing them directly leaks internal schema to the API surface.
 - DTOs give explicit control over what the client sends and receives. The sync endpoint needs a request shape that matches `ParseResult` (books + highlights), not the flat relational model.
-- Placing DTOs in `SunnySunday.Core` (not `SunnySunday.Server`) allows the CLI to reference the same contract types when building HTTP requests, eliminating duplication. Both `SunnySunday.Server` and `SunnySunday.Cli` already reference `SunnySunday.Core`.
+- Placing DTOs in `Relego.Core` (not `Relego.Server`) allows the CLI to reference the same contract types when building HTTP requests, eliminating duplication. Both `Relego.Server` and `Relego.Cli` already reference `Relego.Core`.
 - Settings GET/PUT have different shapes: GET returns all fields; PUT accepts a partial update. DTOs make this explicit.
 - Error responses use `ProblemDetails` (RFC 9457, built into ASP.NET).
 
 **Alternatives considered**:
 - **Expose domain models directly**: simpler initially but creates tight coupling between DB schema and API contract. Any schema change would be a breaking API change.
-- **DTOs in SunnySunday.Server only**: works for MVP but forces the CLI to duplicate or re-define the same types to deserialize responses — unnecessary divergence.
+- **DTOs in Relego.Server only**: works for MVP but forces the CLI to duplicate or re-define the same types to deserialize responses — unnecessary divergence.
 
 ---
 
@@ -111,7 +111,7 @@ Server/
 - This tests the full stack (routing → validation → SQL → response) without Docker or external processes.
 - Unit tests for isolated logic (validation helpers, mapping functions) supplement integration tests.
 
-**Package**: `Microsoft.AspNetCore.Mvc.Testing` (latest for .NET 10) — add to `SunnySunday.Tests.csproj`.
+**Package**: `Microsoft.AspNetCore.Mvc.Testing` (latest for .NET 10) — add to `Relego.Tests.csproj`.
 
 **Alternatives considered**:
 - **Testcontainers**: unnecessary overhead for SQLite (which has native in-memory support).
@@ -189,7 +189,7 @@ if (app.Environment.IsDevelopment())
 ```
 
 **Packages**:
-- `Swashbuckle.AspNetCore` — add to `SunnySunday.Server.csproj`
+- `Swashbuckle.AspNetCore` — add to `Relego.Server.csproj`
 
 **Alternatives considered**:
 - **Microsoft.AspNetCore.OpenApi + Scalar**: .NET 10 built-in, no NuGet for spec generation. Scalar UI requires a separate package. Swashbuckle has more documentation and community familiarity for the `/swagger` URL convention.

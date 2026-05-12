@@ -8,14 +8,14 @@
 ## Prerequisites
 
 - .NET 10 SDK installed (`dotnet --version` → `10.x`)
-- Repository cloned and solution builds: `dotnet build src/SunnySunday.slnx`
+- Repository cloned and solution builds: `dotnet build src/Relego.slnx`
 
 ## Project Structure
 
-All parser code lives in `SunnySunday.Cli`:
+All parser code lives in `Relego.Cli`:
 
 ```
-src/SunnySunday.Cli/
+src/Relego.Cli/
 └── Parsing/          # Parser types and logic
     ├── RawClipping.cs
     ├── ParsedHighlight.cs
@@ -23,7 +23,7 @@ src/SunnySunday.Cli/
     ├── ParseResult.cs
     └── ClippingsParser.cs
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 └── Parsing/          # NEW — parser unit tests
     └── ClippingsParserTests.cs
 ```
@@ -32,19 +32,19 @@ src/SunnySunday.Tests/
 
 ```bash
 # Build everything
-dotnet build src/SunnySunday.slnx
+dotnet build src/Relego.slnx
 
 # Run tests
-dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj
+dotnet test src/Relego.Tests/Relego.Tests.csproj
 
 # Run tests with verbose output
-dotnet test src/SunnySunday.Tests/SunnySunday.Tests.csproj --verbosity normal
+dotnet test src/Relego.Tests/Relego.Tests.csproj --verbosity normal
 ```
 
 ## Usage Example
 
 ```csharp
-using SunnySunday.Cli.Parsing;
+using Relego.Cli.Parsing;
 
 // From a file path
 var result = await ClippingsParser.ParseAsync("/path/to/My Clippings.txt");

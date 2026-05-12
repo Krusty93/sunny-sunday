@@ -15,7 +15,7 @@ Kindle highlights must be imported into the system. Amazon does not expose an of
 
 Use **`My Clippings.txt`** as the sole highlight source for MVP.
 
-The client CLI reads this file when the user runs `sunny sync`, parses all highlights and annotations, deduplicates (Kindle appends duplicates on re-highlight), and syncs new highlights to the server.
+The client CLI reads this file when the user runs `relego sync`, parses all highlights and annotations, deduplicates (Kindle appends duplicates on re-highlight), and syncs new highlights to the server.
 
 ## Consequences
 
