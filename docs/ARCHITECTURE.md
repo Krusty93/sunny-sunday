@@ -40,37 +40,6 @@ Kindle / My Clippings.txt                              │
   - Manage user settings via CLI commands (schedule, count, weights, exclusions)
   - Display server status
 
-#### TUI subsystem (`SunnySunday.Cli/Tui/`)
-
-When invoked with no arguments in an interactive terminal (`sunny`), the client enters **TUI mode** — a full-screen terminal UI powered by [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui) (v2).
-
-```
-TuiApp
-├── StatusChrome          ← persistent header: ASCII logo, version, server status
-├── FrameView             ← content area, swaps per active screen
-│   └── IScreen           ← abstraction for each page
-│       ├── BookListScreen         ← book table + client-side search
-│       ├── HighlightDetailScreen  ← per-book highlights with weight/exclude actions
-│       └── SettingsScreen         ← editable settings + test email trigger
-└── StatusBar             ← key-hint footer, sourced from current screen
-```
-
-**Dual-mode launch** (`Program.cs`): if `args.Length == 0 && !Console.IsInputRedirected`, `TuiApp.RunAsync()` is called; otherwise the Spectre.Console `CommandApp` handles the sub-command (e.g. `sunny sync`).
-
-**Screen navigation**: `TuiApp` manages a `Stack<IScreen>`. Screens return `ScreenResult` (`Push`, `Pop`, `Quit`, `Reload`) from key handling to drive navigation. `Push` calls `InitializeAsync` asynchronously then swaps the frame view.
-
-**Resilience**: `HttpRequestException` from server calls is caught at every screen boundary. `StatusChrome` reflects connectivity; screens show inline error messages without crashing the TUI. A minimum terminal size of 80×24 is enforced on startup.
-
-**Key components**:
-
-- `TuiApp`: orchestrator — splash animation, screen stack, status bar, error propagation
-- `StatusChrome`: always-visible header; `RefreshAsync` pings server and checks Kindle email
-- `ShortcutListView`: `ListView` subclass that intercepts single-letter shortcuts before Terminal.Gui's `CollectionNavigator` type-search consumes them
-- `SearchFilter`: pure static class for client-side book/highlight search (`OrdinalIgnoreCase`)
-- `BookViewModel` / `HighlightViewModel`: projection layer between server DTOs and TUI views
-
-
-
 Responsible for transforming raw Kindle export text into structured data before syncing to the server.
 
 - **Entry point**: `ClippingsParser.ParseAsync(string filePath, ILogger? logger = null)` — file-path overload; `ClippingsParser.ParseAsync(TextReader, ILogger? logger = null)` — streaming overload for testability
@@ -79,12 +48,17 @@ Responsible for transforming raw Kindle export text into structured data before 
   - `ParsedBook` — `(Title, Author?, IReadOnlyList<ParsedHighlight> Highlights)`
   - `ParsedHighlight` — `(Text, Location?, AddedOn?)`
 - **Design decisions**:
-  - Pure static class — no state, no DI, no side effects beyond optional `ILogger`
   - Streaming: reads lines one-by-one via `ReadLineAsync()`; no full file in memory
   - Skip-and-warn: malformed entries are skipped with an `ILogger.LogWarning`; never throws
   - Deduplication: `HashSet<(Title, Author, Text)>` — exact case-sensitive match, first occurrence kept
   - Notes as highlights: entries of type "Note" are emitted as highlights with `[my note] ` prefix on their text
   - Bookmarks: entries of type "Bookmark" are silently dropped
+
+#### TUI subsystem (`SunnySunday.Cli/Tui/`)
+
+When invoked with no arguments in an interactive terminal (`sunny`), the client enters **TUI mode** — a full-screen terminal UI powered by [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui) (v2).
+
+**Dual-mode launch** (`Program.cs`): if `args.Length == 0 && !Console.IsInputRedirected`, `TuiApp.RunAsync()` is called; otherwise the Spectre.Console `CommandApp` handles the sub-command (e.g. `sunny sync`).
 
 ### Server (`sunny-server`)
 
