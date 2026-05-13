@@ -10,19 +10,30 @@
 		"ghcr.io/devcontainers/features/python:1": {
 			"version": "3.11"
 		},
-    "ghcr.io/devcontainers-extra/features/uv:1": {}
+    "ghcr.io/devcontainers-extra/features/uv:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
 	},
   "postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git && dotnet tool install -g Rnwood.Smtp4dev",
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
     "dotnet-https-cert": "dotnet dev-certs https",
-    "smtp4dev": "smtp4dev --urls http://0.0.0.0:3000 --smtpport 2525 --imapport 1143 --db /tmp/smtp4dev.db"
+    // "smtp4dev": "smtp4dev --urls http://0.0.0.0:3000 --smtpport 2525 --imapport 1143 --db /tmp/smtp4dev.db"
   },
-  "forwardPorts": [3000],
+  "forwardPorts": [8080, 3000, 4321],
   "portsAttributes": {
+    "8080": {
+      "label": "Server port",
+      "onAutoForward": "ignore"
+    },
     "3000": {
       "label": "smtp4dev UI",
       "onAutoForward": "notify"
+    },
+    "4321": {
+      "label": "Astro dev server",
+      "onAutoForward": "openBrowser"
     }
   },
 	"customizations": {
@@ -42,7 +53,15 @@
         "ionutvmi.path-autocomplete",
         "humao.rest-client",
         "alexcvzz.vscode-sqlite"
-      ]
+      ],
+      "mcp": {
+      "servers": {
+        "playwright": {
+          "command": "npx",
+          "args": ["-y", "@playwright/mcp@latest", "--headless"]
+        }
+      }
+      }
     }
 	}
 }
