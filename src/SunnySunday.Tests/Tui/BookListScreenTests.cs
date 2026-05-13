@@ -1,5 +1,8 @@
-﻿using RichardSzalay.MockHttp;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging.Abstractions;
+using RichardSzalay.MockHttp;
 using SunnySunday.Cli.Infrastructure;
+using SunnySunday.Cli.Sync;
 using SunnySunday.Cli.Tui;
 
 namespace SunnySunday.Tests.Tui;
@@ -7,8 +10,22 @@ namespace SunnySunday.Tests.Tui;
 public sealed class BookListScreenTests : IDisposable
 {
     private readonly MockHttpMessageHandler _mockHttp = new();
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"sunny-book-screen-{Guid.NewGuid():N}");
 
-    public void Dispose() => _mockHttp.Dispose();
+    public BookListScreenTests()
+    {
+        Directory.CreateDirectory(_tempDir);
+    }
+
+    public void Dispose()
+    {
+        _mockHttp.Dispose();
+
+        if (Directory.Exists(_tempDir))
+        {
+            Directory.Delete(_tempDir, recursive: true);
+        }
+    }
 
     [Fact]
     public async Task MoveSelection_DownAndUp_MovesWithinBounds()
@@ -75,7 +92,7 @@ public sealed class BookListScreenTests : IDisposable
         var screen = await CreateScreenAsync();
         ScreenResult? result = null;
 
-        var handled = screen.TryHandleShortcutKey('q', navigate => result = navigate, null, null);
+        var handled = screen.TryHandleShortcutKey('q', navigate => result = navigate, null, null, null);
 
         Assert.True(handled);
         Assert.NotNull(result);
@@ -88,10 +105,22 @@ public sealed class BookListScreenTests : IDisposable
         var screen = await CreateScreenAsync();
         var focusedSearchField = false;
 
-        var handled = screen.TryHandleShortcutKey('/', _ => { }, null, () => focusedSearchField = true);
+        var handled = screen.TryHandleShortcutKey('/', _ => { }, null, () => focusedSearchField = true, null);
 
         Assert.True(handled);
         Assert.True(focusedSearchField);
+    }
+
+    [Fact]
+    public async Task TryHandleShortcutKey_I_FocusesSyncField()
+    {
+        var screen = await CreateScreenAsync();
+        var focusedSyncField = false;
+
+        var handled = screen.TryHandleShortcutKey('i', _ => { }, null, null, () => focusedSyncField = true);
+
+        Assert.True(handled);
+        Assert.True(focusedSyncField);
     }
 
     [Fact]
@@ -132,14 +161,13 @@ public sealed class BookListScreenTests : IDisposable
 
         ConfigureSupplementaryEndpoints(mockHttp);
 
-        var httpClient = mockHttp.ToHttpClient();
-        httpClient.BaseAddress = new Uri("http://localhost:5000");
-
-        var screen = new BookListScreen(new SunnyHttpClient(httpClient));
+        var sunnyClient = CreateSunnyClient(mockHttp);
+        var workflow = new ClippingsSyncWorkflow(sunnyClient, NullLogger<ClippingsSyncWorkflow>.Instance);
+        var screen = new BookListScreen(sunnyClient, workflow);
         await screen.InitializeAsync(CancellationToken.None);
 
         var refreshedVisibleBooks = false;
-        var handled = screen.TryHandleShortcutKey('r', _ => { }, () => refreshedVisibleBooks = true, null);
+        var handled = screen.TryHandleShortcutKey('r', _ => { }, () => refreshedVisibleBooks = true, null, null);
 
         Assert.True(handled);
         Assert.Empty(screen.Books);
@@ -147,7 +175,144 @@ public sealed class BookListScreenTests : IDisposable
         mockHttp.VerifyNoOutstandingExpectation();
     }
 
+    [Fact]
+    public async Task CancelSyncPrompt_LeavesScreenStable()
+    {
+        var screen = await CreateScreenAsync();
+
+        SetSyncPromptState(screen, syncPathInput: "/tmp/My Clippings.txt");
+        screen.CancelSyncPrompt();
+
+        Assert.False(screen.IsSyncPromptActive);
+    }
+
+    [Fact]
+    public async Task SubmitSyncAsync_WithBlankPath_SetsValidationFeedback()
+    {
+        var screen = await CreateScreenAsync();
+
+        SetSyncPromptState(screen, syncPathInput: string.Empty);
+        var outcome = await screen.SubmitSyncAsync(string.Empty);
+
+        Assert.Equal(ClippingsSyncStatus.Cancelled, outcome.Status);
+        Assert.Equal("Enter a path to My Clippings.txt or press Esc to cancel.", screen.FeedbackMessage);
+        Assert.True(screen.FeedbackIsError);
+        Assert.True(screen.IsSyncPromptActive);
+    }
+
+    [Fact]
+    public async Task SubmitSyncAsync_OnSuccess_RefreshesBooksAndClosesPrompt()
+    {
+        using var mockHttp = new MockHttpMessageHandler(BackendDefinitionBehavior.Always);
+
+        mockHttp.Expect(HttpMethod.Get, "http://localhost:5000/highlights?page=1&pageSize=100")
+            .Respond("application/json", """
+                {
+                  "total": 0,
+                  "page": 1,
+                  "pageSize": 100,
+                  "items": []
+                }
+                """);
+
+        mockHttp.Expect(HttpMethod.Post, "http://localhost:5000/sync")
+            .Respond("application/json", """
+                {
+                  "newHighlights": 1,
+                  "duplicateHighlights": 0,
+                  "newBooks": 1,
+                  "newAuthors": 1
+                }
+                """);
+
+        mockHttp.Expect(HttpMethod.Get, "http://localhost:5000/highlights?page=1&pageSize=100")
+            .Respond("application/json", """
+                {
+                  "total": 1,
+                  "page": 1,
+                  "pageSize": 100,
+                  "items": [
+                    {
+                      "id": 1,
+                      "bookId": 10,
+                      "authorId": 7,
+                      "text": "Psychohistory is built on large numbers.",
+                      "bookTitle": "Foundation",
+                      "authorName": "Isaac Asimov"
+                    }
+                  ]
+                }
+                """);
+
+        ConfigureSupplementaryEndpoints(mockHttp);
+
+        var sunnyClient = CreateSunnyClient(mockHttp);
+        var workflow = new ClippingsSyncWorkflow(sunnyClient, NullLogger<ClippingsSyncWorkflow>.Instance);
+        var screen = new BookListScreen(sunnyClient, workflow);
+        await screen.InitializeAsync(CancellationToken.None);
+
+        var filePath = CreateClippingsFile();
+        SetSyncPromptState(screen, detectedPath: filePath, syncPathInput: filePath);
+        var outcome = await screen.SubmitSyncAsync(filePath);
+
+        Assert.Equal(ClippingsSyncStatus.Succeeded, outcome.Status);
+        Assert.Single(screen.Books);
+        Assert.False(screen.IsSyncPromptActive);
+        Assert.False(screen.FeedbackIsError);
+        Assert.Contains("Sync complete.", screen.FeedbackMessage);
+        mockHttp.VerifyNoOutstandingExpectation();
+    }
+
+    [Fact]
+    public async Task SubmitSyncAsync_OnServerError_ShowsRetryableFeedback()
+    {
+        using var mockHttp = new MockHttpMessageHandler(BackendDefinitionBehavior.Always);
+        ConfigureHighlightEndpoints(mockHttp);
+        ConfigureSupplementaryEndpoints(mockHttp);
+
+        mockHttp.When(HttpMethod.Post, "http://localhost:5000/sync")
+            .Throw(new HttpRequestException("Connection refused"));
+
+        var sunnyClient = CreateSunnyClient(mockHttp);
+        var workflow = new ClippingsSyncWorkflow(sunnyClient, NullLogger<ClippingsSyncWorkflow>.Instance);
+        var screen = new BookListScreen(sunnyClient, workflow);
+        await screen.InitializeAsync(CancellationToken.None);
+
+        var filePath = CreateClippingsFile();
+        SetSyncPromptState(screen, detectedPath: filePath, syncPathInput: filePath);
+        var outcome = await screen.SubmitSyncAsync(filePath);
+
+        Assert.Equal(ClippingsSyncStatus.ServerError, outcome.Status);
+        Assert.True(screen.IsSyncPromptActive);
+        Assert.True(screen.FeedbackIsError);
+        Assert.Equal("Sync failed: Connection refused", screen.FeedbackMessage);
+    }
+
     private async Task<BookListScreen> CreateScreenAsync(int total = 3, string? itemsJson = null)
+    {
+        return await CreateScreenAsync(_mockHttp, total, itemsJson).ConfigureAwait(false);
+    }
+
+    private static async Task<BookListScreen> CreateScreenAsync(MockHttpMessageHandler mockHttp, int total = 3, string? itemsJson = null)
+    {
+        ConfigureHighlightEndpoints(mockHttp, total, itemsJson);
+        ConfigureSupplementaryEndpoints(mockHttp);
+
+        var sunnyClient = CreateSunnyClient(mockHttp);
+        var workflow = new ClippingsSyncWorkflow(sunnyClient, NullLogger<ClippingsSyncWorkflow>.Instance);
+        var screen = new BookListScreen(sunnyClient, workflow);
+        await screen.InitializeAsync(CancellationToken.None);
+        return screen;
+    }
+
+    private static SunnyHttpClient CreateSunnyClient(MockHttpMessageHandler mockHttp)
+    {
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("http://localhost:5000");
+        return new SunnyHttpClient(httpClient);
+    }
+
+    private static void ConfigureHighlightEndpoints(MockHttpMessageHandler mockHttp, int total = 3, string? itemsJson = null)
     {
         itemsJson ??= """
             [
@@ -178,7 +343,7 @@ public sealed class BookListScreenTests : IDisposable
             ]
             """;
 
-        _mockHttp.When(HttpMethod.Get, "http://localhost:5000/highlights?page=1&pageSize=100")
+        mockHttp.When(HttpMethod.Get, "http://localhost:5000/highlights?page=1&pageSize=100")
             .Respond("application/json", $$"""
                 {
                   "total": {{total}},
@@ -187,15 +352,6 @@ public sealed class BookListScreenTests : IDisposable
                   "items": {{itemsJson}}
                 }
                 """);
-
-        ConfigureSupplementaryEndpoints(_mockHttp);
-
-        var httpClient = _mockHttp.ToHttpClient();
-        httpClient.BaseAddress = new Uri("http://localhost:5000");
-
-        var screen = new BookListScreen(new SunnyHttpClient(httpClient));
-        await screen.InitializeAsync(CancellationToken.None);
-        return screen;
     }
 
     private static void ConfigureSupplementaryEndpoints(MockHttpMessageHandler mockHttp)
@@ -227,4 +383,39 @@ public sealed class BookListScreenTests : IDisposable
                 ]
                 """);
     }
+
+    private string CreateClippingsFile()
+    {
+        var filePath = Path.Combine(_tempDir, "My Clippings.txt");
+        File.WriteAllText(filePath, SampleClippings);
+        return filePath;
+    }
+
+    private static void SetSyncPromptState(BookListScreen screen, string? detectedPath = null, string? syncPathInput = null)
+    {
+        var screenType = typeof(BookListScreen);
+        var toolbarModeField = screenType.GetField("_toolbarMode", BindingFlags.Instance | BindingFlags.NonPublic);
+        var detectedSyncPathField = screenType.GetField("_detectedSyncPath", BindingFlags.Instance | BindingFlags.NonPublic);
+        var syncPathInputField = screenType.GetField("_syncPathInput", BindingFlags.Instance | BindingFlags.NonPublic);
+        var isSearchActiveField = screenType.GetField("_isSearchActive", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(toolbarModeField);
+        Assert.NotNull(detectedSyncPathField);
+        Assert.NotNull(syncPathInputField);
+        Assert.NotNull(isSearchActiveField);
+
+        var syncPathMode = Enum.Parse(toolbarModeField!.FieldType, "SyncPath");
+        toolbarModeField.SetValue(screen, syncPathMode);
+        detectedSyncPathField!.SetValue(screen, detectedPath);
+        syncPathInputField!.SetValue(screen, syncPathInput ?? string.Empty);
+        isSearchActiveField!.SetValue(screen, false);
+    }
+
+    private const string SampleClippings = """
+        The Pragmatic Programmer (David Thomas;Andrew Hunt)
+        - Your Highlight on Location 150-152 | Added on Monday, January 15, 2024 12:30:00 PM
+
+        Care About Your Craft
+        ==========
+        """;
 }

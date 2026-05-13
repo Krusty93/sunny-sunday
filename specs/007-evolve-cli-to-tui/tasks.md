@@ -64,11 +64,11 @@
 
 **Purpose**: Replicate the `sunny sync` workflow inside the TUI so a user can import highlights without leaving the session. Covers US9 (In-TUI Sync / Import Workflow).
 
-- [ ] T032 [US9] Create `src/SunnySunday.Cli/Sync/ClippingsSyncWorkflow.cs`: extract the orchestration currently embedded in `src/SunnySunday.Cli/Commands/SyncCommand.cs` into a shared workflow that resolves the clippings path, parses the file, maps `SyncRequest`, posts to `POST /sync`, and returns a structured outcome for success, empty input, validation errors, parse failures, and connectivity failures.
-- [ ] T033 [US9] Update `src/SunnySunday.Cli/Commands/SyncCommand.cs` to delegate to `ClippingsSyncWorkflow` while preserving the current CLI prompts, exit codes, and summary output.
-- [ ] T034 [US9] Update `src/SunnySunday.Cli/Tui/BookListScreen.cs` and supporting TUI views to add an in-TUI sync/import action (recommended shortcut: `I`) for both populated and empty states, including default-path confirmation, manual path entry, inline/dialog outcome rendering, and book list refresh after success.
-- [ ] T035 [P] [US9] Create `src/SunnySunday.Tests/Cli/ClippingsSyncWorkflowTests.cs`: cover successful sync, empty clippings file, missing file, parse failure, server unreachable, and request mapping parity with the existing CLI sync contract.
-- [ ] T036 [P] [US9] Extend `src/SunnySunday.Tests/Tui/BookListScreenTests.cs` to cover sync action availability, safe cancellation, manual-path validation, successful refresh after sync, and non-crashing error handling.
+- [X] T032 [US9] Create `src/SunnySunday.Cli/Sync/ClippingsSyncWorkflow.cs`: extract the orchestration currently embedded in `src/SunnySunday.Cli/Commands/SyncCommand.cs` into a shared workflow that resolves the clippings path, parses the file, maps `SyncRequest`, posts to `POST /sync`, and returns a structured outcome for success, empty input, validation errors, parse failures, and connectivity failures.
+- [X] T033 [US9] Update `src/SunnySunday.Cli/Commands/SyncCommand.cs` to delegate to `ClippingsSyncWorkflow` while preserving the current CLI prompts, exit codes, and summary output.
+- [X] T034 [US9] Update `src/SunnySunday.Cli/Tui/BookListScreen.cs` and supporting TUI views to add an in-TUI sync/import action (recommended shortcut: `I`) for both populated and empty states, including default-path confirmation, manual path entry, inline/dialog outcome rendering, and book list refresh after success.
+- [X] T035 [P] [US9] Create `src/SunnySunday.Tests/Cli/ClippingsSyncWorkflowTests.cs`: cover successful sync, empty clippings file, missing file, parse failure, server unreachable, and request mapping parity with the existing CLI sync contract.
+- [X] T036 [P] [US9] Extend `src/SunnySunday.Tests/Tui/BookListScreenTests.cs` to cover sync action availability, safe cancellation, manual-path validation, successful refresh after sync, and non-crashing error handling.
 
 **Checkpoint**: From the TUI main screen, a user can import highlights without exiting, see the sync outcome, and browse the refreshed book list in the same session.
 

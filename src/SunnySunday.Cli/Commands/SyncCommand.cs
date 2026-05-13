@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using SunnySunday.Cli.Infrastructure;
 using SunnySunday.Cli.Parsing;
+using SunnySunday.Cli.Sync;
 using SunnySunday.Core.Contracts;
 
 namespace SunnySunday.Cli.Commands;
@@ -11,7 +11,7 @@ namespace SunnySunday.Cli.Commands;
 /// <summary>
 /// Parses a Kindle clippings file and syncs highlights to the server.
 /// </summary>
-public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> logger) : ServerCommand<SyncCommand.Settings>
+public sealed class SyncCommand(ClippingsSyncWorkflow workflow, ILogger<SyncCommand> logger) : ServerCommand<SyncCommand.Settings>
 {
     protected override ILogger Logger => logger;
 
@@ -24,57 +24,28 @@ public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> log
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {
-        var filePath = settings.Path
-            ?? KindleDetector.DetectClippingsPath()
-            ?? PromptForPath();
-
-        if (filePath is null)
+        var outcome = await workflow.ExecuteAsync(new ClippingsSyncOptions
         {
-            AnsiConsole.MarkupLine("[yellow]Sync cancelled.[/]");
-            return 1;
-        }
+            FilePath = settings.Path,
+            ResolvePathAsync = settings.Path is null ? ResolvePathAsync : null
+        }, cancellation).ConfigureAwait(false);
 
-        logger.LogDebug("Resolved clippings path: {FilePath}", filePath);
-
-        if (!File.Exists(filePath))
+        return outcome.Status switch
         {
-            AnsiConsole.MarkupLine($"[red]Error:[/] File not found: [yellow]{filePath}[/]");
-            return 1;
-        }
+            ClippingsSyncStatus.Cancelled => HandleCancelled(),
+            ClippingsSyncStatus.FileNotFound => HandleMissingFile(outcome),
+            ClippingsSyncStatus.ParseFailed => HandleParseFailure(outcome),
+            ClippingsSyncStatus.NoHighlightsFound => HandleNoHighlights(),
+            ClippingsSyncStatus.ServerError => HandleConnectivityFailure(outcome),
+            ClippingsSyncStatus.Succeeded => HandleSuccess(outcome),
+            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Status), outcome.Status, null)
+        };
+    }
 
-        ParseResult parseResult;
-        try
-        {
-            parseResult = await ClippingsParser.ParseAsync(filePath);
-        }
-        catch (Exception ex)
-        {
-            AnsiConsole.MarkupLine($"[red]Error parsing clippings file:[/] {ex.Message}");
-            return 1;
-        }
-
-        if (parseResult.Books.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]No highlights found in the clippings file.[/]");
-            return 0;
-        }
-
-        var request = MapToSyncRequest(parseResult);
-        logger.LogDebug("Sending {BookCount} books with {HighlightCount} highlights to server",
-            request.Books.Count, request.Books.Sum(b => b.Highlights.Count));
-
-        SyncResponse response;
-        try
-        {
-            response = await client.PostSyncAsync(request, cancellation);
-        }
-        catch (HttpRequestException ex)
-        {
-            return HandleServerError(ex);
-        }
-
-        DisplaySummary(parseResult, response);
-        return 0;
+    private static ValueTask<string?> ResolvePathAsync(ClippingsPathPromptRequest request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(!string.IsNullOrWhiteSpace(request.DetectedPath) ? request.DetectedPath : PromptForPath());
     }
 
     private static string? PromptForPath()
@@ -87,26 +58,44 @@ public sealed class SyncCommand(SunnyHttpClient client, ILogger<SyncCommand> log
         return string.IsNullOrWhiteSpace(path) ? null : path;
     }
 
-    private static SyncRequest MapToSyncRequest(ParseResult result)
+    private static int HandleCancelled()
     {
-        return new SyncRequest
-        {
-            Books = result.Books.Select(book => new SyncBookRequest
-            {
-                Title = book.Title,
-                Author = book.Author,
-                Highlights = book.Highlights.Select(h => new SyncHighlightRequest
-                {
-                    Text = h.Text,
-                    AddedOn = h.AddedOn
-                }).ToList()
-            }).ToList()
-        };
+        AnsiConsole.MarkupLine("[yellow]Sync cancelled.[/]");
+        return 1;
+    }
+
+    private static int HandleMissingFile(ClippingsSyncOutcome outcome)
+    {
+        AnsiConsole.MarkupLine($"[red]Error:[/] File not found: [yellow]{outcome.FilePath}[/]");
+        return 1;
+    }
+
+    private static int HandleParseFailure(ClippingsSyncOutcome outcome)
+    {
+        AnsiConsole.MarkupLine($"[red]Error parsing clippings file:[/] {outcome.Message}");
+        return 1;
+    }
+
+    private static int HandleNoHighlights()
+    {
+        AnsiConsole.MarkupLine("[yellow]No highlights found in the clippings file.[/]");
+        return 0;
+    }
+
+    private int HandleConnectivityFailure(ClippingsSyncOutcome outcome)
+    {
+        return HandleServerError(outcome.Error as HttpRequestException ?? new HttpRequestException(outcome.Message));
+    }
+
+    private static int HandleSuccess(ClippingsSyncOutcome outcome)
+    {
+        DisplaySummary(outcome.ParseResult!, outcome.Response!);
+        return 0;
     }
 
     private static void DisplaySummary(ParseResult parseResult, SyncResponse response)
     {
-        var totalHighlights = parseResult.Books.Sum(b => b.Highlights.Count);
+        var totalHighlights = parseResult.Books.Sum(book => book.Highlights.Count);
 
         AnsiConsole.WriteLine();
         AnsiConsole.Write(new Panel(

@@ -10,6 +10,7 @@ using SunnySunday.Cli.Commands.Config;
 using SunnySunday.Cli.Commands.Exclude;
 using SunnySunday.Cli.Commands.Weight;
 using SunnySunday.Cli.Infrastructure;
+using SunnySunday.Cli.Sync;
 using SunnySunday.Cli.Tui;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -41,17 +42,19 @@ string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribu
 builder.Services.AddHttpClient<SunnyHttpClient>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var serverUrl = config["sunny_server"]!;
-    client.BaseAddress = new Uri(serverUrl);
+    var configuredServerUrl = config["sunny_server"]!;
+    client.BaseAddress = new Uri(configuredServerUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 }).AddSunnyResilience();
+builder.Services.AddTransient<ClippingsSyncWorkflow>();
 
 using IHost host = builder.Build();
 
 if (TuiModeDetector.Detect(args, Console.IsInputRedirected) == StartupMode.Tui)
 {
     var client = host.Services.GetRequiredService<SunnyHttpClient>();
-    var tuiApp = new TuiApp(client, normalizedServerUrl, version);
+    var syncWorkflow = host.Services.GetRequiredService<ClippingsSyncWorkflow>();
+    var tuiApp = new TuiApp(client, syncWorkflow, normalizedServerUrl, version);
     await tuiApp.RunAsync(CancellationToken.None);
     return 0;
 }

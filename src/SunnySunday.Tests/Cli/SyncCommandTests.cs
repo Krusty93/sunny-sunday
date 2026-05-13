@@ -3,6 +3,7 @@ using RichardSzalay.MockHttp;
 using Spectre.Console.Cli;
 using SunnySunday.Cli.Commands;
 using SunnySunday.Cli.Infrastructure;
+using SunnySunday.Cli.Sync;
 
 namespace SunnySunday.Tests.Cli;
 
@@ -81,6 +82,7 @@ public sealed class SyncCommandTests : IDisposable
             httpClient.BaseAddress = new Uri("http://localhost:5000");
             return new SunnyHttpClient(httpClient);
         });
+        services.AddTransient<ClippingsSyncWorkflow>();
 
         var registrar = new TypeRegistrar(services.BuildServiceProvider());
         var app = new CommandApp(registrar);
