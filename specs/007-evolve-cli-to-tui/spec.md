@@ -57,8 +57,29 @@ On startup, the TUI displays a table of all imported books retrieved from the se
 
 1. **Given** the server has imported highlights for multiple books, **When** the TUI main screen renders, **Then** a table is displayed with columns: Title, Author, Highlight Count.
 2. **Given** the book list table is displayed, **When** the user presses the up/down arrow keys, **Then** the selected row changes visually.
-3. **Given** the server has no imported highlights, **When** the TUI main screen renders, **Then** an empty state message is displayed (e.g., "No highlights found. Run `sunny sync` to import.").
+3. **Given** the server has no imported highlights, **When** the TUI main screen renders, **Then** an empty state message is displayed with a visible in-TUI sync action (e.g., "No highlights found. Press `I` to sync from My Clippings.txt.").
 4. **Given** the server returns many books, **When** the table exceeds the terminal height, **Then** the list scrolls to keep the selected row visible.
+
+---
+
+### User Story 9 — In-TUI Sync / Import Workflow (Priority: P1)
+
+When the user is on the TUI main screen, they can run the equivalent of `sunny sync` without leaving TUI mode. The TUI reuses the same sync behavior as the CLI: detect `My Clippings.txt` when possible, allow manual path entry when needed, parse highlights, upload them to the server, show the sync summary, and refresh the book list in place.
+
+**Why this priority**: The TUI is intended to provide a guided, end-to-end experience. Without an in-TUI sync flow, first-time and empty-state users still have to drop back to the CLI, which breaks the main promise of feature 007.
+
+**Independent Test**: Launch `sunny` in TUI mode against an empty server. Trigger the sync action from the main screen, provide a valid clippings path, and verify the TUI shows the sync outcome and refreshes the book list without exiting.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user is on the book list screen, **When** the user triggers the sync action, **Then** the TUI starts the sync/import flow without exiting to the CLI.
+2. **Given** a default `My Clippings.txt` path is detected, **When** the sync flow starts, **Then** the TUI offers that path for use or confirmation.
+3. **Given** no default clippings path is detected, **When** the sync flow starts, **Then** the TUI prompts for a custom file path and allows the user to cancel safely.
+4. **Given** the user provides a missing or invalid file path, **When** the sync flow validates the path, **Then** the TUI shows an actionable validation error and remains usable.
+5. **Given** the clippings file parses successfully but contains no highlights, **When** the sync flow completes, **Then** the TUI shows the empty-result outcome and keeps the user on the current screen.
+6. **Given** parsing fails, **When** the sync flow processes the file, **Then** the TUI shows the parser error without crashing or dropping to raw CLI output.
+7. **Given** the sync upload succeeds, **When** the server returns the import summary, **Then** the TUI shows the same outcome data as the CLI sync flow (new highlights, duplicates, new books, new authors) and refreshes the visible book list.
+8. **Given** the server is unreachable during sync, **When** the upload fails, **Then** the TUI shows an inline or dialog error, updates connection state, and remains interactive.
 
 ---
 
@@ -164,6 +185,8 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 - **Very large number of books (100+)**: The book list must remain navigable through scrolling; rendering performance must not degrade noticeably.
 - **Terminal too small**: If the terminal dimensions are below a minimum usable size (e.g., less than 80×24), the TUI displays a message asking the user to resize.
 - **Non-interactive terminal (piped input)**: If stdin is not a TTY, the TUI does not start; the help text is displayed instead (same as `sunny --help`).
+- **Sync path prompt cancelled**: If the user cancels clippings path confirmation or manual entry, the TUI returns to the current screen without side effects.
+- **Invalid clippings path in TUI sync**: If the user enters a missing or unreadable path, the TUI shows a validation error and allows retry without leaving TUI mode.
 - **Concurrent modification**: If another CLI instance modifies data while the TUI is open, the TUI shows stale data until the user presses `R` to refresh the current screen.
 - **Interrupted API call**: If the user navigates away during an in-flight API call, the TUI cancels the request and returns to the previous screen without error.
 - **Figlet rendering in narrow terminals**: If the terminal is too narrow for the full Figlet text, fall back to a plain-text "SunnySunday" heading.
@@ -181,6 +204,11 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 - **FR-007-07**: TUI MUST support keyboard navigation (up/down arrow keys) for selecting rows in the book list.
 - **FR-007-08**: TUI MUST support pressing Enter on a selected book to open the highlight detail view for that book.
 - **FR-007-09**: TUI MUST provide actions in the highlight detail view: modify weight, exclude/include by highlight, exclude/include by book, exclude/include by author, delete highlight.
+- **FR-007-09a**: TUI main screen MUST provide a sync/import action that is accessible from both populated and empty states.
+- **FR-007-09b**: TUI MUST allow the user to run the highlight sync workflow entirely inside TUI mode without exiting to the CLI.
+- **FR-007-09c**: TUI sync MUST auto-detect `My Clippings.txt` using the same detection logic as the CLI and MUST allow manual path entry or cancellation when auto-detection is unavailable or unsuitable.
+- **FR-007-09d**: TUI sync MUST reuse the same parsing, request mapping, and `POST /sync` upload behavior as CLI `sunny sync`.
+- **FR-007-09e**: After a successful sync, TUI MUST show the sync outcome summary and refresh the current book list data.
 - **FR-007-10**: TUI MUST provide a settings page accessible from the main screen via the `S` key.
 - **FR-007-11**: Settings page MUST allow editing: Kindle email, recap schedule (cadence + time), highlight count per recap.
 - **FR-007-12**: Server MUST expose `POST /settings/test-email` to send a simple plain-text test email for SMTP verification without generating a recap.
@@ -193,7 +221,7 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 - **FR-007-16a**: TUI MUST support a refresh action (`R` key) on every screen that re-fetches data from the server and re-renders the current screen without navigating away.
 - **FR-007-17**: TUI MUST exit cleanly on `Q` or `Ctrl+C`, restoring the terminal state.
 - **FR-007-18**: TUI MUST NOT modify any existing REST API endpoints; all interactions use the current API surface.
-- **FR-007-19**: TUI MUST show an appropriate empty state when no highlights have been imported.
+- **FR-007-19**: TUI MUST show an appropriate empty state when no highlights have been imported, including a visible sync/import action.
 - **FR-007-20**: TUI MUST detect non-interactive terminals (stdin is not a TTY) and fall back to displaying help text instead of starting TUI mode.
 - **FR-007-21**: All existing CLI commands MUST continue to function identically when invoked with arguments — zero behavioral regression.
 
@@ -203,6 +231,7 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 - **Screen**: An abstraction representing a distinct TUI page (BookListScreen, HighlightDetailScreen, SettingsScreen) with its own layout, data, and input handling.
 - **StatusChrome**: The persistent header region containing the Figlet banner, version, connection status, and Kindle email warning — shared across all screens.
 - **SearchFilter**: Client-side filter component that narrows the book list based on a text query matched against title, author, and highlight text.
+- **SyncWorkflow**: Shared application workflow used by both CLI and TUI to resolve the clippings path, parse highlights, upload the sync request, and return a structured outcome summary.
 
 ## Success Criteria
 
@@ -210,18 +239,20 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 
 - **SC-007-01**: Users can launch the TUI by running `sunny` with no arguments and see the book list within 3 seconds (under normal network conditions).
 - **SC-007-02**: All existing CLI commands (`sunny sync`, `sunny status`, `sunny config *`, `sunny exclude *`, `sunny weight *`) continue to work identically — zero regressions.
-- **SC-007-03**: Users can navigate the book list, view highlight details, and modify settings without leaving the TUI — completing a full management workflow in a single session.
+- **SC-007-03**: Users can import highlights, navigate the book list, view highlight details, and modify settings without leaving the TUI — completing a full management workflow in a single session.
 - **SC-007-04**: Users without Kindle email configured are informed by a persistent warning visible on every screen, reducing failed recap deliveries.
 - **SC-007-05**: Users with 100+ books can scroll and search the book list without perceptible rendering lag.
 - **SC-007-06**: The TUI renders correctly in terminals with at least 80 columns and 24 rows.
 - **SC-007-07**: Search filters the book list as the user types, showing results within 200ms of each keystroke.
 - **SC-007-08**: Users can verify SMTP delivery with a plain-text test email without sending a real recap.
+- **SC-007-09**: A first-time user with no imported books can complete a sync from within the TUI and see the refreshed book list in the same session.
 
 ## Assumptions
 
 - Terminal.Gui v2 (added as a new NuGet dependency) provides the event loop, input dispatch, widget composition, and layout engine needed for TUI rendering.
 - Spectre.Console.Cli continues to handle CLI command routing unchanged; Terminal.Gui is used exclusively for the TUI mode.
 - The REST API surface from features 004 and 005 is mostly sufficient for TUI functionality. One new endpoint is required: `POST /settings/test-email` to send a simple plain-text test email for SMTP verification. This missing API is documented as a comment on issue #188.
+- The existing `sunny sync` flow can be extracted into a shared workflow consumed by both the CLI command and the TUI without changing the current CLI contract.
 - All data displayed in the TUI (books, highlights, settings) is fetched via existing REST endpoints and cached client-side for the duration of the TUI session.
 - Single-user architecture — no concurrent TUI sessions modifying the same server.
 - The TUI is a convenience layer; all operations remain available via CLI commands for scripting and automation.
