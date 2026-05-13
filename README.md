@@ -1,8 +1,23 @@
-# Relego
+<p align="center">
+  <img src="docs/assets/header.png" width="500" />
+</p>
 
-> periodic notes recaps, on your Kindle
+<h1 align="center">Relego</h1>
 
-Existing solutions deliver periodic recaps only via mobile or web apps. Relego delivers them to your Kindle — free, self-hosted, and without a subscription.
+<p align="center">
+  Periodic highlights recap, delivered to your Kindle. For free.
+</p>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://github.com/Krusty93/relego/actions/workflows/release.yaml/badge.svg)](https://github.com/Krusty93/relego/actions/workflows/release.yaml)
+![GitHub Release](https://img.shields.io/github/v/release/krusty93/relego)
+
+## Why Relego
+
+- **E-ink first**: recaps delivered as native Kindle documents, not push notifications on your phone
+- **Free and self-hosted**: no subscription, no data leaving your infrastructure
+- **No lock-in**: your highlights stay yours, in an open format
+- **Privacy**: your reading habits are not sent to any cloud service
 
 ![Relego landing page hero section in dark theme](docs/assets/landing-hero-dark.jpg)
 
@@ -15,7 +30,13 @@ Existing solutions deliver periodic recaps only via mobile or web apps. Relego d
 3. A recap document is sent to your Kindle email address via Amazon's Send-to-Kindle service
 4. Open the recap on your Kindle like any other book
 
-> **TUI mode**: Running `relego` with no arguments in an interactive terminal opens a full-screen TUI to browse your books and manage settings without leaving the terminal.
+## Interactive mode
+
+Run `relego` without arguments to open the interactive TUI:
+
+[TODO: GIF della TUI]
+
+Use the TUI to configure the server, browse highlights, and manage exclusions. For automation and scripting, use the CLI commands directly (see CLI reference).
 
 ## Getting started
 
@@ -78,6 +99,7 @@ Upload highlights to the server using the CLI. It automatically detects the path
   ```
 
   **macOS** (Kindle mounts at `/Volumes/Kindle`):
+
   ```sh
   docker run \
     -v "/Volumes/Kindle/documents:/kindle:ro" \
@@ -87,6 +109,7 @@ Upload highlights to the server using the CLI. It automatically detects the path
   ```
 
   **Linux** (Kindle mounts at `/media/$USER/Kindle`):
+
   ```sh
   docker run \
     -v "/media/$USER/Kindle/documents:/kindle:ro" \
@@ -103,7 +126,8 @@ Upload highlights to the server using the CLI. It automatically detects the path
 #### winget
 
   ```sh
-  winget install Krusty93.Relego sync
+  winget install Krusty93.Relego
+  relego sync
   ```
 
 #### Binary
@@ -111,7 +135,7 @@ Upload highlights to the server using the CLI. It automatically detects the path
   Replace `<version>` with the actual version number (e.g. `1.0.0`).
 
   ```powershell
-  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/relego-<version>-win-x64 -o ./relego.exe
+  curl -L https://github.com/Krusty93/relego/releases/download/cli%2Fv<version>/relego-<version>-win-x64 -o ./relego.exe
   ./relego.exe sync
   ```
 
@@ -125,7 +149,7 @@ Upload highlights to the server using the CLI. It automatically detects the path
 #### Apple Silicon
 
   ```sh
-  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/relego-<version>-osx-arm64 -o /usr/local/bin/relego
+  curl -L https://github.com/Krusty93/relego/releases/download/cli%2Fv<version>/relego-<version>-osx-arm64 -o /usr/local/bin/relego
   chmod +x /usr/local/bin/relego
   relego sync
   ```
@@ -133,7 +157,7 @@ Upload highlights to the server using the CLI. It automatically detects the path
 #### Intel
 
   ```sh
-  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/relego-<version>-osx-amd64 -o /usr/local/bin/relego
+  curl -L https://github.com/Krusty93/relego/releases/download/cli%2Fv<version>/relego-<version>-osx-amd64 -o /usr/local/bin/relego
   chmod +x /usr/local/bin/relego
   relego sync
   ```
@@ -146,7 +170,7 @@ Upload highlights to the server using the CLI. It automatically detects the path
   Replace `<version>` with the actual version number (e.g. `1.0.0`).
 
   ```sh
-  curl -L https://github.com/Krusty93/sunny-sunday/releases/download/cli%2Fv<version>/relego-<version>-linux-x64 -o /usr/local/bin/relego
+  curl -L https://github.com/Krusty93/relego/releases/download/cli%2Fv<version>/relego-<version>-linux-x64 -o /usr/local/bin/relego
   chmod +x /usr/local/bin/relego
   relego sync
   ```
@@ -183,8 +207,8 @@ Running `relego` with no arguments in an interactive terminal opens a full-scree
 
 ## CLI reference
 
-|                   Command                       |              Description                  |
-|-------------------------------------------------|-------------------------------------------|
+|                   Command                        |              Description                  |
+|--------------------------------------------------|-------------------------------------------|
 | `relego`                                         | Open interactive TUI                      |
 | `relego sync [path]`                             | Import highlights from `My Clippings.txt` |
 | `relego status`                                  | Show server status and next recap         |
@@ -203,15 +227,6 @@ Running `relego` with no arguments in an interactive terminal opens a full-scree
 | `relego weight set <id> <1-5>`                   | Set highlight weight                      |
 | `relego weight list`                             | Show weighted highlights                  |
 | `relego version`                                 | Print version                             |
-
----
-
-## Documentation
-
-- [Product Requirements Document](docs/PRD.md)
-- [Developer Experience Design](docs/DX.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Architecture Decision Records](docs/adr/)
 
 ---
 
@@ -235,7 +250,12 @@ gh attestation verify \
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Useful documentation:
+
+- [Product Requirements Document](docs/PRD.md)
+- [Developer Experience Design](docs/DX.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Architecture Decision Records](docs/adr/)
 
 ## License
 
