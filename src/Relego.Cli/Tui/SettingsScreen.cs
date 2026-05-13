@@ -16,6 +16,9 @@ public sealed class SettingsScreen : IScreen
     private const int MinWeight = 1;
     private const int MaxWeight = 15;
 
+    private static readonly string[] ScheduleOptions = ["daily", "weekly"];
+    private static readonly string[] DayOfWeekOptions = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
     private static readonly (string Key, string Label)[] NormalKeyHints =
     [
         ("↑↓", "Navigate"),
@@ -32,6 +35,9 @@ public sealed class SettingsScreen : IScreen
     private SettingsResponse? _settings;
     private int _selectedField;
     private bool _isEditing;
+    private bool _isSelectMode;
+    private List<string> _selectOptions = [];
+    private int _selectIndex;
     private string _editBuffer = string.Empty;
     private string? _statusMessage;
     private bool _statusIsError;
@@ -73,6 +79,14 @@ public sealed class SettingsScreen : IScreen
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
         _settings = await _client.GetSettingsAsync(cancellationToken).ConfigureAwait(false);
+
+        var localTimezone = TimeZoneInfo.Local.Id;
+        if (!string.Equals(_settings.Timezone, localTimezone, StringComparison.Ordinal))
+        {
+            var request = new UpdateSettingsRequest { Timezone = localTimezone };
+            _settings = await _client.PutSettingsAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
         RebuildFields();
     }
 
@@ -155,6 +169,28 @@ public sealed class SettingsScreen : IScreen
             {
                 CancelEdit();
                 key.Handled = true;
+                return;
+            }
+
+            if (_isSelectMode)
+            {
+                switch (key.KeyCode)
+                {
+                    case KeyCode.CursorLeft:
+                    case KeyCode.CursorUp:
+                        CycleSelect(-1);
+                        key.Handled = true;
+                        break;
+                    case KeyCode.CursorRight:
+                    case KeyCode.CursorDown:
+                        CycleSelect(1);
+                        key.Handled = true;
+                        break;
+                    default:
+                        if (key.KeyCode != KeyCode.Enter)
+                            key.Handled = true;
+                        break;
+                }
             }
         };
 
@@ -218,6 +254,7 @@ public sealed class SettingsScreen : IScreen
         if (_fields.Count == 0)
             return ScreenResult.Stay();
         _selectedField = Math.Clamp(_selectedField + delta, 0, _fields.Count - 1);
+        ClearStatus();
         return ScreenResult.Stay();
     }
 
@@ -241,19 +278,30 @@ public sealed class SettingsScreen : IScreen
     {
         _isEditing = true;
         _editBuffer = field.Value;
+        ClearStatus();
+
+        var hasOptions = field.Options is { Count: > 0 };
+        _isSelectMode = hasOptions;
+
+        if (hasOptions)
+        {
+            _selectOptions = [.. field.Options!];
+            _selectIndex = Math.Max(0, _selectOptions.IndexOf(field.Value));
+        }
 
         if (_editPromptLabel is not null)
         {
-            _editPromptLabel.Text = $"Edit {field.Label}:";
+            _editPromptLabel.Text = field.Hint ?? $"Edit {field.Label}:";
             _editPromptLabel.Visible = true;
         }
 
         if (_editField is not null)
         {
-            _editField.Text = _editBuffer;
+            _editField.Text = hasOptions ? _selectOptions[_selectIndex] : _editBuffer;
             _editField.Visible = true;
             _editField.SetFocus();
-            _editField.MoveEnd();
+            if (!hasOptions)
+                _editField.MoveEnd();
         }
 
         if (_editOverlay is not null)
@@ -265,6 +313,9 @@ public sealed class SettingsScreen : IScreen
     private void CancelEdit()
     {
         _isEditing = false;
+        _isSelectMode = false;
+        _selectOptions = [];
+        _selectIndex = 0;
         _editBuffer = string.Empty;
 
         if (_editPromptLabel is not null)
@@ -282,6 +333,8 @@ public sealed class SettingsScreen : IScreen
     {
         if (!_isEditing || _fields.Count == 0)
             return;
+
+        ClearStatus();
 
         var field = _fields[_selectedField];
         var newValue = _editField?.Text?.Trim() ?? string.Empty;
@@ -383,32 +436,19 @@ public sealed class SettingsScreen : IScreen
         return ScreenResult.Stay();
     }
 
-    private static string? ValidateField(SettingsField field, string value)
+    public static string? ValidateField(SettingsField field, string value)
     {
         return field.FieldId switch
         {
             "kindleEmail" => !value.Contains('@') ? "Email must contain '@'." : null,
             "schedule" => value is not "daily" and not "weekly" ? "Schedule must be 'daily' or 'weekly'." : null,
+            "deliveryDay" => !DayOfWeekOptions.Contains(value, StringComparer.OrdinalIgnoreCase) ? "Invalid day of week." : null,
             "deliveryTime" => !TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)
                 ? "Time must be in HH:mm format." : null,
             "count" => !int.TryParse(value, out var c) || c < MinWeight || c > MaxWeight
                 ? $"Count must be an integer between {MinWeight} and {MaxWeight}." : null,
-            "timezone" => !IsValidTimezone(value) ? "Invalid IANA timezone identifier." : null,
             _ => null
         };
-    }
-
-    private static bool IsValidTimezone(string value)
-    {
-        try
-        {
-            TimeZoneInfo.FindSystemTimeZoneById(value.Trim());
-            return true;
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return false;
-        }
     }
 
     private static UpdateSettingsRequest BuildUpdateRequest(SettingsField field, string value)
@@ -417,9 +457,9 @@ public sealed class SettingsScreen : IScreen
         {
             "kindleEmail" => new UpdateSettingsRequest { KindleEmail = value },
             "schedule" => new UpdateSettingsRequest { Schedule = value },
+            "deliveryDay" => new UpdateSettingsRequest { DeliveryDay = value },
             "deliveryTime" => new UpdateSettingsRequest { DeliveryTime = value },
             "count" => new UpdateSettingsRequest { Count = int.Parse(value, CultureInfo.InvariantCulture) },
-            "timezone" => new UpdateSettingsRequest { Timezone = value },
             _ => new UpdateSettingsRequest()
         };
     }
@@ -431,11 +471,22 @@ public sealed class SettingsScreen : IScreen
         if (_settings is null)
             return;
 
-        _fields.Add(new SettingsField("Kindle Email", _settings.KindleEmail, "kindleEmail", FieldKind.Editable));
-        _fields.Add(new SettingsField("Schedule", _settings.Schedule, "schedule", FieldKind.Editable));
-        _fields.Add(new SettingsField("Delivery Time", _settings.DeliveryTime, "deliveryTime", FieldKind.Editable));
-        _fields.Add(new SettingsField("Timezone", _settings.Timezone, "timezone", FieldKind.Editable));
-        _fields.Add(new SettingsField("Highlights per Recap", _settings.Count.ToString(CultureInfo.InvariantCulture), "count", FieldKind.Editable));
+        _fields.Add(new SettingsField("Kindle Email", _settings.KindleEmail, "kindleEmail", FieldKind.Editable,
+            Hint: "Insert a valid email address"));
+        _fields.Add(new SettingsField("Schedule", _settings.Schedule, "schedule", FieldKind.Editable,
+            Hint: "◀ ▶ to change, Enter to confirm", Options: ScheduleOptions));
+
+        if (string.Equals(_settings.Schedule, "weekly", StringComparison.OrdinalIgnoreCase))
+        {
+            var dayValue = string.IsNullOrWhiteSpace(_settings.DeliveryDay) ? "monday" : _settings.DeliveryDay;
+            _fields.Add(new SettingsField("Delivery Day", dayValue, "deliveryDay", FieldKind.Editable,
+                Hint: "◀ ▶ to change, Enter to confirm", Options: DayOfWeekOptions));
+        }
+
+        _fields.Add(new SettingsField("Delivery Time", _settings.DeliveryTime, "deliveryTime", FieldKind.Editable,
+            Hint: "HH:mm format (e.g. 09:30)", DisplaySuffix: $"({_settings.Timezone})"));
+        _fields.Add(new SettingsField("Highlights per Recap", _settings.Count.ToString(CultureInfo.InvariantCulture), "count", FieldKind.Editable,
+            Hint: $"A number between {MinWeight} and {MaxWeight}"));
         _fields.Add(new SettingsField("▶ Send test email", string.Empty, "test-email", FieldKind.Action));
 
         if (_isDevelopment)
@@ -452,6 +503,23 @@ public sealed class SettingsScreen : IScreen
         _statusMessage = message;
         _statusIsError = isError;
         UpdateViewStateIfCreated();
+    }
+
+    private void ClearStatus()
+    {
+        _statusMessage = null;
+        _statusIsError = false;
+        UpdateViewStateIfCreated();
+    }
+
+    private void CycleSelect(int delta)
+    {
+        if (_selectOptions.Count == 0)
+            return;
+
+        _selectIndex = (_selectIndex + delta + _selectOptions.Count) % _selectOptions.Count;
+        if (_editField is not null)
+            _editField.Text = _selectOptions[_selectIndex];
     }
 
     private void UpdateViewStateIfCreated()
@@ -498,7 +566,8 @@ public sealed class SettingsScreen : IScreen
             return $"  {field.Label}";
 
         var label = field.Label.PadRight(LabelColumnWidth);
-        return $"  {label}{field.Value}";
+        var displayValue = field.DisplaySuffix is not null ? $"{field.Value} {field.DisplaySuffix}" : field.Value;
+        return $"  {label}{displayValue}";
     }
 
     private static Scheme CreateEditFieldScheme(Terminal.Gui.Drawing.Attribute attribute) => new(attribute)
@@ -605,7 +674,14 @@ public sealed class SettingsScreen : IScreen
             _navigate?.Invoke(result);
     }
 
-    public sealed record SettingsField(string Label, string Value, string FieldId, FieldKind Kind)
+    public sealed record SettingsField(
+        string Label,
+        string Value,
+        string FieldId,
+        FieldKind Kind,
+        string? Hint = null,
+        IReadOnlyList<string>? Options = null,
+        string? DisplaySuffix = null)
     {
         public string? ActionId => Kind == FieldKind.Action ? FieldId : null;
     }
