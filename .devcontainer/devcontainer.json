@@ -55,12 +55,12 @@
         "alexcvzz.vscode-sqlite"
       ],
       "mcp": {
-      "servers": {
-        "playwright": {
-          "command": "npx",
-          "args": ["-y", "@playwright/mcp@latest", "--headless"]
+        "servers": {
+          "playwright": {
+            "command": "npx",
+            "args": ["-y", "@playwright/mcp@latest", "--headless"]
+          }
         }
-      }
       }
     }
 	}
