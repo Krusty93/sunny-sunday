@@ -146,6 +146,8 @@ public sealed class SettingsScreen : IScreen
             Visible = false,
             CanFocus = true
         };
+        var editFieldAttribute = new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background);
+        _editField.SetScheme(CreateEditFieldScheme(editFieldAttribute));
         _editField.Accepting += async (_, _) => await HandleEditSubmitAsync().ConfigureAwait(false);
         _editField.KeyDown += (_, key) =>
         {
@@ -178,7 +180,7 @@ public sealed class SettingsScreen : IScreen
 
         container.KeyDown += async (_, key) => await HandleContainerKeyDownAsync(key).ConfigureAwait(false);
 
-        container.Add(headerLabel, _fieldList, _editPromptLabel, _editField, _editOverlay, _statusLabel);
+        container.Add(headerLabel, _fieldList, _editOverlay, _editPromptLabel, _editField, _statusLabel);
 
         _viewCreated = true;
         UpdateViewState();
@@ -498,6 +500,21 @@ public sealed class SettingsScreen : IScreen
         var label = field.Label.PadRight(LabelColumnWidth);
         return $"  {label}{field.Value}";
     }
+
+    private static Scheme CreateEditFieldScheme(Terminal.Gui.Drawing.Attribute attribute) => new(attribute)
+    {
+        Normal = attribute,
+        Focus = attribute,
+        Active = attribute,
+        Code = attribute,
+        Editable = attribute,
+        Highlight = attribute,
+        HotActive = attribute,
+        HotFocus = attribute,
+        HotNormal = attribute,
+        ReadOnly = attribute,
+        Disabled = attribute
+    };
 
     private async Task HandleContainerKeyDownAsync(Key key)
     {
