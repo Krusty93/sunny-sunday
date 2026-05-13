@@ -5,7 +5,7 @@
 
 **Tests**: Included — xUnit tests for data/logic layer (mode detection, book grouping, search filter, screen key handling). Rendering output is NOT tested directly per research decision (Terminal.Gui's `Application.Run` requires a real terminal driver; unit tests target logic and state only).
 
-**Organization**: Tasks are grouped by user story so each slice stays independently testable after the shared foundation is in place. The plan defines 7 phases matching 8 user stories: Phase 1 covers US1 (Dual-Mode) + US8 (Render Loop) as foundational infrastructure, Phase 2 covers US2 (Chrome), Phase 3 covers US3 (Book List) + US7 (Search), Phase 4 covers US4 (Highlight Detail), Phase 5 covers US5 (Test Email API), Phase 6 covers US6 (Settings), and Phase 7 handles polish and edge cases.
+**Organization**: Tasks are grouped by user story so each slice stays independently testable after the shared foundation is in place. The plan defines 8 phases matching 9 user stories: Phase 1 covers US1 (Dual-Mode) + US8 (Render Loop) as foundational infrastructure, Phase 2 covers US2 (Chrome), Phase 3 covers US3 (Book List) + US7 (Search), Phase 3b covers US9 (In-TUI Sync), Phase 4 covers US4 (Highlight Detail), Phase 5 covers US5 (Test Email API), Phase 6 covers US6 (Settings), and Phase 7 handles polish and edge cases.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -57,6 +57,20 @@
 - [X] T018 [P] [US3] Write `src/SunnySunday.Tests/Tui/BookListScreenTests.cs`: test key handling: `↑/↓` changes `selectedIndex` within bounds, `Enter` returns `Push` with correct book, `Q` returns `Quit`, `/` activates search mode. Test empty state when no books loaded.
 
 **Checkpoint**: TUI launches with book list populated from server. Arrow keys navigate rows. Search filters the list. `Enter` attempts to push highlight detail screen (implemented next phase). Tests pass.
+
+---
+
+## Phase 3b: In-TUI Sync Workflow
+
+**Purpose**: Replicate the `sunny sync` workflow inside the TUI so a user can import highlights without leaving the session. Covers US9 (In-TUI Sync / Import Workflow).
+
+- [ ] T032 [US9] Create `src/SunnySunday.Cli/Sync/ClippingsSyncWorkflow.cs`: extract the orchestration currently embedded in `src/SunnySunday.Cli/Commands/SyncCommand.cs` into a shared workflow that resolves the clippings path, parses the file, maps `SyncRequest`, posts to `POST /sync`, and returns a structured outcome for success, empty input, validation errors, parse failures, and connectivity failures.
+- [ ] T033 [US9] Update `src/SunnySunday.Cli/Commands/SyncCommand.cs` to delegate to `ClippingsSyncWorkflow` while preserving the current CLI prompts, exit codes, and summary output.
+- [ ] T034 [US9] Update `src/SunnySunday.Cli/Tui/BookListScreen.cs` and supporting TUI views to add an in-TUI sync/import action (recommended shortcut: `I`) for both populated and empty states, including default-path confirmation, manual path entry, inline/dialog outcome rendering, and book list refresh after success.
+- [ ] T035 [P] [US9] Create `src/SunnySunday.Tests/Cli/ClippingsSyncWorkflowTests.cs`: cover successful sync, empty clippings file, missing file, parse failure, server unreachable, and request mapping parity with the existing CLI sync contract.
+- [ ] T036 [P] [US9] Extend `src/SunnySunday.Tests/Tui/BookListScreenTests.cs` to cover sync action availability, safe cancellation, manual-path validation, successful refresh after sync, and non-crashing error handling.
+
+**Checkpoint**: From the TUI main screen, a user can import highlights without exiting, see the sync outcome, and browse the refreshed book list in the same session.
 
 ---
 
@@ -115,11 +129,12 @@
 
 - **Phase 1 (Infra)**: No dependencies — start immediately. **BLOCKS all subsequent phases.**
 - **Phase 2 (Chrome)**: Depends on Phase 1 (`TuiApp` + `Layout` structure). **BLOCKS Phase 3** (chrome must exist before content screens).
-- **Phase 3 (Book List + Search)**: Depends on Phase 2 (chrome provides the layout context). **BLOCKS Phases 4, 5, and 6.**
+- **Phase 3 (Book List + Search)**: Depends on Phase 2 (chrome provides the layout context). **BLOCKS Phases 3b, 4, 5, and 6.**
+- **Phase 3b (In-TUI Sync)**: Depends on Phase 3 and the existing CLI sync/parser pipeline. **BLOCKS the end-to-end first-run TUI experience.**
 - **Phase 4 (Highlight Detail)**: Depends on Phase 3. **Parallel with Phase 5.**
 - **Phase 5 (Test Email API)**: Depends on Phase 3. **Parallel with Phase 4.**
 - **Phase 6 (Settings)**: Depends on Phase 3 and Phase 5.
-- **Phase 7 (Polish)**: Depends on all preceding phases.
+- **Phase 7 (Polish)**: Depends on all preceding phases, including Phase 3b.
 
 ### User Story Dependencies
 
@@ -128,6 +143,7 @@
 - **US2 (Chrome)**: Phase 2 — depends on render loop from Phase 1.
 - **US3 (Book List)**: Phase 3 — depends on chrome from Phase 2.
 - **US7 (Search)**: Phase 3 — co-located with book list, depends on chrome from Phase 2.
+- **US9 (In-TUI Sync)**: Phase 3b — depends on the book list from Phase 3 and the existing CLI sync/parser pipeline.
 - **US4 (Highlight Detail)**: Phase 4 — depends on book list from Phase 3. Independent of US5.
 - **US5 (Test Email API)**: Phase 5 — depends on book list from Phase 3 for feature sequencing. Independent of US4.
 - **US6 (Settings)**: Phase 6 — depends on book list from Phase 3 and the API endpoint from Phase 5.
@@ -136,6 +152,7 @@
 
 - Within Phase 1: `T001`, `T002`, `T003` (interface + view models) can run in parallel. `T006`, `T007` (HTTP client) can run in parallel. `T008`, `T009` (tests) can run in parallel.
 - Within Phase 3: `T014` (SearchFilter) and `T017`, `T018` (tests) can run in parallel with each other.
+- Within Phase 3b: `T032` must land before `T033` and `T034`; `T035` and `T036` can be developed in parallel once the shared workflow and TUI entry point stabilize.
 - Phases 4 and 5 are fully independent once Phase 3 is complete.
 - Within Phase 7: `T026`, `T027`, `T028`, `T029` can run in parallel (different files/concerns).
 
@@ -169,13 +186,14 @@ Phase 3 ──┬──► Phase 4 (T019) ──┐
 1. Complete Phase 1 (Infra) — mode detection, render loop, view models, HTTP extensions.
 2. Complete Phase 2 (Chrome) — branded header with connection status.
 3. Complete Phase 3 (Book List + Search) — main screen with navigation and filtering.
-4. Land Phase 4 (Highlight Detail) and Phase 5 (Test Email API) in parallel or either order.
-5. Complete Phase 6 (Settings) once the API endpoint exists.
-6. Finish with Phase 7 (Polish) — edge cases, docs, full regression suite.
+4. Complete Phase 3b (In-TUI Sync) so first-time users can import highlights without leaving the TUI.
+5. Land Phase 4 (Highlight Detail) and Phase 5 (Test Email API) in parallel or either order.
+6. Complete Phase 6 (Settings) once the API endpoint exists.
+7. Finish with Phase 7 (Polish) — edge cases, docs, full regression suite.
 
 ### Suggested MVP Scope
 
-The smallest demonstrable increment is **Phase 1 + Phase 2 + Phase 3** — a user can launch `sunny` with no arguments, see a branded TUI with the book list, navigate rows, and search. All existing CLI commands remain unchanged.
+The smallest end-to-end TUI increment is **Phase 1 + Phase 2 + Phase 3 + Phase 3b** — a user can launch `sunny` with no arguments, import highlights from within the TUI, and immediately browse the refreshed book list without leaving the session. All existing CLI commands remain unchanged.
 
 ---
 
