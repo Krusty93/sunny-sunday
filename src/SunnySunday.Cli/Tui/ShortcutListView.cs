@@ -4,13 +4,12 @@ using Terminal.Gui.Views;
 namespace SunnySunday.Cli.Tui;
 
 /// <summary>
-/// A <see cref="ListView"/> that intercepts single-letter shortcut keys (Q, S, R, /)
-/// before the built-in <see cref="CollectionNavigator"/> can consume them for type-search.
+/// A <see cref="ListView"/> that routes printable character keys through
+/// <see cref="ShortcutKeyPressed"/> before the built-in <see cref="CollectionNavigator"/>
+/// can consume them for type-search.
 /// </summary>
 internal sealed class ShortcutListView : ListView
 {
-    private static readonly HashSet<char> ShortcutChars = ['q', 'a', 'r', 's', 't', '/'];
-
     /// <summary>
     /// Raised when a shortcut key is pressed. Set <see cref="Key.Handled"/> to true
     /// to prevent the key from reaching the <see cref="CollectionNavigator"/>.
@@ -19,22 +18,23 @@ internal sealed class ShortcutListView : ListView
 
     protected override bool OnKeyDown(Key key)
     {
-        if (!key.Handled)
+        if (key.Handled)
         {
-            var ch = GetShortcutChar(key);
-
-            if (ch is not null && ShortcutChars.Contains(ch.Value))
-            {
-                ShortcutKeyPressed?.Invoke(this, key);
-
-                if (key.Handled)
-                {
-                    return true;
-                }
-            }
+            return true;
         }
 
-        return base.OnKeyDown(key);
+        var shortcutChar = GetShortcutChar(key);
+        if (shortcutChar is null || ShortcutKeyPressed is null)
+        {
+            return base.OnKeyDown(key);
+        }
+
+        ShortcutKeyPressed.Invoke(this, key);
+
+        // Disable the built-in type-to-select behavior when a screen is explicitly
+        // using shortcut handling for printable keys.
+        key.Handled = true;
+        return true;
     }
 
     private static char? GetShortcutChar(Key key)

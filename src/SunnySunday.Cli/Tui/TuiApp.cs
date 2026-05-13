@@ -2,10 +2,11 @@
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using SunnySunday.Cli.Sync;
 
 namespace SunnySunday.Cli.Tui;
 
-public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client, string serverUrl, string version)
+public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client, ClippingsSyncWorkflow syncWorkflow, string serverUrl, string version)
 {
     private const int SplashTopPadding = 1;
 
@@ -35,6 +36,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
     private static readonly Color FooterLabelColor = new(190, 190, 190);
 
     private readonly SunnySunday.Cli.Infrastructure.SunnyHttpClient _client = client;
+    private readonly ClippingsSyncWorkflow _syncWorkflow = syncWorkflow;
     private readonly StatusChrome _chrome = new(serverUrl, version);
     private readonly Stack<IScreen> _screens = new();
     private IApplication? _app;
@@ -47,16 +49,8 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
     {
         if (_screens.Count == 0)
         {
-            var initialScreen = new BookListScreen(_client);
-            try
-            {
-                await initialScreen.InitializeAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (HttpRequestException)
-            {
-                _chrome.SetDisconnected();
-            }
-
+            var initialScreen = new BookListScreen(_client, _syncWorkflow, HandleConnectionFailure, RefreshChromeAsync);
+            await initialScreen.InitializeAsync(cancellationToken).ConfigureAwait(false);
             _screens.Push(initialScreen);
         }
 
@@ -65,7 +59,6 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
         try
         {
-            // T026: Check minimum terminal size before starting the normal layout
             var cols = Console.IsOutputRedirected ? 80 : Console.WindowWidth;
             var rows = Console.IsOutputRedirected ? 24 : Console.WindowHeight;
             if (cols < 80 || rows < 24)
@@ -111,11 +104,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
             ShowCurrentScreen();
 
-            _ = Task.Run(async () =>
-            {
-                await _chrome.RefreshAsync(_client, cancellationToken);
-                _app.Invoke(() => _chrome.UpdateLabels());
-            });
+            _ = Task.Run(() => RefreshChromeAsync(cancellationToken));
 
             _app.Run(_window);
         }
@@ -138,7 +127,7 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         win.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background)));
 
         var line1 = new Label { Text = "Terminal too small.", X = Pos.Center(), Y = Pos.AnchorEnd(4) };
-        var line2 = new Label { Text = "Please resize to at least 80\u00d724 and restart.", X = Pos.Center(), Y = Pos.AnchorEnd(3) };
+        var line2 = new Label { Text = "Please resize to at least 80×24 and restart.", X = Pos.Center(), Y = Pos.AnchorEnd(3) };
         var line3 = new Label { Text = "Press any key to exit.", X = Pos.Center(), Y = Pos.AnchorEnd(2) };
         line3.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), StatusChrome.Background)));
         win.Add(line1, line2, line3);
@@ -234,12 +223,12 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
             for (var width = 2; width <= maxWidth; width += 2)
             {
                 ct.ThrowIfCancellationRequested();
-                var w = Math.Min(width, maxWidth);
+                var currentWidth = Math.Min(width, maxWidth);
 
                 for (var i = 0; i < SplashLines.Length; i++)
                 {
                     var line = SplashLines[i];
-                    labels[i].Text = line[..Math.Min(w, line.Length)];
+                    labels[i].Text = line[..Math.Min(currentWidth, line.Length)];
                 }
 
                 _app.LayoutAndDraw(true);
@@ -267,7 +256,6 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
         }
         catch (OperationCanceledException)
         {
-            // user quit before animation finished — safe to ignore
         }
         finally
         {
@@ -292,12 +280,11 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
                 {
                     try
                     {
-                        await result.Next.InitializeAsync(CancellationToken.None);
+                        await result.Next.InitializeAsync(CancellationToken.None).ConfigureAwait(false);
                     }
                     catch (HttpRequestException)
                     {
-                        _chrome.SetDisconnected();
-                        _app?.Invoke(() => _chrome.UpdateLabels());
+                        HandleConnectionFailure();
                     }
 
                     _app?.Invoke(() =>
@@ -317,11 +304,22 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
                 break;
             case ScreenAction.Quit:
                 _app?.RequestStop();
-
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(result.Action), result.Action, null);
         }
+    }
+
+    private void HandleConnectionFailure()
+    {
+        _chrome.SetDisconnected();
+        _app?.Invoke(() => _chrome.UpdateLabels());
+    }
+
+    private async Task RefreshChromeAsync(CancellationToken cancellationToken)
+    {
+        await _chrome.RefreshAsync(_client, cancellationToken).ConfigureAwait(false);
+        _app?.Invoke(() => _chrome.UpdateLabels());
     }
 
     private void ShowCurrentScreen()
@@ -333,14 +331,12 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
 
         var screen = _screens.Peek();
 
-        // Remove previous toolbar if any
         if (_toolbarView is not null)
         {
             _window.Remove(_toolbarView);
             _toolbarView = null;
         }
 
-        // Add toolbar if the screen provides one
         var toolbarHeight = screen.ToolbarHeight;
         _toolbarView = screen.CreateToolbarView(Navigate);
 
@@ -357,7 +353,6 @@ public sealed class TuiApp(SunnySunday.Cli.Infrastructure.SunnyHttpClient client
             toolbarHeight = 0;
         }
 
-        // Adjust content frame position
         _contentFrame.Y = StatusChrome.LogoHeight + toolbarHeight;
 
         _contentFrame.RemoveAll();

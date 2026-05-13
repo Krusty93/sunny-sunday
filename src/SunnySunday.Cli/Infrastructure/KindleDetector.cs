@@ -21,6 +21,32 @@ public static class KindleDetector
         return null;
     }
 
+    public static string? GetSuggestedClippingsPath()
+    {
+        var detectedPath = DetectClippingsPath();
+        if (!string.IsNullOrWhiteSpace(detectedPath))
+        {
+            return detectedPath;
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return Path.Combine("/Volumes/Kindle", ClippingsRelativePath);
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return GetLinuxSuggestedPath();
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            return GetWindowsSuggestedPath();
+        }
+
+        return null;
+    }
+
     private static string? ProbeMacOS()
     {
         var path = Path.Combine("/Volumes/Kindle", ClippingsRelativePath);
@@ -64,5 +90,35 @@ public static class KindleDetector
         }
 
         return null;
+    }
+
+    private static string GetLinuxSuggestedPath()
+    {
+        var userName = Environment.UserName;
+
+        foreach (var baseDir in new[] { "/media", "/run/media" })
+        {
+            var userRoot = Path.Combine(baseDir, userName);
+            if (Directory.Exists(userRoot))
+            {
+                return Path.Combine(userRoot, "Kindle", ClippingsRelativePath);
+            }
+        }
+
+        return Path.Combine("/media", userName, "Kindle", ClippingsRelativePath);
+    }
+
+    private static string GetWindowsSuggestedPath()
+    {
+        foreach (var drive in new[] { 'D', 'E', 'F', 'G' })
+        {
+            var driveRoot = $"{drive}:\\";
+            if (Directory.Exists(driveRoot))
+            {
+                return Path.Combine(driveRoot, ClippingsRelativePath);
+            }
+        }
+
+        return Path.Combine("D:\\", ClippingsRelativePath);
     }
 }
