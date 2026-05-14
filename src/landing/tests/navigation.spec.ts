@@ -32,4 +32,18 @@ test.describe('Navigation', () => {
 		await expect(footer).toBeVisible();
 		await expect(footer).toContainText('Relego · MIT License');
 	});
+
+	test('hero section renders logotype, tagline, and CTA', async ({ page }) => {
+		const hero = page.locator('#hero');
+		await expect(hero.locator('h1')).toContainText('relego.');
+		await expect(hero.locator('p')).toContainText('Kindle');
+		await expect(hero.locator('a:has-text("Get started")')).toBeVisible();
+	});
+
+	test('clicking "Get started" CTA scrolls to Getting Started section', async ({ page }) => {
+		const cta = page.locator('#hero a:has-text("Get started")');
+		await cta.click();
+		const section = page.locator('#getting-started');
+		await expect(section).toBeInViewport({ timeout: 3000 });
+	});
 });
