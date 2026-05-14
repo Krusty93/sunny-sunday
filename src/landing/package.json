@@ -10,11 +10,11 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.18.1"
+    "@tailwindcss/postcss": "^4.3.0",
+    "astro": "^6.3.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
-    "@playwright/test": "^1.60.0",
-    "@tailwindcss/vite": "^4.3.0"
+    "@playwright/test": "^1.60.0"
   }
 }
