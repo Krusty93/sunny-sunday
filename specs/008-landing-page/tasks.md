@@ -42,17 +42,17 @@
 
 ### Implementation
 
-- [ ] T011 [P] Create `src/landing/components/Button.astro` with props: `href` (string), `variant` ("primary" | "outline"), `class` (optional). Renders an `<a>` tag styled with Tailwind classes — primary variant uses accent background, outline variant uses border + transparent background. Both adapt to dark/light mode via CSS variables.
-- [ ] T012 Create `src/landing/components/ThemeToggle.astro`: renders a `<button>` with sun/moon icon (inline SVG), `aria-label="Toggle theme"`. Client-side `<script>` toggles `data-theme` attribute on `<html>` between "light" and "dark", persists choice to `localStorage`. Icons swap based on current theme.
-- [ ] T013 Create `src/landing/components/Navbar.astro`: fixed top navbar with "relego." logotype text (Playfair Display 300, links to page top) on the left; ThemeToggle and "View on GitHub" Button (outline variant, `href` from `siteConfig.githubUrl`, opens in new tab with `target="_blank" rel="noopener"`) on the right. Responsive: collapses gracefully on mobile. Imports `siteConfig` from `src/landing/config/site.ts`.
-- [ ] T014 Create `src/landing/components/Footer.astro`: minimal footer displaying "Relego · MIT License" text centered, with subtle top border. Uses `siteConfig.license` for the license name.
-- [ ] T015 Update `src/landing/pages/index.astro` to import and render Navbar at top and Footer at bottom, with a `<main>` element between them
+- [X] T011 [P] Create `src/landing/components/Button.astro` with props: `href` (string), `variant` ("primary" | "outline"), `class` (optional). Renders an `<a>` tag styled with Tailwind classes — primary variant uses accent background, outline variant uses border + transparent background. Both adapt to dark/light mode via CSS variables.
+- [X] T012 Create `src/landing/components/ThemeToggle.astro`: renders a `<button>` with sun/moon icon (inline SVG), `aria-label="Toggle theme"`. Client-side `<script>` toggles `data-theme` attribute on `<html>` between "light" and "dark", persists choice to `localStorage`. Icons swap based on current theme.
+- [X] T013 Create `src/landing/components/Navbar.astro`: fixed top navbar with "relego." logotype text (Playfair Display 300, links to page top) on the left; ThemeToggle and "View on GitHub" Button (outline variant, `href` from `siteConfig.githubUrl`, opens in new tab with `target="_blank" rel="noopener"`) on the right. Responsive: collapses gracefully on mobile. Imports `siteConfig` from `src/landing/config/site.ts`.
+- [X] T014 Create `src/landing/components/Footer.astro`: minimal footer displaying "Relego · MIT License" text centered, with subtle top border. Uses `siteConfig.license` for the license name.
+- [X] T015 Update `src/landing/pages/index.astro` to import and render Navbar at top and Footer at bottom, with a `<main>` element between them
 
 ### Tests
 
-- [ ] T016 [P] Create `src/landing/tests/navigation.spec.ts`: test that the navbar renders with "relego." logotype text; test that "View on GitHub" link points to the configured GitHub URL and opens in a new tab (`target="_blank"`); test that clicking the logotype navigates to or stays at the top of the page
-- [ ] T017 [P] Create `src/landing/tests/theme.spec.ts`: test that clicking the theme toggle switches `data-theme` on `<html>` between "light" and "dark"; test that the selected theme persists after page reload (check `localStorage` and `data-theme` attribute); test that the toggle button has an accessible `aria-label`
-- [ ] T018 Run `cd src/landing && npx playwright install --with-deps chromium && npx playwright test tests/navigation.spec.ts tests/theme.spec.ts` — all tests must pass
+- [X] T016 [P] Create `src/landing/tests/navigation.spec.ts`: test that the navbar renders with "relego." logotype text; test that "View on GitHub" link points to the configured GitHub URL and opens in a new tab (`target="_blank"`); test that clicking the logotype navigates to or stays at the top of the page
+- [X] T017 [P] Create `src/landing/tests/theme.spec.ts`: test that clicking the theme toggle switches `data-theme` on `<html>` between "light" and "dark"; test that the selected theme persists after page reload (check `localStorage` and `data-theme` attribute); test that the toggle button has an accessible `aria-label`
+- [X] T018 Run `cd src/landing && npx playwright install --with-deps chromium && npx playwright test tests/navigation.spec.ts tests/theme.spec.ts` — all tests must pass
 
 **Checkpoint**: Page has a working navbar with GitHub link, theme toggle with persistence, and footer. Navigation and theme tests pass.
 

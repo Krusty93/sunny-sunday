@@ -1,12 +1,16 @@
 ---
 import { siteConfig } from '../config/site';
 import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
 ---
 
 <Layout title={siteConfig.name}>
-	<main class="mx-auto flex min-h-screen w-full max-w-6xl items-center px-6 py-24">
+	<Navbar />
+	<main class="mx-auto flex min-h-screen w-full max-w-6xl items-center px-6 pt-24 pb-12">
 		<h1 class="text-5xl font-light tracking-tight text-[var(--color-text)] sm:text-7xl">
 			{siteConfig.logotype}
 		</h1>
 	</main>
+	<Footer />
 </Layout>
