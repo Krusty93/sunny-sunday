@@ -1,0 +1,55 @@
+---
+import '../styles/global.css';
+import { siteConfig } from '../config/site';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = siteConfig.name,
+	description = siteConfig.tagline,
+} = Astro.props;
+
+const pageTitle = title === siteConfig.name ? title : `${title} | ${siteConfig.name}`;
+const faviconHref = `${import.meta.env.BASE_URL}favicon.svg`;
+---
+
+<!doctype html>
+<html lang="en" data-theme="light">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content={description} />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="icon" type="image/svg+xml" href={faviconHref} />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300&display=swap"
+			rel="stylesheet"
+		/>
+		<script is:inline>
+			(() => {
+				let theme = 'light';
+				try {
+					const storedTheme = window.localStorage.getItem('theme');
+					theme = storedTheme === 'dark' || storedTheme === 'light'
+						? storedTheme
+						: window.matchMedia('(prefers-color-scheme: dark)').matches
+							? 'dark'
+							: 'light';
+				} catch {
+					theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				}
+
+				document.documentElement.setAttribute('data-theme', theme);
+			})();
+		</script>
+		<title>{pageTitle}</title>
+	</head>
+	<body class="landing">
+		<slot />
+	</body>
+</html>

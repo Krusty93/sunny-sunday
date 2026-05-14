@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+	color-scheme: light;
+	--color-bg: #f7f1e8;
+	--color-text: #171311;
+	--color-accent: #b56b39;
+	--color-surface: rgba(255, 255, 255, 0.72);
+	--color-border: rgba(23, 19, 17, 0.12);
+}
+
+[data-theme='dark'] {
+	color-scheme: dark;
+	--color-bg: #120e0c;
+	--color-text: #f5eee3;
+	--color-accent: #d4a05e;
+	--color-surface: rgba(18, 14, 12, 0.82);
+	--color-border: rgba(245, 238, 227, 0.14);
+}
+
+html {
+	background: var(--color-bg);
+	color: var(--color-text);
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background:
+		radial-gradient(circle at top left, rgba(181, 107, 57, 0.16), transparent 28%),
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 35%),
+		var(--color-bg);
+	color: var(--color-text);
+}
+
+.landing {
+	min-height: 100vh;
+}
+
+.landing h1,
+.landing h2 {
+	font-family: 'Playfair Display', Georgia, serif;
+	font-weight: 300;
+	letter-spacing: -0.01em;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
