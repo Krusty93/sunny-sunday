@@ -21,6 +21,7 @@
 html {
 	background: var(--color-bg);
 	color: var(--color-text);
+	scroll-behavior: smooth;
 }
 
 body {
@@ -42,6 +43,10 @@ body {
 	font-family: 'Playfair Display', Georgia, serif;
 	font-weight: 300;
 	letter-spacing: -0.01em;
+}
+
+section[id] {
+	scroll-margin-top: 5rem;
 }
 
 a {

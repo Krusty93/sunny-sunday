@@ -68,15 +68,15 @@
 
 ### Implementation
 
-- [ ] T019 [P] Add placeholder hero image at `src/landing/assets/hero-kindle.jpg` (use a sample image or placeholder; the real Kindle photo will be swapped in before deployment)
-- [ ] T020 Create `src/landing/components/Section.astro` with props: `id` (string), `title` (optional string), `class` (optional string). Renders a `<section>` with the given `id`, optional `<h2>` title in Playfair Display 300, and a default `<slot>` for content. Applies consistent vertical padding and max-width container.
-- [ ] T021 [US1] Implement hero section in `src/landing/pages/index.astro`: split layout with left column containing "relego." logotype as `<h1>` in Playfair Display 300, tagline paragraph from `siteConfig.tagline`, and "Get started" Button (primary variant, `href="#getting-started"` for smooth scroll); right column containing the hero image imported from `src/landing/assets/hero-kindle.jpg` via Astro's `<Image>` component with descriptive `alt` text, overlaid with a CSS gradient that fades from `var(--color-bg)` to transparent (adapts to dark/light mode automatically). Responsive: stacks vertically on mobile with image below text.
-- [ ] T022 [US1] Add smooth scroll behavior via CSS `html { scroll-behavior: smooth; }` in `src/landing/styles/global.css` and add `scroll-margin-top` to sections to account for the fixed navbar height
+- [X] T019 [P] Add placeholder hero image at `src/landing/assets/hero-kindle.jpg` (use a sample image or placeholder; the real Kindle photo will be swapped in before deployment)
+- [X] T020 Create `src/landing/components/Section.astro` with props: `id` (string), `title` (optional string), `class` (optional string). Renders a `<section>` with the given `id`, optional `<h2>` title in Playfair Display 300, and a default `<slot>` for content. Applies consistent vertical padding and max-width container.
+- [X] T021 [US1] Implement hero section in `src/landing/pages/index.astro`: split layout with left column containing "relego." logotype as `<h1>` in Playfair Display 300, tagline paragraph from `siteConfig.tagline`, and "Get started" Button (primary variant, `href="#getting-started"` for smooth scroll); right column containing the hero image imported from `src/landing/assets/hero-kindle.jpg` via Astro's `<Image>` component with descriptive `alt` text, overlaid with a CSS gradient that fades from `var(--color-bg)` to transparent (adapts to dark/light mode automatically). Responsive: stacks vertically on mobile with image below text.
+- [X] T022 [US1] Add smooth scroll behavior via CSS `html { scroll-behavior: smooth; }` in `src/landing/styles/global.css` and add `scroll-margin-top` to sections to account for the fixed navbar height
 
 ### Tests
 
-- [ ] T023 [US1] Add tests to `src/landing/tests/navigation.spec.ts`: test that clicking "Get started" CTA scrolls the page to the Getting Started section (verify `#getting-started` element is in viewport after click)
-- [ ] T024 Run `cd src/landing && npx playwright test` — all existing tests plus new hero navigation test must pass
+- [X] T023 [US1] Add tests to `src/landing/tests/navigation.spec.ts`: test that clicking "Get started" CTA scrolls the page to the Getting Started section (verify `#getting-started` element is in viewport after click)
+- [X] T024 Run `cd src/landing && npx playwright test` — all existing tests plus new hero navigation test must pass
 
 **Checkpoint**: Hero section renders with logotype, tagline, CTA (smooth-scrolls to Getting Started), and hero image with theme-adaptive gradient. All tests pass.
 
