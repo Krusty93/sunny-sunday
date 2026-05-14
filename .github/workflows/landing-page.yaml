@@ -5,11 +5,11 @@ on:
     branches: [main]
     paths:
       - 'src/landing/**'
-      - '.github/workflows/landing-page.yml'
+      - '.github/workflows/landing-page.yaml'
   pull_request:
     paths:
       - 'src/landing/**'
-      - '.github/workflows/landing-page.yml'
+      - '.github/workflows/landing-page.yaml'
 
 permissions:
   contents: read
