@@ -8,16 +8,18 @@ test.describe('Content Sections', () => {
 	test('sections appear in correct order', async ({ page }) => {
 		const sections = page.locator('section[id]');
 		const ids = await sections.evaluateAll((els) => els.map((el) => el.id));
-		const expected = ['hero', 'getting-started', 'why-relego', 'faq', 'explore'];
+		const expected = ['hero', 'getting-started', 'why-relego', 'features', 'faq', 'explore'];
 		expect(ids).toEqual(expect.arrayContaining(expected));
 		const heroIdx = ids.indexOf('hero');
 		const gsIdx = ids.indexOf('getting-started');
 		const wrIdx = ids.indexOf('why-relego');
+		const featIdx = ids.indexOf('features');
 		const faqIdx = ids.indexOf('faq');
 		const exploreIdx = ids.indexOf('explore');
 		expect(heroIdx).toBeLessThan(gsIdx);
 		expect(gsIdx).toBeLessThan(wrIdx);
-		expect(wrIdx).toBeLessThan(faqIdx);
+		expect(wrIdx).toBeLessThan(featIdx);
+		expect(featIdx).toBeLessThan(faqIdx);
 		expect(faqIdx).toBeLessThan(exploreIdx);
 	});
 
@@ -25,7 +27,9 @@ test.describe('Content Sections', () => {
 		const gsAccent = page.locator('#getting-started h2 span');
 		await expect(gsAccent).toContainText('in just 3 steps');
 		const wrTitle = page.locator('#why-relego h2');
-		await expect(wrTitle).toHaveText('Built for readers');
+		await expect(wrTitle).toContainText('Why Relego');
+		const featTitle = page.locator('#features h2');
+		await expect(featTitle).toHaveText('Built for readers');
 	});
 
 	test('Getting Started renders 3 step tabs with correct titles', async ({ page }) => {
@@ -48,18 +52,18 @@ test.describe('Content Sections', () => {
 		await expect(section.locator('[data-step-panel="0"]')).toBeHidden();
 	});
 
-	test('Why Relego renders 4 feature cards with correct titles', async ({ page }) => {
-		const section = page.locator('#why-relego');
+	test('Features renders 4 feature cards with correct titles', async ({ page }) => {
+		const section = page.locator('#features');
 		const titles = section.locator('h3');
 		await expect(titles).toHaveCount(4);
-		await expect(titles.nth(0)).toHaveText('Built for e-ink');
-		await expect(titles.nth(1)).toHaveText('Free, open-source & self-hosted');
+		await expect(titles.nth(0)).toHaveText('Grouped by book');
+		await expect(titles.nth(1)).toHaveText('Built for e-ink');
 		await expect(titles.nth(2)).toHaveText('No lock-in');
 		await expect(titles.nth(3)).toHaveText('Privacy');
 	});
 
-	test('Why Relego feature cards have icons', async ({ page }) => {
-		const section = page.locator('#why-relego');
+	test('Features section has icons', async ({ page }) => {
+		const section = page.locator('#features');
 		const icons = section.locator('svg');
 		await expect(icons).toHaveCount(4);
 	});

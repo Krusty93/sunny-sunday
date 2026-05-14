@@ -59,8 +59,10 @@ test.describe('Navigation', () => {
 		await expect(link).toHaveAttribute('target', '_blank');
 	});
 
-	test('Explore section shows MIT license badge', async ({ page }) => {
-		const badge = page.locator('#explore').getByText('MIT License');
-		await expect(badge).toBeVisible();
+	test('Explore section shows Contribute link', async ({ page }) => {
+		const link = page.locator('#explore a:has-text("Contribute")');
+		await expect(link).toBeVisible();
+		await expect(link).toHaveAttribute('href', 'https://github.com/Krusty93/relego/blob/main/CONTRIBUTING.md');
+		await expect(link).toHaveAttribute('target', '_blank');
 	});
 });

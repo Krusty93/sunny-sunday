@@ -70,17 +70,41 @@ const steps = [
 		</Section>
 
 		<!-- Why Relego -->
-		<Section id="why-relego" title="Built for readers" subtitle="Everything you need to rediscover your highlights. Nothing you don't.">
+		<Section id="why-relego" title="Why Relego" titleAccent="is different">
+			<div class="grid gap-12 sm:grid-cols-3">
+				<div>
+					<h3 class="mb-3 text-lg font-medium text-[var(--color-text)]">The problem</h3>
+					<p class="leading-relaxed text-[var(--color-text)]/70">
+						You highlight passages while reading, but they disappear into a file you never reopen. Without a system to surface them again, your best ideas fade away.
+					</p>
+				</div>
+				<div>
+					<h3 class="mb-3 text-lg font-medium text-[var(--color-text)]">The name</h3>
+					<p class="leading-relaxed text-[var(--color-text)]/70">
+						From Latin <em>re-lego</em>, "to read again". Relego brings your highlights back through spaced repetition, so the words that struck you once can strike again.
+					</p>
+				</div>
+				<div>
+					<h3 class="mb-3 text-lg font-medium text-[var(--color-text)]">The difference</h3>
+					<p class="leading-relaxed text-[var(--color-text)]/70">
+						Free, open-source, and self-hosted. No cloud accounts, no subscriptions, no tracking. Your reading data stays always on your machine.
+					</p>
+				</div>
+			</div>
+		</Section>
+
+		<!-- Features -->
+		<Section id="features" title="Built for readers" subtitle="Everything you need to rediscover your highlights. Nothing you don't.">
 			<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+				<FeatureCard
+					icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+					title="Grouped by book"
+					description="Browse all your highlights organized by book. Find any passage in seconds."
+				/>
 				<FeatureCard
 					icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="10" y1="18" x2="14" y2="18"/></svg>'
 					title="Built for e-ink"
 					description="Recaps are formatted as clean documents optimized for Kindle's e-ink display."
-				/>
-				<FeatureCard
-					icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-					title="Free, open-source & self-hosted"
-					description="MIT-licensed and open source. Runs on your own hardware, with no subscriptions or cloud accounts required."
 				/>
 				<FeatureCard
 					icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
@@ -135,13 +159,13 @@ const steps = [
 					<Button href={siteConfig.githubUrl} variant="primary" target="_blank" rel="noopener noreferrer">
 						View on GitHub
 					</Button>
-					<Button href={siteConfig.docsUrl} variant="outline">
+					<Button href={siteConfig.docsUrl} variant="outline" target="_blank" rel="noopener noreferrer">
 						Read the docs
 					</Button>
 				</div>
-				<span class="mt-2 inline-flex items-center rounded-full border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-text)]/60">
-					MIT License
-				</span>
+				<a href={siteConfig.contributingUrl} target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex items-center rounded-full border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-text)]/60 transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-text)]">
+					Contribute
+				</a>
 			</div>
 		</Section>
 	</main>
