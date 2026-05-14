@@ -165,11 +165,11 @@
 
 **Purpose**: Final cleanup, documentation updates, and quickstart validation
 
-- [ ] T043 [P] Review all user-facing copy in `src/landing/pages/index.astro` against spec.md FR-008-17 (use "Relego" not "SunnySunday") and FR-008-18 (third person, short sentences, no forbidden words: "powerful", "seamless", "robust", "leverage", "unlock")
-- [ ] T044 [P] Verify Dockit template sections are removed per FR-008-24: no hero search bar, no "Powerful features" grid, no dark/light mode showcase section
-- [ ] T045 [P] Verify the page renders all static content without JavaScript enabled per FR-008-19 and SC-008-06: only theme toggle and accordion interactivity should degrade
-- [ ] T046 [P] Update `docs/ARCHITECTURE.md` to document the `src/landing/` component: its purpose (static marketing landing page), tech stack (Astro + Tailwind), deployment target (GitHub Pages), and separation from the .NET solution
-- [ ] T047 Run full validation: `cd src/landing && npm run build && npx playwright test` — all tests pass. Validate that `quickstart.md` instructions in `specs/008-landing-page/quickstart.md` match the implemented project (dev server command, build command, test command, file paths).
+- [X] T043 [P] Review all user-facing copy in `src/landing/pages/index.astro` against spec.md FR-008-17 (use "Relego" not "SunnySunday") and FR-008-18 (third person, short sentences, no forbidden words: "powerful", "seamless", "robust", "leverage", "unlock")
+- [X] T044 [P] Verify Dockit template sections are removed per FR-008-24: no hero search bar, no "Powerful features" grid, no dark/light mode showcase section
+- [X] T045 [P] Verify the page renders all static content without JavaScript enabled per FR-008-19 and SC-008-06: only theme toggle and accordion interactivity should degrade
+- [X] T046 [P] Update `docs/ARCHITECTURE.md` to document the `src/landing/` component: its purpose (static marketing landing page), tech stack (Astro + Tailwind), deployment target (GitHub Pages), and separation from the .NET solution
+- [X] T047 Run full validation: `cd src/landing && npm run build && npx playwright test` — all tests pass. Validate that `quickstart.md` instructions in `specs/008-landing-page/quickstart.md` match the implemented project (dev server command, build command, test command, file paths).
 
 ---
 
