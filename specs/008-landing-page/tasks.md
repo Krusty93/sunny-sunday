@@ -90,15 +90,15 @@
 
 ### Implementation
 
-- [ ] T025 [P] [US2] Create `src/landing/components/StepCard.astro` with props: `number` (number), `title` (string), `description` (string). Renders a card with a large styled number, bold title, and description text. Adapts to dark/light mode.
-- [ ] T026 [P] [US4] Create `src/landing/components/FeatureCard.astro` with props: `icon` (string — inline SVG markup), `title` (string), `description` (string). Renders a card with icon, title, and description. Adapts to dark/light mode.
-- [ ] T027 [US2] Implement Getting Started section in `src/landing/pages/index.astro`: use Section component with `id="getting-started"` and title "Getting Started". Render three StepCard components in a responsive grid: (1) "Sync" — connect your Kindle and run `relego sync`, (2) "Schedule" — the server picks highlights using spaced repetition, (3) "Read" — open the recap on your Kindle like any other book. Content per spec.md US2 acceptance scenarios.
-- [ ] T028 [US4] Implement Why Relego section in `src/landing/pages/index.astro`: use Section component with `id="why-relego"` and title "Why Relego". Render four FeatureCard components in a responsive grid: "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy". Each card has a small inline SVG icon and a short description written in third person without buzzwords. Content per spec.md US4 acceptance scenarios.
+- [X] T025 [P] [US2] Create `src/landing/components/StepCard.astro` with props: `number` (number), `title` (string), `description` (string). Renders a card with a large styled number, bold title, and description text. Adapts to dark/light mode.
+- [X] T026 [P] [US4] Create `src/landing/components/FeatureCard.astro` with props: `icon` (string — inline SVG markup), `title` (string), `description` (string). Renders a card with icon, title, and description. Adapts to dark/light mode.
+- [X] T027 [US2] Implement Getting Started section in `src/landing/pages/index.astro`: use Section component with `id="getting-started"` and title "Getting Started". Render three StepCard components in a responsive grid: (1) "Sync" — connect your Kindle and run `relego sync`, (2) "Schedule" — the server picks highlights using spaced repetition, (3) "Read" — open the recap on your Kindle like any other book. Content per spec.md US2 acceptance scenarios.
+- [X] T028 [US4] Implement Why Relego section in `src/landing/pages/index.astro`: use Section component with `id="why-relego"` and title "Why Relego". Render four FeatureCard components in a responsive grid: "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy". Each card has a small inline SVG icon and a short description written in third person without buzzwords. Content per spec.md US4 acceptance scenarios.
 
 ### Tests
 
-- [ ] T029 Create `src/landing/tests/content-sections.spec.ts`: test that all sections appear in correct order (hero → getting-started → why-relego → faq → explore → footer) by checking `id` attributes; test that exactly 3 step cards render in the Getting Started section with titles "Sync", "Schedule", "Read"; test that exactly 4 feature cards render in the Why Relego section with titles "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy"
-- [ ] T030 Run `cd src/landing && npx playwright test` — all tests must pass
+- [X] T029 Create `src/landing/tests/content-sections.spec.ts`: test that all sections appear in correct order (hero → getting-started → why-relego → faq → explore → footer) by checking `id` attributes; test that exactly 3 step cards render in the Getting Started section with titles "Sync", "Schedule", "Read"; test that exactly 4 feature cards render in the Why Relego section with titles "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy"
+- [X] T030 Run `cd src/landing && npx playwright test` — all tests must pass
 
 **Checkpoint**: Getting Started (3 step cards) and Why Relego (4 feature cards) render correctly. Content sections test validates section order and card content. All tests pass.
 
