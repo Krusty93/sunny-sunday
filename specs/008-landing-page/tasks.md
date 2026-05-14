@@ -114,13 +114,13 @@
 
 ### Implementation
 
-- [ ] T031 [US5] Create `src/landing/components/Accordion.astro` with props: `question` (string), `answer` (string). Renders a `<details>` / `<summary>` element (native HTML accordion — no JS required). `<summary>` shows the question with a chevron indicator. The answer is the expandable content. Styled with Tailwind for spacing, borders, and dark/light mode. Accessible: keyboard-operable via native `<details>` behavior.
-- [ ] T032 [US5] Implement FAQ section in `src/landing/pages/index.astro`: use Section component with `id="faq"` and title "FAQ". Render 5–6 Accordion components with questions and answers covering: (a) cloud account requirements, (b) SMTP provider compatibility, (c) recap frequency, (d) Kindle model support, (e) data storage location, (f) excluding books/highlights. Content per spec.md US5 acceptance scenarios and FR-008-11.
+- [X] T031 [US5] Create `src/landing/components/Accordion.astro` with props: `question` (string), `answer` (string). Renders a `<details>` / `<summary>` element (native HTML accordion — no JS required). `<summary>` shows the question with a chevron indicator. The answer is the expandable content. Styled with Tailwind for spacing, borders, and dark/light mode. Accessible: keyboard-operable via native `<details>` behavior.
+- [X] T032 [US5] Implement FAQ section in `src/landing/pages/index.astro`: use Section component with `id="faq"` and title "FAQ". Render 5–6 Accordion components with questions and answers covering: (a) cloud account requirements, (b) SMTP provider compatibility, (c) recap frequency, (d) Kindle model support, (e) data storage location, (f) excluding books/highlights. Content per spec.md US5 acceptance scenarios and FR-008-11.
 
 ### Tests
 
-- [ ] T033 Create `src/landing/tests/faq.spec.ts`: test that 5–6 FAQ accordion items render with question text visible; test that clicking a collapsed FAQ item expands the answer; test that clicking an expanded FAQ item collapses the answer; test that FAQ content addresses the required topics (check for key terms: "SMTP", "Kindle", "data", "frequency" or similar)
-- [ ] T034 Run `cd src/landing && npx playwright test` — all tests must pass
+- [X] T033 Create `src/landing/tests/faq.spec.ts`: test that 5–6 FAQ accordion items render with question text visible; test that clicking a collapsed FAQ item expands the answer; test that clicking an expanded FAQ item collapses the answer; test that FAQ content addresses the required topics (check for key terms: "SMTP", "Kindle", "data", "frequency" or similar)
+- [X] T034 Run `cd src/landing && npx playwright test` — all tests must pass
 
 **Checkpoint**: FAQ accordion renders with 5–6 items that expand/collapse correctly. FAQ tests pass. All previous tests still pass.
 
