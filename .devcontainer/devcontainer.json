@@ -52,7 +52,8 @@
         "DavidAnson.vscode-markdownlint",
         "ionutvmi.path-autocomplete",
         "humao.rest-client",
-        "alexcvzz.vscode-sqlite"
+        "alexcvzz.vscode-sqlite",
+        "astro-build.astro-vscode"
       ],
       "mcp": {
         "servers": {

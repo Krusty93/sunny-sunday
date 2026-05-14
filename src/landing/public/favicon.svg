@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Relego favicon">
+	<rect width="64" height="64" rx="16" fill="#16110f" />
+	<circle cx="32" cy="32" r="22" fill="#f4ecdf" opacity="0.12" />
+	<path fill="#f4ecdf" d="M21 18h12c7.18 0 11.5 3.79 11.5 10.12 0 5.33-2.92 8.84-7.88 9.73L45 46h-7.76l-7.73-7.58H28V46h-7V18Zm7 14.66h4.31c3.56 0 5.46-1.46 5.46-4.16 0-2.72-1.9-4.13-5.46-4.13H28v8.29Z" />
+</svg>

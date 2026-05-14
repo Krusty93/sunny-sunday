@@ -19,16 +19,16 @@
 
 **Purpose**: Initialize the Astro project with Tailwind CSS, TypeScript, Playwright, and base layout
 
-- [ ] T001 Scaffold Astro project at `src/landing/` using `npm create astro@latest -- --template minimal`, configure `package.json` with project name `@relego/landing`
-- [ ] T002 Install dependencies: `@tailwindcss/vite`, `@playwright/test`, `@axe-core/playwright`, and configure `astro.config.mjs` with `site: 'https://krusty93.github.io'`, `base: '/sunny-sunday/'`, `srcDir: '.'` (eliminates nested `src/` folder), and Tailwind vite plugin in `src/landing/astro.config.mjs`
-- [ ] T003 [P] Create `src/landing/tsconfig.json` with strict TypeScript configuration extending Astro's base config
-- [ ] T004 [P] Create `src/landing/styles/global.css` with Tailwind imports (`@import "tailwindcss"`) and CSS custom properties for light/dark theme colors (background, text, accent) using `[data-theme='dark']` selectors
-- [ ] T005 [P] Create site configuration in `src/landing/config/site.ts` exporting typed `siteConfig` object with fields: `name` ("Relego"), `logotype` ("relego."), `tagline`, `githubUrl` ("https://github.com/Krusty93/sunny-sunday"), `docsUrl` ("/docs"), `license` ("MIT") — per data-model.md
-- [ ] T006 [P] Create `src/landing/public/favicon.svg` with a minimal placeholder favicon
-- [ ] T007 Create base layout in `src/landing/layouts/Layout.astro`: HTML shell with `<!DOCTYPE html>`, `<html lang="en" data-theme="light">`, Google Fonts `<link>` for Playfair Display 300 with `display=swap` and `preconnect`, global CSS import, inline `<script>` in `<head>` that reads `localStorage.getItem('theme')` or `prefers-color-scheme` and sets `data-theme` before paint to avoid flash
-- [ ] T008 Create empty `src/landing/pages/index.astro` that imports and uses `Layout.astro`, renders a placeholder heading to verify the setup works
-- [ ] T009 [P] Create `src/landing/playwright.config.ts` with: `webServer` pointing to `npm run dev` on port 4321, base URL `http://localhost:4321/sunny-sunday/`, Chromium-only project, `tests/` test directory, retries 0 for local, screenshot on failure
-- [ ] T010 Verify setup: run `cd src/landing && npm install && npm run dev` starts without errors, and `npm run build` produces output in `dist/`
+- [X] T001 Scaffold Astro project at `src/landing/` using `npm create astro@latest -- --template minimal`, configure `package.json` with project name `@relego/landing`
+- [X] T002 Install dependencies: `@tailwindcss/vite`, `@playwright/test`, `@axe-core/playwright`, and configure `astro.config.mjs` with `site: 'https://krusty93.github.io'`, `base: '/sunny-sunday/'`, `srcDir: '.'` (eliminates nested `src/` folder), and Tailwind vite plugin in `src/landing/astro.config.mjs`
+- [X] T003 [P] Create `src/landing/tsconfig.json` with strict TypeScript configuration extending Astro's base config
+- [X] T004 [P] Create `src/landing/styles/global.css` with Tailwind imports (`@import "tailwindcss"`) and CSS custom properties for light/dark theme colors (background, text, accent) using `[data-theme='dark']` selectors
+- [X] T005 [P] Create site configuration in `src/landing/config/site.ts` exporting typed `siteConfig` object with fields: `name` ("Relego"), `logotype` ("relego."), `tagline`, `githubUrl` ("https://github.com/Krusty93/sunny-sunday"), `docsUrl` ("/docs"), `license` ("MIT") — per data-model.md
+- [X] T006 [P] Create `src/landing/public/favicon.svg` with a minimal placeholder favicon
+- [X] T007 Create base layout in `src/landing/layouts/Layout.astro`: HTML shell with `<!DOCTYPE html>`, `<html lang="en" data-theme="light">`, Google Fonts `<link>` for Playfair Display 300 with `display=swap` and `preconnect`, global CSS import, inline `<script>` in `<head>` that reads `localStorage.getItem('theme')` or `prefers-color-scheme` and sets `data-theme` before paint to avoid flash
+- [X] T008 Create empty `src/landing/pages/index.astro` that imports and uses `Layout.astro`, renders a placeholder heading to verify the setup works
+- [X] T009 [P] Create `src/landing/playwright.config.ts` with: `webServer` pointing to `npm run dev` on port 4321, base URL `http://localhost:4321/sunny-sunday/`, Chromium-only project, `tests/` test directory, retries 0 for local, screenshot on failure
+- [X] T010 Verify setup: run `cd src/landing && npm install && npm run dev` starts without errors, and `npm run build` produces output in `dist/`
 
 **Checkpoint**: Astro project scaffolded with Tailwind, TypeScript, Playwright config, and base layout. Dev server runs and builds successfully.
 
