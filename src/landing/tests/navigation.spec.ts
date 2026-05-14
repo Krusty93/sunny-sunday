@@ -32,4 +32,37 @@ test.describe('Navigation', () => {
 		await expect(footer).toBeVisible();
 		await expect(footer).toContainText('Relego · MIT License');
 	});
+
+	test('hero section renders logotype, tagline, and CTA', async ({ page }) => {
+		const hero = page.locator('#hero');
+		await expect(hero.locator('h1')).toContainText('relego.');
+		await expect(hero.locator('p')).toContainText('Kindle');
+		await expect(hero.locator('a:has-text("Get started")')).toBeVisible();
+	});
+
+	test('clicking "Get started" CTA scrolls to Getting Started section', async ({ page }) => {
+		const cta = page.locator('#hero a:has-text("Get started")');
+		await cta.click();
+		const section = page.locator('#getting-started');
+		await expect(section).toBeInViewport({ timeout: 3000 });
+	});
+
+	test('Explore section renders "View on GitHub" and "Read the docs" buttons', async ({ page }) => {
+		const explore = page.locator('#explore');
+		await expect(explore.locator('a:has-text("View on GitHub")')).toBeVisible();
+		await expect(explore.locator('a:has-text("Read the docs")')).toBeVisible();
+	});
+
+	test('Explore "View on GitHub" links to the configured GitHub URL', async ({ page }) => {
+		const link = page.locator('#explore a:has-text("View on GitHub")');
+		await expect(link).toHaveAttribute('href', 'https://github.com/Krusty93/relego');
+		await expect(link).toHaveAttribute('target', '_blank');
+	});
+
+	test('Explore section shows Contribute link', async ({ page }) => {
+		const link = page.locator('#explore a:has-text("Contribute")');
+		await expect(link).toBeVisible();
+		await expect(link).toHaveAttribute('href', 'https://github.com/Krusty93/relego/blob/main/CONTRIBUTING.md');
+		await expect(link).toHaveAttribute('target', '_blank');
+	});
 });

@@ -5,7 +5,7 @@ import ThemeToggle from './ThemeToggle.astro';
 
 <nav class="fixed top-0 z-50 w-full border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 backdrop-blur-md">
 	<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-		<a href="#" class="font-['Playfair_Display'] text-xl font-light text-[var(--color-text)]">
+		<a href="#" aria-label="relego. — go to top" class="font-['Playfair_Display'] text-xl font-light text-[var(--color-text)]">
 			{siteConfig.logotype}
 		</a>
 		<div class="flex items-center gap-3">
@@ -17,7 +17,7 @@ import ThemeToggle from './ThemeToggle.astro';
 				class:list={['hidden sm:inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2 border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-surface)]']}
 			>
 				<span>View on GitHub</span>
-				<svg class="ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+				<svg aria-hidden="true" class="ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
 					<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" />
 				</svg>
 			</a>

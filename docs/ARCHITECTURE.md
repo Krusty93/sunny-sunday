@@ -94,6 +94,18 @@ Endpoint groups currently implemented:
 
 ---
 
+### Landing Page (`src/landing/`)
+
+Static marketing landing page built with Astro and Tailwind CSS. Completely independent from the .NET solution: separate `package.json`, separate build, separate test suite.
+
+- **Tech stack**: Astro 6, Tailwind CSS v4 (via PostCSS), Playwright for E2E testing
+- **Deployment target**: GitHub Pages (static HTML output, no server required)
+- **Build**: `cd src/landing && npm run build` → outputs to `src/landing/dist/`
+- **Tests**: `cd src/landing && npx playwright test` — Chromium-only, includes axe-core accessibility audit
+- **Separation**: no shared code, no shared dependencies with the .NET projects; the landing page can be deployed and developed independently
+
+---
+
 ## Technology Stack
 
 | Component | Technology | Rationale |
@@ -107,6 +119,7 @@ Endpoint groups currently implemented:
 | Logging | Serilog (file + SQLite sink) | Structured logging, persistent, queryable |
 | Scheduling | Quartz.NET | Mature .NET scheduler, cron-style expressions |
 | CLI UX | Spectre.Console | Rich terminal output, tables, progress bars |
+| Landing page | Astro + Tailwind CSS | Static site generation, minimal JS, fast build |
 
 ---
 
@@ -222,6 +235,15 @@ src/SunnySunday.Tests/
 ├── Parsing/            # CLI parser tests
 ├── Recap/              # Recap service tests
 └── Tui/                # TUI logic tests (mode detection, search, screen key handling)
+
+src/landing/                # Static marketing landing page (independent from .NET)
+├── pages/              # Astro pages (index.astro)
+├── components/         # Reusable Astro components (Navbar, Footer, Section, etc.)
+├── config/             # Site configuration (site.ts)
+├── layouts/            # Layout wrapper
+├── styles/             # Global CSS with Tailwind + CSS variables
+├── assets/             # Images (hero)
+└── tests/              # Playwright E2E tests (navigation, theme, content, a11y)
 ```
 
 ---

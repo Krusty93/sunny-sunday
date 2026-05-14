@@ -68,15 +68,15 @@
 
 ### Implementation
 
-- [ ] T019 [P] Add placeholder hero image at `src/landing/assets/hero-kindle.jpg` (use a sample image or placeholder; the real Kindle photo will be swapped in before deployment)
-- [ ] T020 Create `src/landing/components/Section.astro` with props: `id` (string), `title` (optional string), `class` (optional string). Renders a `<section>` with the given `id`, optional `<h2>` title in Playfair Display 300, and a default `<slot>` for content. Applies consistent vertical padding and max-width container.
-- [ ] T021 [US1] Implement hero section in `src/landing/pages/index.astro`: split layout with left column containing "relego." logotype as `<h1>` in Playfair Display 300, tagline paragraph from `siteConfig.tagline`, and "Get started" Button (primary variant, `href="#getting-started"` for smooth scroll); right column containing the hero image imported from `src/landing/assets/hero-kindle.jpg` via Astro's `<Image>` component with descriptive `alt` text, overlaid with a CSS gradient that fades from `var(--color-bg)` to transparent (adapts to dark/light mode automatically). Responsive: stacks vertically on mobile with image below text.
-- [ ] T022 [US1] Add smooth scroll behavior via CSS `html { scroll-behavior: smooth; }` in `src/landing/styles/global.css` and add `scroll-margin-top` to sections to account for the fixed navbar height
+- [X] T019 [P] Add placeholder hero image at `src/landing/assets/hero-kindle.jpg` (use a sample image or placeholder; the real Kindle photo will be swapped in before deployment)
+- [X] T020 Create `src/landing/components/Section.astro` with props: `id` (string), `title` (optional string), `class` (optional string). Renders a `<section>` with the given `id`, optional `<h2>` title in Playfair Display 300, and a default `<slot>` for content. Applies consistent vertical padding and max-width container.
+- [X] T021 [US1] Implement hero section in `src/landing/pages/index.astro`: split layout with left column containing "relego." logotype as `<h1>` in Playfair Display 300, tagline paragraph from `siteConfig.tagline`, and "Get started" Button (primary variant, `href="#getting-started"` for smooth scroll); right column containing the hero image imported from `src/landing/assets/hero-kindle.jpg` via Astro's `<Image>` component with descriptive `alt` text, overlaid with a CSS gradient that fades from `var(--color-bg)` to transparent (adapts to dark/light mode automatically). Responsive: stacks vertically on mobile with image below text.
+- [X] T022 [US1] Add smooth scroll behavior via CSS `html { scroll-behavior: smooth; }` in `src/landing/styles/global.css` and add `scroll-margin-top` to sections to account for the fixed navbar height
 
 ### Tests
 
-- [ ] T023 [US1] Add tests to `src/landing/tests/navigation.spec.ts`: test that clicking "Get started" CTA scrolls the page to the Getting Started section (verify `#getting-started` element is in viewport after click)
-- [ ] T024 Run `cd src/landing && npx playwright test` — all existing tests plus new hero navigation test must pass
+- [X] T023 [US1] Add tests to `src/landing/tests/navigation.spec.ts`: test that clicking "Get started" CTA scrolls the page to the Getting Started section (verify `#getting-started` element is in viewport after click)
+- [X] T024 Run `cd src/landing && npx playwright test` — all existing tests plus new hero navigation test must pass
 
 **Checkpoint**: Hero section renders with logotype, tagline, CTA (smooth-scrolls to Getting Started), and hero image with theme-adaptive gradient. All tests pass.
 
@@ -90,15 +90,15 @@
 
 ### Implementation
 
-- [ ] T025 [P] [US2] Create `src/landing/components/StepCard.astro` with props: `number` (number), `title` (string), `description` (string). Renders a card with a large styled number, bold title, and description text. Adapts to dark/light mode.
-- [ ] T026 [P] [US4] Create `src/landing/components/FeatureCard.astro` with props: `icon` (string — inline SVG markup), `title` (string), `description` (string). Renders a card with icon, title, and description. Adapts to dark/light mode.
-- [ ] T027 [US2] Implement Getting Started section in `src/landing/pages/index.astro`: use Section component with `id="getting-started"` and title "Getting Started". Render three StepCard components in a responsive grid: (1) "Sync" — connect your Kindle and run `relego sync`, (2) "Schedule" — the server picks highlights using spaced repetition, (3) "Read" — open the recap on your Kindle like any other book. Content per spec.md US2 acceptance scenarios.
-- [ ] T028 [US4] Implement Why Relego section in `src/landing/pages/index.astro`: use Section component with `id="why-relego"` and title "Why Relego". Render four FeatureCard components in a responsive grid: "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy". Each card has a small inline SVG icon and a short description written in third person without buzzwords. Content per spec.md US4 acceptance scenarios.
+- [X] T025 [P] [US2] Create `src/landing/components/StepCard.astro` with props: `number` (number), `title` (string), `description` (string). Renders a card with a large styled number, bold title, and description text. Adapts to dark/light mode.
+- [X] T026 [P] [US4] Create `src/landing/components/FeatureCard.astro` with props: `icon` (string — inline SVG markup), `title` (string), `description` (string). Renders a card with icon, title, and description. Adapts to dark/light mode.
+- [X] T027 [US2] Implement Getting Started section in `src/landing/pages/index.astro`: use Section component with `id="getting-started"` and title "Getting Started". Render three StepCard components in a responsive grid: (1) "Sync" — connect your Kindle and run `relego sync`, (2) "Schedule" — the server picks highlights using spaced repetition, (3) "Read" — open the recap on your Kindle like any other book. Content per spec.md US2 acceptance scenarios.
+- [X] T028 [US4] Implement Why Relego section in `src/landing/pages/index.astro`: use Section component with `id="why-relego"` and title "Why Relego". Render four FeatureCard components in a responsive grid: "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy". Each card has a small inline SVG icon and a short description written in third person without buzzwords. Content per spec.md US4 acceptance scenarios.
 
 ### Tests
 
-- [ ] T029 Create `src/landing/tests/content-sections.spec.ts`: test that all sections appear in correct order (hero → getting-started → why-relego → faq → explore → footer) by checking `id` attributes; test that exactly 3 step cards render in the Getting Started section with titles "Sync", "Schedule", "Read"; test that exactly 4 feature cards render in the Why Relego section with titles "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy"
-- [ ] T030 Run `cd src/landing && npx playwright test` — all tests must pass
+- [X] T029 Create `src/landing/tests/content-sections.spec.ts`: test that all sections appear in correct order (hero → getting-started → why-relego → faq → explore → footer) by checking `id` attributes; test that exactly 3 step cards render in the Getting Started section with titles "Sync", "Schedule", "Read"; test that exactly 4 feature cards render in the Why Relego section with titles "Built for e-ink", "Free & self-hosted", "No lock-in", "Privacy"
+- [X] T030 Run `cd src/landing && npx playwright test` — all tests must pass
 
 **Checkpoint**: Getting Started (3 step cards) and Why Relego (4 feature cards) render correctly. Content sections test validates section order and card content. All tests pass.
 
@@ -114,13 +114,13 @@
 
 ### Implementation
 
-- [ ] T031 [US5] Create `src/landing/components/Accordion.astro` with props: `question` (string), `answer` (string). Renders a `<details>` / `<summary>` element (native HTML accordion — no JS required). `<summary>` shows the question with a chevron indicator. The answer is the expandable content. Styled with Tailwind for spacing, borders, and dark/light mode. Accessible: keyboard-operable via native `<details>` behavior.
-- [ ] T032 [US5] Implement FAQ section in `src/landing/pages/index.astro`: use Section component with `id="faq"` and title "FAQ". Render 5–6 Accordion components with questions and answers covering: (a) cloud account requirements, (b) SMTP provider compatibility, (c) recap frequency, (d) Kindle model support, (e) data storage location, (f) excluding books/highlights. Content per spec.md US5 acceptance scenarios and FR-008-11.
+- [X] T031 [US5] Create `src/landing/components/Accordion.astro` with props: `question` (string), `answer` (string). Renders a `<details>` / `<summary>` element (native HTML accordion — no JS required). `<summary>` shows the question with a chevron indicator. The answer is the expandable content. Styled with Tailwind for spacing, borders, and dark/light mode. Accessible: keyboard-operable via native `<details>` behavior.
+- [X] T032 [US5] Implement FAQ section in `src/landing/pages/index.astro`: use Section component with `id="faq"` and title "FAQ". Render 5–6 Accordion components with questions and answers covering: (a) cloud account requirements, (b) SMTP provider compatibility, (c) recap frequency, (d) Kindle model support, (e) data storage location, (f) excluding books/highlights. Content per spec.md US5 acceptance scenarios and FR-008-11.
 
 ### Tests
 
-- [ ] T033 Create `src/landing/tests/faq.spec.ts`: test that 5–6 FAQ accordion items render with question text visible; test that clicking a collapsed FAQ item expands the answer; test that clicking an expanded FAQ item collapses the answer; test that FAQ content addresses the required topics (check for key terms: "SMTP", "Kindle", "data", "frequency" or similar)
-- [ ] T034 Run `cd src/landing && npx playwright test` — all tests must pass
+- [X] T033 Create `src/landing/tests/faq.spec.ts`: test that 5–6 FAQ accordion items render with question text visible; test that clicking a collapsed FAQ item expands the answer; test that clicking an expanded FAQ item collapses the answer; test that FAQ content addresses the required topics (check for key terms: "SMTP", "Kindle", "data", "frequency" or similar)
+- [X] T034 Run `cd src/landing && npx playwright test` — all tests must pass
 
 **Checkpoint**: FAQ accordion renders with 5–6 items that expand/collapse correctly. FAQ tests pass. All previous tests still pass.
 
@@ -136,14 +136,14 @@
 
 ### Implementation
 
-- [ ] T035 [US6] Implement Explore section in `src/landing/pages/index.astro`: use Section component with `id="explore"` and title "Explore". Render two Button components: "View on GitHub" (primary variant, `href` from `siteConfig.githubUrl`, `target="_blank" rel="noopener"`) and "Read the docs" (outline variant, `href` from `siteConfig.docsUrl`). Below the buttons, render an MIT license badge (text badge styled with Tailwind, not an image). Content per spec.md US6 acceptance scenarios.
-- [ ] T036 [US7] Accessibility hardening pass across all components: verify all images have descriptive `alt` attributes (FR-008-20); verify all interactive elements (buttons, accordion, theme toggle, links) have appropriate ARIA labels and are keyboard-reachable (FR-008-21); verify color contrast meets WCAG AA (FR-008-22) by reviewing CSS variable color values in `global.css`; add `role` and `aria-*` attributes where needed
+- [X] T035 [US6] Implement Explore section in `src/landing/pages/index.astro`: use Section component with `id="explore"` and title "Explore". Render two Button components: "View on GitHub" (primary variant, `href` from `siteConfig.githubUrl`, `target="_blank" rel="noopener"`) and "Read the docs" (outline variant, `href` from `siteConfig.docsUrl`). Below the buttons, render an MIT license badge (text badge styled with Tailwind, not an image). Content per spec.md US6 acceptance scenarios.
+- [X] T036 [US7] Accessibility hardening pass across all components: verify all images have descriptive `alt` attributes (FR-008-20); verify all interactive elements (buttons, accordion, theme toggle, links) have appropriate ARIA labels and are keyboard-reachable (FR-008-21); verify color contrast meets WCAG AA (FR-008-22) by reviewing CSS variable color values in `global.css`; add `role` and `aria-*` attributes where needed
 
 ### Tests
 
-- [ ] T037 [P] Add tests to `src/landing/tests/navigation.spec.ts`: test that the Explore section renders two buttons "View on GitHub" and "Read the docs"; test that "View on GitHub" links to the configured GitHub URL; test that the MIT license badge is visible
-- [ ] T038 [P] Create `src/landing/tests/accessibility.spec.ts`: run axe-core audit via `@axe-core/playwright` on the full page and assert no critical or serious violations; test keyboard navigation through all interactive elements (Tab through navbar logotype, GitHub link, theme toggle, Get started CTA, accordion items, Explore buttons); test that all `<img>` elements have non-empty `alt` attributes
-- [ ] T039 Run `cd src/landing && npx playwright test` — all tests must pass including the accessibility audit
+- [X] T037 [P] Add tests to `src/landing/tests/navigation.spec.ts`: test that the Explore section renders two buttons "View on GitHub" and "Read the docs"; test that "View on GitHub" links to the configured GitHub URL; test that the MIT license badge is visible
+- [X] T038 [P] Create `src/landing/tests/accessibility.spec.ts`: run axe-core audit via `@axe-core/playwright` on the full page and assert no critical or serious violations; test keyboard navigation through all interactive elements (Tab through navbar logotype, GitHub link, theme toggle, Get started CTA, accordion items, Explore buttons); test that all `<img>` elements have non-empty `alt` attributes
+- [X] T039 Run `cd src/landing && npx playwright test` — all tests must pass including the accessibility audit
 
 **Checkpoint**: Explore section with CTAs and MIT badge renders. Accessibility audit passes. All E2E tests pass across all test files.
 
@@ -153,9 +153,9 @@
 
 **Purpose**: Create a dedicated CI workflow for the landing page that builds, tests, and deploys to GitHub Pages
 
-- [ ] T040 Create `.github/workflows/landing-page.yml` with: trigger on push to `main` with path filter `src/landing/**`; trigger on pull requests with same path filter (build + test only, no deploy); Node.js 24 setup; `cd src/landing && npm ci`; `npm run build`; `npx playwright install --with-deps chromium && npx playwright test`; on push to `main`: upload `dist/` as Pages artifact via `actions/upload-pages-artifact@v4` and deploy via `actions/deploy-pages@v4`; set `permissions: pages: write, id-token: write` for OIDC deployment
-- [ ] T041 [P] Add `.github/workflows/landing-page.yml` concurrency group to prevent overlapping deployments: `concurrency: { group: "pages", cancel-in-progress: false }`
-- [ ] T042 Verify CI workflow syntax: run `cd /workspaces/sunny-sunday && cat .github/workflows/landing-page.yml | head -5` and validate YAML structure is correct
+- [X] T040 Create `.github/workflows/landing-page.yml` with: trigger on push to `main` with path filter `src/landing/**`; trigger on pull requests with same path filter (build + test only, no deploy); Node.js 24 setup; `cd src/landing && npm ci`; `npm run build`; `npx playwright install --with-deps chromium && npx playwright test`; on push to `main`: upload `dist/` as Pages artifact via `actions/upload-pages-artifact@v4` and deploy via `actions/deploy-pages@v4`; set `permissions: pages: write, id-token: write` for OIDC deployment
+- [X] T041 [P] Add `.github/workflows/landing-page.yml` concurrency group to prevent overlapping deployments: `concurrency: { group: "pages", cancel-in-progress: false }`
+- [X] T042 Verify CI workflow syntax: run `cd /workspaces/sunny-sunday && cat .github/workflows/landing-page.yml | head -5` and validate YAML structure is correct
 
 **Checkpoint**: CI pipeline created. Builds, tests, and deploys the landing page to GitHub Pages on push to main.
 
@@ -165,11 +165,11 @@
 
 **Purpose**: Final cleanup, documentation updates, and quickstart validation
 
-- [ ] T043 [P] Review all user-facing copy in `src/landing/pages/index.astro` against spec.md FR-008-17 (use "Relego" not "SunnySunday") and FR-008-18 (third person, short sentences, no forbidden words: "powerful", "seamless", "robust", "leverage", "unlock")
-- [ ] T044 [P] Verify Dockit template sections are removed per FR-008-24: no hero search bar, no "Powerful features" grid, no dark/light mode showcase section
-- [ ] T045 [P] Verify the page renders all static content without JavaScript enabled per FR-008-19 and SC-008-06: only theme toggle and accordion interactivity should degrade
-- [ ] T046 [P] Update `docs/ARCHITECTURE.md` to document the `src/landing/` component: its purpose (static marketing landing page), tech stack (Astro + Tailwind), deployment target (GitHub Pages), and separation from the .NET solution
-- [ ] T047 Run full validation: `cd src/landing && npm run build && npx playwright test` — all tests pass. Validate that `quickstart.md` instructions in `specs/008-landing-page/quickstart.md` match the implemented project (dev server command, build command, test command, file paths).
+- [X] T043 [P] Review all user-facing copy in `src/landing/pages/index.astro` against spec.md FR-008-17 (use "Relego" not "SunnySunday") and FR-008-18 (third person, short sentences, no forbidden words: "powerful", "seamless", "robust", "leverage", "unlock")
+- [X] T044 [P] Verify Dockit template sections are removed per FR-008-24: no hero search bar, no "Powerful features" grid, no dark/light mode showcase section
+- [X] T045 [P] Verify the page renders all static content without JavaScript enabled per FR-008-19 and SC-008-06: only theme toggle and accordion interactivity should degrade
+- [X] T046 [P] Update `docs/ARCHITECTURE.md` to document the `src/landing/` component: its purpose (static marketing landing page), tech stack (Astro + Tailwind), deployment target (GitHub Pages), and separation from the .NET solution
+- [X] T047 Run full validation: `cd src/landing && npm run build && npx playwright test` — all tests pass. Validate that `quickstart.md` instructions in `specs/008-landing-page/quickstart.md` match the implemented project (dev server command, build command, test command, file paths).
 
 ---
 

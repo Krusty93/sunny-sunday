@@ -1,0 +1,30 @@
+---
+interface Props {
+	question: string;
+	answer: string;
+}
+
+const { question, answer } = Astro.props;
+---
+
+<details class="group border-b border-[var(--color-border)]">
+	<summary class="flex cursor-pointer items-center justify-between gap-4 py-5 text-left text-[var(--color-text)] transition-colors hover:text-[var(--color-accent)]">
+		<span class="text-base font-medium">{question}</span>
+		<svg
+			aria-hidden="true"
+			class="h-5 w-5 shrink-0 text-[var(--color-text)]/40 transition-transform duration-200 group-open:rotate-180"
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
+			<polyline points="6 9 12 15 18 9" />
+		</svg>
+	</summary>
+	<div class="pb-5 text-sm leading-relaxed text-[var(--color-text)]/70">
+		{answer}
+	</div>
+</details>
