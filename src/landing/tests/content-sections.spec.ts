@@ -24,8 +24,8 @@ test.describe('Content Sections', () => {
 	test('section titles use dual-color pattern with accent text', async ({ page }) => {
 		const gsAccent = page.locator('#getting-started h2 span');
 		await expect(gsAccent).toContainText('in just 3 steps');
-		const wrAccent = page.locator('#why-relego h2 span');
-		await expect(wrAccent).toContainText('built for readers');
+		const wrTitle = page.locator('#why-relego h2');
+		await expect(wrTitle).toHaveText('Built for readers');
 	});
 
 	test('Getting Started renders 3 step tabs with correct titles', async ({ page }) => {
@@ -53,7 +53,7 @@ test.describe('Content Sections', () => {
 		const titles = section.locator('h3');
 		await expect(titles).toHaveCount(4);
 		await expect(titles.nth(0)).toHaveText('Built for e-ink');
-		await expect(titles.nth(1)).toHaveText('Free & self-hosted');
+		await expect(titles.nth(1)).toHaveText('Free, open-source & self-hosted');
 		await expect(titles.nth(2)).toHaveText('No lock-in');
 		await expect(titles.nth(3)).toHaveText('Privacy');
 	});

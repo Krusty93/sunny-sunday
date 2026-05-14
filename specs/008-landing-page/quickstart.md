@@ -26,9 +26,9 @@ src/landing/
 │   ├── Button.astro
 │   ├── FeatureCard.astro
 │   ├── Footer.astro
+│   ├── GettingStarted.astro
 │   ├── Navbar.astro
 │   ├── Section.astro
-│   ├── StepCard.astro
 │   └── ThemeToggle.astro
 ├── config/
 │   └── site.ts             # Site configuration (GitHub URL, etc.)
@@ -104,7 +104,7 @@ export const siteConfig = {
   name: "Relego",
   logotype: "relego.",
   tagline: "Periodic highlights recap, delivered to your Kindle. For free.",
-  githubUrl: "https://github.com/Krusty93/sunny-sunday",
+  githubUrl: "https://github.com/Krusty93/relego",
   docsUrl: "/docs",
   license: "MIT",
 } as const;
