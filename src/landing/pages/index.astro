@@ -47,7 +47,7 @@ const steps = [
 				sizes="100vw"
 			/>
 			<!-- Gradient overlay: solid bg on left → transparent on right -->
-			<div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--color-bg)] via-[var(--color-bg)] via-25% to-transparent to-65%"></div>
+			<div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--color-bg)] via-[var(--color-bg)] via-25% to-transparent to-65%"></div>
 			<!-- Text content on the left -->
 			<div class="relative z-10 mx-auto flex min-h-[80vh] max-w-6xl items-center px-6">
 				<div class="flex max-w-lg flex-col gap-6">
@@ -122,6 +122,26 @@ const steps = [
 					question="Can I exclude specific books or highlights?"
 					answer="Yes. The CLI supports excluding books by title and individual highlights by content. Excluded items are filtered out of future recaps but remain in your database."
 				/>
+			</div>
+		</Section>
+
+		<!-- Explore -->
+		<Section id="explore" title="Ready to" titleAccent="get started?">
+			<div class="flex flex-col items-center gap-6 text-center">
+				<p class="max-w-xl text-[var(--color-text)]/70">
+					Browse the source code, read the documentation, and start revisiting your highlights today.
+				</p>
+				<div class="flex flex-wrap justify-center gap-4">
+					<Button href={siteConfig.githubUrl} variant="primary" target="_blank" rel="noopener noreferrer">
+						View on GitHub
+					</Button>
+					<Button href={siteConfig.docsUrl} variant="outline">
+						Read the docs
+					</Button>
+				</div>
+				<span class="mt-2 inline-flex items-center rounded-full border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-text)]/60">
+					MIT License
+				</span>
 			</div>
 		</Section>
 	</main>

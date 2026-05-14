@@ -136,14 +136,14 @@
 
 ### Implementation
 
-- [ ] T035 [US6] Implement Explore section in `src/landing/pages/index.astro`: use Section component with `id="explore"` and title "Explore". Render two Button components: "View on GitHub" (primary variant, `href` from `siteConfig.githubUrl`, `target="_blank" rel="noopener"`) and "Read the docs" (outline variant, `href` from `siteConfig.docsUrl`). Below the buttons, render an MIT license badge (text badge styled with Tailwind, not an image). Content per spec.md US6 acceptance scenarios.
-- [ ] T036 [US7] Accessibility hardening pass across all components: verify all images have descriptive `alt` attributes (FR-008-20); verify all interactive elements (buttons, accordion, theme toggle, links) have appropriate ARIA labels and are keyboard-reachable (FR-008-21); verify color contrast meets WCAG AA (FR-008-22) by reviewing CSS variable color values in `global.css`; add `role` and `aria-*` attributes where needed
+- [X] T035 [US6] Implement Explore section in `src/landing/pages/index.astro`: use Section component with `id="explore"` and title "Explore". Render two Button components: "View on GitHub" (primary variant, `href` from `siteConfig.githubUrl`, `target="_blank" rel="noopener"`) and "Read the docs" (outline variant, `href` from `siteConfig.docsUrl`). Below the buttons, render an MIT license badge (text badge styled with Tailwind, not an image). Content per spec.md US6 acceptance scenarios.
+- [X] T036 [US7] Accessibility hardening pass across all components: verify all images have descriptive `alt` attributes (FR-008-20); verify all interactive elements (buttons, accordion, theme toggle, links) have appropriate ARIA labels and are keyboard-reachable (FR-008-21); verify color contrast meets WCAG AA (FR-008-22) by reviewing CSS variable color values in `global.css`; add `role` and `aria-*` attributes where needed
 
 ### Tests
 
-- [ ] T037 [P] Add tests to `src/landing/tests/navigation.spec.ts`: test that the Explore section renders two buttons "View on GitHub" and "Read the docs"; test that "View on GitHub" links to the configured GitHub URL; test that the MIT license badge is visible
-- [ ] T038 [P] Create `src/landing/tests/accessibility.spec.ts`: run axe-core audit via `@axe-core/playwright` on the full page and assert no critical or serious violations; test keyboard navigation through all interactive elements (Tab through navbar logotype, GitHub link, theme toggle, Get started CTA, accordion items, Explore buttons); test that all `<img>` elements have non-empty `alt` attributes
-- [ ] T039 Run `cd src/landing && npx playwright test` — all tests must pass including the accessibility audit
+- [X] T037 [P] Add tests to `src/landing/tests/navigation.spec.ts`: test that the Explore section renders two buttons "View on GitHub" and "Read the docs"; test that "View on GitHub" links to the configured GitHub URL; test that the MIT license badge is visible
+- [X] T038 [P] Create `src/landing/tests/accessibility.spec.ts`: run axe-core audit via `@axe-core/playwright` on the full page and assert no critical or serious violations; test keyboard navigation through all interactive elements (Tab through navbar logotype, GitHub link, theme toggle, Get started CTA, accordion items, Explore buttons); test that all `<img>` elements have non-empty `alt` attributes
+- [X] T039 Run `cd src/landing && npx playwright test` — all tests must pass including the accessibility audit
 
 **Checkpoint**: Explore section with CTAs and MIT badge renders. Accessibility audit passes. All E2E tests pass across all test files.
 

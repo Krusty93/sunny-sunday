@@ -15,7 +15,7 @@ const { steps } = Astro.props;
 
 <div class="flex flex-col gap-8 lg:flex-row lg:gap-16">
 	<!-- Steps list (left) -->
-	<div class="flex flex-col gap-2 lg:w-2/5">
+	<div class="flex flex-col gap-2 lg:w-2/5" role="tablist" aria-label="Getting started steps">
 		{steps.map((step, i) => (
 			<button
 				type="button"
@@ -25,6 +25,8 @@ const { steps } = Astro.props;
 					i === 0 ? 'bg-[var(--color-accent)]/10 ring-1 ring-[var(--color-accent)]/30' : 'hover:bg-[var(--color-accent)]/5',
 				]}
 				aria-selected={i === 0 ? 'true' : 'false'}
+				aria-controls={`step-panel-${i}`}
+				id={`step-tab-${i}`}
 				role="tab"
 			>
 				<span class:list={[
@@ -46,6 +48,8 @@ const { steps } = Astro.props;
 		{steps.map((step, i) => (
 			<div
 				data-step-panel={i}
+				id={`step-panel-${i}`}
+				aria-labelledby={`step-tab-${i}`}
 				class:list={[
 					'rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 transition-opacity duration-200',
 					i === 0 ? 'block' : 'hidden',
