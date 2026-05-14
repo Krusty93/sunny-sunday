@@ -46,4 +46,21 @@ test.describe('Navigation', () => {
 		const section = page.locator('#getting-started');
 		await expect(section).toBeInViewport({ timeout: 3000 });
 	});
+
+	test('Explore section renders "View on GitHub" and "Read the docs" buttons', async ({ page }) => {
+		const explore = page.locator('#explore');
+		await expect(explore.locator('a:has-text("View on GitHub")')).toBeVisible();
+		await expect(explore.locator('a:has-text("Read the docs")')).toBeVisible();
+	});
+
+	test('Explore "View on GitHub" links to the configured GitHub URL', async ({ page }) => {
+		const link = page.locator('#explore a:has-text("View on GitHub")');
+		await expect(link).toHaveAttribute('href', 'https://github.com/Krusty93/relego');
+		await expect(link).toHaveAttribute('target', '_blank');
+	});
+
+	test('Explore section shows MIT license badge', async ({ page }) => {
+		const badge = page.locator('#explore').getByText('MIT License');
+		await expect(badge).toBeVisible();
+	});
 });

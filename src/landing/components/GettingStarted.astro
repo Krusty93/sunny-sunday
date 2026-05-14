@@ -1,0 +1,104 @@
+---
+interface Step {
+	number: number;
+	title: string;
+	description: string;
+	content: string;
+}
+
+interface Props {
+	steps: Step[];
+}
+
+const { steps } = Astro.props;
+---
+
+<div class="flex flex-col gap-8 lg:flex-row lg:gap-16">
+	<!-- Steps list (left) -->
+	<div class="flex flex-col gap-2 lg:w-2/5" role="tablist" aria-label="Getting started steps">
+		{steps.map((step, i) => (
+			<button
+				type="button"
+				data-step-tab={i}
+				class:list={[
+					'group flex cursor-pointer items-start gap-4 rounded-xl p-4 text-left transition-all',
+					i === 0 ? 'bg-[var(--color-accent)]/10 ring-1 ring-[var(--color-accent)]/30' : 'hover:bg-[var(--color-accent)]/5',
+				]}
+				aria-selected={i === 0 ? 'true' : 'false'}
+				aria-controls={`step-panel-${i}`}
+				id={`step-tab-${i}`}
+				role="tab"
+			>
+				<span class:list={[
+					'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-semibold transition-colors',
+					i === 0 ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-border)] text-[var(--color-text)]/60 group-hover:bg-[var(--color-accent)]/20',
+				]}>
+					{step.number}
+				</span>
+				<div>
+					<h3 class="text-lg font-semibold text-[var(--color-text)]">{step.title}</h3>
+					<p class="mt-1 text-sm leading-relaxed text-[var(--color-text)]/60">{step.description}</p>
+				</div>
+			</button>
+		))}
+	</div>
+
+	<!-- Tab content panel (right) -->
+	<div class="relative lg:w-3/5">
+		{steps.map((step, i) => (
+			<div
+				data-step-panel={i}
+				id={`step-panel-${i}`}
+				aria-labelledby={`step-tab-${i}`}
+				class:list={[
+					'rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 transition-opacity duration-200',
+					i === 0 ? 'block' : 'hidden',
+				]}
+				role="tabpanel"
+			>
+				<div class="flex items-center gap-3 mb-6">
+					<span class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent)] text-sm font-semibold text-white">{step.number}</span>
+					<h4 class="text-xl font-semibold text-[var(--color-text)]">{step.title}</h4>
+				</div>
+				<div class="prose text-[var(--color-text)]/80 leading-relaxed whitespace-pre-line">{step.content}</div>
+			</div>
+		))}
+	</div>
+</div>
+
+<script>
+	const tabs = document.querySelectorAll<HTMLButtonElement>('[data-step-tab]');
+	const panels = document.querySelectorAll<HTMLElement>('[data-step-panel]');
+
+	tabs.forEach((tab) => {
+		tab.addEventListener('click', () => {
+			const idx = tab.dataset.stepTab;
+
+			// Reset all tabs
+			tabs.forEach((t) => {
+				t.classList.remove('bg-[var(--color-accent)]/10', 'ring-1', 'ring-[var(--color-accent)]/30');
+				t.setAttribute('aria-selected', 'false');
+				const circle = t.querySelector('span');
+				if (circle) {
+					circle.classList.remove('bg-[var(--color-accent)]', 'text-white');
+					circle.classList.add('bg-[var(--color-border)]', 'text-[var(--color-text)]/60');
+				}
+			});
+
+			// Activate clicked tab
+			tab.classList.add('bg-[var(--color-accent)]/10', 'ring-1', 'ring-[var(--color-accent)]/30');
+			tab.setAttribute('aria-selected', 'true');
+			const circle = tab.querySelector('span');
+			if (circle) {
+				circle.classList.remove('bg-[var(--color-border)]', 'text-[var(--color-text)]/60');
+				circle.classList.add('bg-[var(--color-accent)]', 'text-white');
+			}
+
+			// Show matching panel
+			panels.forEach((p) => {
+				p.classList.toggle('hidden', p.dataset.stepPanel !== idx);
+				p.classList.toggle('block', p.dataset.stepPanel === idx);
+			});
+		});
+	});
+</script>
