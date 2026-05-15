@@ -1,11 +1,6 @@
-name: Landing Page
+name: CI - Landing Page
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/landing/**'
-      - '.github/workflows/landing-page.yaml'
   pull_request:
     paths:
       - 'src/landing/**'
@@ -15,8 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: landing-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -51,33 +46,9 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: src/landing/test-results/
+          path: src/landing/playwright-report/
+          if-no-files-found: warn
           retention-days: 7
-
-      - name: Upload Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: src/landing/dist/
-
-  deploy:
-    name: Deploy to GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-and-test
-    runs-on: ubuntu-latest
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
