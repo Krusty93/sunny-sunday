@@ -6,7 +6,7 @@
 
 ## Entity Overview
 
-This feature introduces **parser-specific types** that live in `SunnySunday.Cli/Parsing/`. The parser is CLI-exclusive logic and does not need to be shared with the server.
+This feature introduces **parser-specific types** that live in `Relego.Cli/Parsing/`. The parser is CLI-exclusive logic and does not need to be shared with the server.
 
 ```
 ParseResult
@@ -91,7 +91,7 @@ Parse warnings for malformed entries are logged to the console (via `ILogger` / 
 
 ## Relationship to Existing Models
 
-The parser types are **separate from** the persistence models in `SunnySunday.Core/Models/`:
+The parser types are **separate from** the persistence models in `Relego.Core/Models/`:
 
 | Parser Type | Persistence Model | Mapping (future sync feature) |
 |-------------|-------------------|-------------------------------|
@@ -108,7 +108,7 @@ The sync feature (future) will be responsible for mapping `ParseResult` → pers
 ## File Layout
 
 ```
-src/SunnySunday.Core/
+src/Relego.Core/
 └── Parsing/
     ├── RawClipping.cs         # Internal intermediate type
     ├── ParsedHighlight.cs     # Public output type

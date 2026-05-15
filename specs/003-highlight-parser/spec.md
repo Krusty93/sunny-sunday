@@ -9,7 +9,7 @@
 
 ### User Story 1 — Parse Highlights from My Clippings.txt (Priority: P1)
 
-A Kindle user connects their device via USB and runs the `sunny sync` command, pointing it at the `My Clippings.txt` file. The system reads the file, parses each clipping entry, and extracts structured highlight data including the book title, author, and highlight text. The user sees a summary of how many highlights were successfully parsed.
+A Kindle user connects their device via USB and runs the `relego sync` command, pointing it at the `My Clippings.txt` file. The system reads the file, parses each clipping entry, and extracts structured highlight data including the book title, author, and highlight text. The user sees a summary of how many highlights were successfully parsed.
 
 **Why this priority**: This is the foundational capability. Without parsing, no other feature (deduplication, grouping, sync) can function. It directly addresses PRD FR-01.
 

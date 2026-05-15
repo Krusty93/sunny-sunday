@@ -18,9 +18,9 @@ Relevant files:
 
 | Component | File                                               |
 |-----------|----------------------------------------------------|
-| `core`    | `src/SunnySunday.Core/SunnySunday.Core.csproj`     |
-| `cli`     | `src/SunnySunday.Cli/SunnySunday.Cli.csproj`       |
-| `server`  | `src/SunnySunday.Server/SunnySunday.Server.csproj` |
+| `core`    | `src/Relego.Core/Relego.Core.csproj`     |
+| `cli`     | `src/Relego.Cli/Relego.Cli.csproj`       |
+| `server`  | `src/Relego.Server/Relego.Server.csproj` |
 
 Decide the bump level yourself (patch / minor / major) — no commit message format is required.
 Bump the version whenever you modify a component, even if the change is not user-facing (e.g. refactor, bug fix, internal API change) — this ensures accurate version tracking and release notes.
@@ -28,7 +28,7 @@ Bump the version whenever you modify a component, even if the change is not user
 ### 2. Commit and open a PR
 
 ```bash
-git add src/SunnySunday.Cli/SunnySunday.Cli.csproj
+git add src/Relego.Cli/Relego.Cli.csproj
 git commit -m "your commit message"
 git push origin feature/your-branch
 ```
@@ -58,8 +58,8 @@ server/v2.0.0
 ## Adding a new component
 
 1. Create `src/<Name>/<Name>.csproj` with `<Version>0.1.0</Version>`
-2. Add `dotnet sln src/SunnySunday.slnx add src/<Name>/<Name>.csproj`
-3. Ensure the project folder and `.csproj` file use the `SunnySunday.<Component>` naming pattern so the workflow discovery action derives the correct component tag name
+2. Add `dotnet sln src/Relego.slnx add src/<Name>/<Name>.csproj`
+3. Ensure the project folder and `.csproj` file use the `Relego.<Component>` naming pattern so the workflow discovery action derives the correct component tag name
 4. Ensure the `.csproj` declares an explicit `<Version>` value; projects without `<Version>` are ignored by the release automation
 5. If the component should be publish a GitHub Release page, update triggers in `.github/workflows/release.yaml` to include it
 6. Create the deployment workflow for the specific component, following the triggers in `deploy-server.yml`

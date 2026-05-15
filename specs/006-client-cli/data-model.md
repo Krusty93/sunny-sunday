@@ -10,7 +10,7 @@
 
 The CLI is stateless — it stores no data locally. All domain data lives on the server (SQLite). The CLI's "data model" consists of:
 1. Command tree structure and settings classes (Spectre.Console.Cli)
-2. The typed HTTP client wrapping server API contracts (already defined in `SunnySunday.Core/Contracts/`)
+2. The typed HTTP client wrapping server API contracts (already defined in `Relego.Core/Contracts/`)
 3. Infrastructure components (Kindle detection, DI bridge, retry pipeline)
 
 ---
@@ -20,7 +20,7 @@ The CLI is stateless — it stores no data locally. All domain data lives on the
 ### Command Hierarchy
 
 ```text
-sunny (root)
+relego (root)
 ├── sync [path]                    → SyncCommand
 ├── status                         → StatusCommand
 ├── config (branch)
@@ -102,7 +102,7 @@ public class Settings : CommandSettings
 
 ### SunnyHttpClient
 
-Typed HTTP client wrapping all server REST API calls. Registered via `IHttpClientFactory` with base address from `SUNNY_SERVER`.
+Typed HTTP client wrapping all server REST API calls. Registered via `IHttpClientFactory` with base address from `RELEGO_SERVER`.
 
 ```csharp
 public class SunnyHttpClient
@@ -223,7 +223,7 @@ public static class HttpClientResilienceExtensions
 
 ---
 
-## Shared Contracts (from SunnySunday.Core)
+## Shared Contracts (from Relego.Core)
 
 The CLI uses the following existing DTOs without modification:
 
@@ -238,18 +238,18 @@ The CLI uses the following existing DTOs without modification:
 | `SetWeightRequest` | PUT /highlights/{id}/weight body |
 | `WeightedHighlightDto` | GET /highlights/weights response items |
 
-No changes to `SunnySunday.Core` are required for this feature.
+No changes to `Relego.Core` are required for this feature.
 
 ---
 
 ## Data Flow: Sync Command
 
 ```
-User runs: sunny sync /path/to/My Clippings.txt
+User runs: relego sync /path/to/My Clippings.txt
     │
     ▼
 ┌─────────────────────┐
-│ ClippingsParser      │  (existing, in SunnySunday.Cli/Parsing/)
+│ ClippingsParser      │  (existing, in Relego.Cli/Parsing/)
 │ ParseAsync(path)     │
 └──────────┬──────────┘
            │ ParseResult { Books[], TotalEntries, DuplicatesRemoved }
@@ -283,4 +283,4 @@ User runs: sunny sync /path/to/My Clippings.txt
 | `config count` | count | Integer 1–15 | "Count must be between 1 and 15" |
 | `weight set` | weight | Integer 1–5 | "Weight must be between 1 and 5" |
 | `exclude` | type | Must be "highlight", "book", or "author" | "Invalid type. Use 'highlight', 'book', or 'author'" |
-| startup | SUNNY_SERVER | Valid absolute HTTP(S) URI | "SUNNY_SERVER must be set to a valid URL (e.g., http://localhost:5000)" |
+| startup | RELEGO_SERVER | Valid absolute HTTP(S) URI | "RELEGO_SERVER must be set to a valid URL (e.g., http://localhost:5000)" |

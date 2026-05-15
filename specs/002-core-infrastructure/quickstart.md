@@ -31,17 +31,17 @@ Expected output: all tests pass (zero tests exist at this stage, but the project
 The server requires a writable `/data/` directory. For local development, use a `.data/` folder in the repo root (already in `.gitignore`):
 
 ```bash
-dotnet run --project src/SunnySunday.Server
+dotnet run --project src/Relego.Server
 ```
 
 On first run the server will:
 1. Create `.data/logs/` if it does not exist, then start Serilog
-2. Create `.data/sunny.db` with all 7 schema tables (errors logged if this fails)
+2. Create `.data/relego.db` with all 7 schema tables (errors logged if this fails)
 3. Start an HTTP listener (port TBD — configured in feature 004)
 
 Verify the schema:
 ```bash
-sqlite3 .data/sunny.db .tables
+sqlite3 .data/relego.db .tables
 # Expected: authors  books  excluded_authors  excluded_books  highlights  settings  users
 ```
 
@@ -49,20 +49,20 @@ sqlite3 .data/sunny.db .tables
 
 ```bash
 # File sink
-tail -f .data/logs/sunny-$(date +%Y%m%d).log
+tail -f .data/logs/relego-$(date +%Y%m%d).log
 
 # SQLite sink
-sqlite3 .data/sunny.db "SELECT Timestamp, Level, RenderedMessage FROM Logs ORDER BY Timestamp DESC LIMIT 10;"
+sqlite3 .data/relego.db "SELECT Timestamp, Level, RenderedMessage FROM Logs ORDER BY Timestamp DESC LIMIT 10;"
 ```
 
 ## 5. Project structure at a glance
 
 | Project | SDK | Purpose |
 |---------|-----|---------|
-| `SunnySunday.Core` | `Microsoft.NET.Sdk` (class library) | Domain models — shared by all projects |
-| `SunnySunday.Server` | `Microsoft.NET.Sdk.Web` | HTTP server — schema bootstrap, Serilog, future REST API |
-| `SunnySunday.Cli` | `Microsoft.NET.Sdk` (console) | Client binary — no commands yet |
-| `SunnySunday.Tests` | `Microsoft.NET.Sdk` (xUnit) | Tests — references all three above |
+| `Relego.Core` | `Microsoft.NET.Sdk` (class library) | Domain models — shared by all projects |
+| `Relego.Server` | `Microsoft.NET.Sdk.Web` | HTTP server — schema bootstrap, Serilog, future REST API |
+| `Relego.Cli` | `Microsoft.NET.Sdk` (console) | Client binary — no commands yet |
+| `Relego.Tests` | `Microsoft.NET.Sdk` (xUnit) | Tests — references all three above |
 
 ## Notes for implementers
 

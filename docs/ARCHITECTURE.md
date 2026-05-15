@@ -1,4 +1,4 @@
-# Architecture — Sunny Sunday
+# Architecture — Relego
 
 **Version:** 0.1 — Draft
 **Date:** 2026-03-31
@@ -8,12 +8,12 @@
 
 ## System Overview
 
-Sunny Sunday follows a client/server architecture with two independently deployable components.
+Relego follows a client/server architecture with two independently deployable components.
 
 ```
 User Laptop                              Home Server / NAS / Pi
 -----------                              ----------------------
-sunny CLI  ── REST HTTP ──────────────▶  sunny-server (Docker)
+relego CLI  ── REST HTTP ──────────────▶  relego-server (Docker)
     │                                       ├── Scheduler (Quartz.NET)
     │ USB                                   ├── SMTP sender (MailKit)
     ▼                                       └── SQLite (Docker volume)
@@ -30,11 +30,11 @@ Kindle / My Clippings.txt                              │
 
 ## Components
 
-### Client CLI (`sunny`)
+### Client CLI (`relego`)
 
 - Distributed as a self-contained binary (macOS/Linux/Windows) or runnable via Docker
-- Optional Docker image for no-install usage: `ghcr.io/krusty93/sunnysunday.cli`
-- Connects to the server via `SUNNY_SERVER` environment variable (no authentication — local network trusted)
+- Optional Docker image for no-install usage: `ghcr.io/krusty93/relego.cli`
+- Connects to the server via `RELEGO_SERVER` environment variable (no authentication — local network trusted)
 - Responsibilities:
   - Parse and sync highlights from `My Clippings.txt` to the server
   - Manage user settings via CLI commands (schedule, count, weights, exclusions)
@@ -54,16 +54,16 @@ Responsible for transforming raw Kindle export text into structured data before 
   - Notes as highlights: entries of type "Note" are emitted as highlights with `[my note] ` prefix on their text
   - Bookmarks: entries of type "Bookmark" are silently dropped
 
-#### TUI subsystem (`SunnySunday.Cli/Tui/`)
+#### TUI subsystem (`Relego.Cli/Tui/`)
 
-When invoked with no arguments in an interactive terminal (`sunny`), the client enters **TUI mode** — a full-screen terminal UI powered by [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui) (v2).
+When invoked with no arguments in an interactive terminal (`relego`), the client enters **TUI mode** — a full-screen terminal UI powered by [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui) (v2).
 
-**Dual-mode launch** (`Program.cs`): if `args.Length == 0 && !Console.IsInputRedirected`, `TuiApp.RunAsync()` is called; otherwise the Spectre.Console `CommandApp` handles the sub-command (e.g. `sunny sync`).
+**Dual-mode launch** (`Program.cs`): if `args.Length == 0 && !Console.IsInputRedirected`, `TuiApp.RunAsync()` is called; otherwise the Spectre.Console `CommandApp` handles the sub-command (e.g. `relego sync`).
 
-### Server (`sunny-server`)
+### Server (`relego-server`)
 
 - Distributed as a Docker container
-- Published to GHCR as `ghcr.io/krusty93/sunnysunday.server`
+- Published to GHCR as `ghcr.io/krusty93/relego.server`
 - Always-on, handles all automated operations
 - Responsibilities:
   - Store highlights, recap history, weights, exclusions, settings in SQLite
@@ -72,14 +72,14 @@ When invoked with no arguments in an interactive terminal (`sunny`), the client 
   - Compose recap document and send via SMTP to Kindle email address
   - Expose REST HTTP API consumed by the client CLI
 
-#### REST API layer (`SunnySunday.Server/`)
+#### REST API layer (`Relego.Server/`)
 
 The server currently exposes the MVP storage API as ASP.NET Minimal APIs.
 
 - Composition root: `Program.cs`
 - Endpoint modules: `Endpoints/`
 - Data access: `Data/`
-- Shared request/response contracts: `SunnySunday.Core/Contracts/`
+- Shared request/response contracts: `Relego.Core/Contracts/`
 - OpenAPI: Swagger UI is enabled only in Development
 
 The application registers a scoped `IDbConnection` backed by `Microsoft.Data.Sqlite`, opens the connection per request, enables SQLite foreign keys via `PRAGMA foreign_keys = ON`, and resolves thin repository classes over that connection.
@@ -204,31 +204,31 @@ The API returns JSON-only responses.
 - Validation failures use `Results.ValidationProblem(...)` and return HTTP `422`
 - Missing entities use `Results.Problem(...)` and return HTTP `404`
 - Successful mutations that do not need a body return HTTP `204`
-- Successful reads return HTTP `200` with DTO payloads from `SunnySunday.Core/Contracts/`
+- Successful reads return HTTP `200` with DTO payloads from `Relego.Core/Contracts/`
 
 This keeps the client protocol small, explicit, and aligned with the quickstart `curl` flows.
 
 ## Project structure
 
 ```
-src/SunnySunday.Core/
+src/Relego.Core/
 └── Contracts/          # Shared request/response DTOs for CLI and server
 
-src/SunnySunday.Cli/
+src/Relego.Cli/
 ├── Commands/           # Spectre.Console CLI sub-commands (sync, status, config, …)
 ├── Infrastructure/     # HTTP client, resilience, Kindle detector
 ├── Parsing/            # My Clippings.txt parser
 ├── Tui/                # Terminal.Gui TUI (TuiApp, screens, StatusChrome, …)
 └── Program.cs          # Dual-mode entry point (TUI or CLI)
 
-src/SunnySunday.Server/
+src/Relego.Server/
 ├── Data/               # Dapper repositories over SQLite
 ├── Endpoints/          # Minimal API endpoint modules
 ├── Infrastructure/     # Database bootstrap and logging
 ├── Models/             # Server-side domain models
 └── Program.cs          # Composition root and DI wiring
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 ├── Api/                # End-to-end HTTP integration tests via WebApplicationFactory
 ├── Cli/                # CLI command tests
 ├── Infrastructure/     # Database/bootstrap tests

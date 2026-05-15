@@ -1,4 +1,4 @@
-# Product Requirements Document — Sunny Sunday
+# Product Requirements Document — Relego
 
 **Version:** 0.2 — Draft
 **Date:** 2026-03-30
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Sunny Sunday is a self-hosted, open source CLI tool that parses Kindle highlights from `My Clippings.txt` and delivers periodic recap documents directly to a Kindle device via Amazon's Send-to-Kindle email service.
+Relego is a self-hosted, open source CLI tool that parses Kindle highlights from `My Clippings.txt` and delivers periodic recap documents directly to a Kindle device via Amazon's Send-to-Kindle email service.
 
 ---
 

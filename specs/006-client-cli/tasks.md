@@ -19,13 +19,13 @@
 
 **Purpose**: Add NuGet packages, implement the DI/host bootstrap, typed HTTP client with Polly retry, and the Spectre.Console DI bridge.
 
-- [X] T001 Update `src/SunnySunday.Cli/SunnySunday.Cli.csproj` to add package references for `Spectre.Console.Cli` (0.55.0), `Microsoft.Extensions.Http` (10.0.6), `Microsoft.Extensions.DependencyInjection` (10.0.6); add `RichardSzalay.MockHttp` (7.0.0) to `src/SunnySunday.Tests/SunnySunday.Tests.csproj`; verify the solution builds from `src/SunnySunday.slnx`.
-- [X] T002 [P] Create `src/SunnySunday.Cli/Infrastructure/TypeRegistrar.cs` implementing `ITypeRegistrar` and `ITypeResolver` bridging Spectre.Console.Cli to `Microsoft.Extensions.DependencyInjection.IServiceProvider`.
-- [X] T003 [P] Create `src/SunnySunday.Cli/Infrastructure/SunnyHttpClient.cs` as a typed HTTP client with methods: `PostSyncAsync`, `GetSettingsAsync`, `PutSettingsAsync`, `GetStatusAsync`, `PostExcludeAsync`, `DeleteExcludeAsync`, `GetExclusionsAsync`, `PutWeightAsync`, `GetWeightsAsync`; uses `System.Net.Http.Json` and contracts from `SunnySunday.Core`.
-- [X] T004 [P] Create `src/SunnySunday.Cli/Infrastructure/HttpClientResilienceExtensions.cs` with a Polly retry pipeline: handle `HttpRequestException`, retry on 408/429/5xx, max 3 attempts, exponential backoff (1s, 2s, 4s).
-- [X] T005 Rewrite `src/SunnySunday.Cli/Program.cs` to validate `SUNNY_SERVER` env var, build `IServiceCollection` with typed `SunnyHttpClient` and Polly resilience, create `TypeRegistrar`, and run `CommandApp` with the command tree.
+- [X] T001 Update `src/Relego.Cli/Relego.Cli.csproj` to add package references for `Spectre.Console.Cli` (0.55.0), `Microsoft.Extensions.Http` (10.0.6), `Microsoft.Extensions.DependencyInjection` (10.0.6); add `RichardSzalay.MockHttp` (7.0.0) to `src/Relego.Tests/Relego.Tests.csproj`; verify the solution builds from `src/Relego.slnx`.
+- [X] T002 [P] Create `src/Relego.Cli/Infrastructure/TypeRegistrar.cs` implementing `ITypeRegistrar` and `ITypeResolver` bridging Spectre.Console.Cli to `Microsoft.Extensions.DependencyInjection.IServiceProvider`.
+- [X] T003 [P] Create `src/Relego.Cli/Infrastructure/SunnyHttpClient.cs` as a typed HTTP client with methods: `PostSyncAsync`, `GetSettingsAsync`, `PutSettingsAsync`, `GetStatusAsync`, `PostExcludeAsync`, `DeleteExcludeAsync`, `GetExclusionsAsync`, `PutWeightAsync`, `GetWeightsAsync`; uses `System.Net.Http.Json` and contracts from `Relego.Core`.
+- [X] T004 [P] Create `src/Relego.Cli/Infrastructure/HttpClientResilienceExtensions.cs` with a Polly retry pipeline: handle `HttpRequestException`, retry on 408/429/5xx, max 3 attempts, exponential backoff (1s, 2s, 4s).
+- [X] T005 Rewrite `src/Relego.Cli/Program.cs` to validate `RELEGO_SERVER` env var, build `IServiceCollection` with typed `SunnyHttpClient` and Polly resilience, create `TypeRegistrar`, and run `CommandApp` with the command tree.
 
-**Checkpoint**: CLI starts, validates `SUNNY_SERVER`, and exits with `--help`. `dotnet build src/SunnySunday.slnx` passes.
+**Checkpoint**: CLI starts, validates `RELEGO_SERVER`, and exits with `--help`. `dotnet build src/Relego.slnx` passes.
 
 ---
 
@@ -35,8 +35,8 @@
 
 **⚠️ CRITICAL**: No user story work should start until this phase is complete.
 
-- [X] T006 Create `src/SunnySunday.Cli/Infrastructure/KindleDetector.cs` with static `DetectClippingsPath()` probing macOS (`/Volumes/Kindle/`), Linux (`/media/*/Kindle/`, `/run/media/*/Kindle/`), and Windows (drives D–G) for `documents/My Clippings.txt`.
-- [X] T007 [P] Create `src/SunnySunday.Tests/Cli/KindleDetectorTests.cs` verifying the detector returns null when no Kindle paths exist and returns a valid path when a temp directory matches the expected layout.
+- [X] T006 Create `src/Relego.Cli/Infrastructure/KindleDetector.cs` with static `DetectClippingsPath()` probing macOS (`/Volumes/Kindle/`), Linux (`/media/*/Kindle/`, `/run/media/*/Kindle/`), and Windows (drives D–G) for `documents/My Clippings.txt`.
+- [X] T007 [P] Create `src/Relego.Tests/Cli/KindleDetectorTests.cs` verifying the detector returns null when no Kindle paths exist and returns a valid path when a temp directory matches the expected layout.
 
 **Checkpoint**: Foundation ready — user story implementation can now begin in parallel.
 
@@ -44,74 +44,74 @@
 
 ## Phase 3: User Story 1 - Sync Highlights to Server (Priority: P1) 🎯 MVP
 
-**Goal**: Parse a Kindle clippings file and upload all highlights to the server in a single `sunny sync` command.
+**Goal**: Parse a Kindle clippings file and upload all highlights to the server in a single `relego sync` command.
 
-**Independent Test**: Run `sunny sync /path/to/My Clippings.txt` against a mock server and verify highlights are posted and a summary is displayed.
+**Independent Test**: Run `relego sync /path/to/My Clippings.txt` against a mock server and verify highlights are posted and a summary is displayed.
 
 ### Tests for User Story 1
 
-- [X] T008 [P] [US1] Create `src/SunnySunday.Tests/Cli/SyncCommandTests.cs` covering: successful sync displays summary, server unreachable returns exit code 1 with server URL in error, file not found returns exit code 1, empty file displays "No highlights found".
+- [X] T008 [P] [US1] Create `src/Relego.Tests/Cli/SyncCommandTests.cs` covering: successful sync displays summary, server unreachable returns exit code 1 with server URL in error, file not found returns exit code 1, empty file displays "No highlights found".
 
 ### Implementation for User Story 1
 
-- [X] T009 [US1] Create `src/SunnySunday.Cli/Commands/SyncCommand.cs` as `AsyncCommand<SyncCommand.Settings>`: resolve path (argument → KindleDetector → Spectre prompt), parse via `ClippingsParser`, map to `SyncRequest`, call `PostSyncAsync`, display rich summary panel.
-- [X] T010 [US1] Register `SyncCommand` in the command tree in `src/SunnySunday.Cli/Program.cs`.
+- [X] T009 [US1] Create `src/Relego.Cli/Commands/SyncCommand.cs` as `AsyncCommand<SyncCommand.Settings>`: resolve path (argument → KindleDetector → Spectre prompt), parse via `ClippingsParser`, map to `SyncRequest`, call `PostSyncAsync`, display rich summary panel.
+- [X] T010 [US1] Register `SyncCommand` in the command tree in `src/Relego.Cli/Program.cs`.
 
-**Checkpoint**: `sunny sync /path/to/file` works end-to-end against a mock server. Tests pass.
+**Checkpoint**: `relego sync /path/to/file` works end-to-end against a mock server. Tests pass.
 
 ---
 
 ## Phase 4: User Story 8 - Server URL Configuration (Priority: P1)
 
-**Goal**: The CLI resolves the server URL from `SUNNY_SERVER` on every invocation and fails fast with actionable errors if missing or malformed.
+**Goal**: The CLI resolves the server URL from `RELEGO_SERVER` on every invocation and fails fast with actionable errors if missing or malformed.
 
-**Independent Test**: Unset `SUNNY_SERVER` and verify any command exits with a clear error; set a malformed URL and verify a validation error.
+**Independent Test**: Unset `RELEGO_SERVER` and verify any command exits with a clear error; set a malformed URL and verify a validation error.
 
 ### Tests for User Story 8
 
-- [X] T011 [P] [US8] Create `src/SunnySunday.Tests/Cli/ServerUrlValidationTests.cs` covering: missing env var exits with actionable error, malformed URL exits with validation error, valid URL allows command execution.
+- [X] T011 [P] [US8] Create `src/Relego.Tests/Cli/ServerUrlValidationTests.cs` covering: missing env var exits with actionable error, malformed URL exits with validation error, valid URL allows command execution.
 
 ### Implementation for User Story 8
 
-- [X] T012 [US8] Verify `src/SunnySunday.Cli/Program.cs` validation logic: missing `SUNNY_SERVER` → Spectre error markup + exit 1; malformed URI (not absolute, not HTTP/HTTPS) → validation error + exit 1. (Logic implemented in T005; this task adds edge-case handling and test coverage.)
+- [X] T012 [US8] Verify `src/Relego.Cli/Program.cs` validation logic: missing `RELEGO_SERVER` → Spectre error markup + exit 1; malformed URI (not absolute, not HTTP/HTTPS) → validation error + exit 1. (Logic implemented in T005; this task adds edge-case handling and test coverage.)
 
-**Checkpoint**: Server URL validation is robust and tested. No command executes without a valid `SUNNY_SERVER`.
+**Checkpoint**: Server URL validation is robust and tested. No command executes without a valid `RELEGO_SERVER`.
 
 ---
 
 ## Phase 5: User Story 7 - View Server Status (Priority: P2)
 
-**Goal**: Display server health, totals, last sync, next recap, and version with `sunny status`.
+**Goal**: Display server health, totals, last sync, next recap, and version with `relego status`.
 
-**Independent Test**: Run `sunny status` against a mock server and verify the table contains expected values with local-time conversion.
+**Independent Test**: Run `relego status` against a mock server and verify the table contains expected values with local-time conversion.
 
 ### Tests for User Story 7
 
-- [X] T013 [P] [US7] Create `src/SunnySunday.Tests/Cli/StatusCommandTests.cs` covering: normal response displays table, server unreachable shows error with URL, UTC timestamps are converted to local time.
+- [X] T013 [P] [US7] Create `src/Relego.Tests/Cli/StatusCommandTests.cs` covering: normal response displays table, server unreachable shows error with URL, UTC timestamps are converted to local time.
 
 ### Implementation for User Story 7
 
-- [X] T014 [US7] Create `src/SunnySunday.Cli/Commands/StatusCommand.cs` as `AsyncCommand`: call `GetStatusAsync`, build Spectre `Table` with Total Highlights, Total Books, Total Authors, Excluded counts, Next Recap (local time), Last Recap Status, Last Recap Error.
-- [X] T015 [US7] Register `StatusCommand` in the command tree in `src/SunnySunday.Cli/Program.cs`.
+- [X] T014 [US7] Create `src/Relego.Cli/Commands/StatusCommand.cs` as `AsyncCommand`: call `GetStatusAsync`, build Spectre `Table` with Total Highlights, Total Books, Total Authors, Excluded counts, Next Recap (local time), Last Recap Status, Last Recap Error.
+- [X] T015 [US7] Register `StatusCommand` in the command tree in `src/Relego.Cli/Program.cs`.
 
-**Checkpoint**: `sunny status` displays server state. Tests pass.
+**Checkpoint**: `relego status` displays server state. Tests pass.
 
 ---
 
 ## Phase 6: User Story 2 - Configure Schedule (Priority: P1)
 
-**Goal**: Configure when recap emails are delivered using `sunny config schedule`.
+**Goal**: Configure when recap emails are delivered using `relego config schedule`.
 
-**Independent Test**: Run `sunny config schedule daily 08:00` against a mock server and verify the PUT payload includes cadence, time, and local timezone.
+**Independent Test**: Run `relego config schedule daily 08:00` against a mock server and verify the PUT payload includes cadence, time, and local timezone.
 
 ### Tests for User Story 2
 
-- [X] T016 [P] [US2] Add schedule tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config schedule daily 08:00` sends correct PUT with timezone, `config schedule daily 25:00` triggers validation error without HTTP call, `config schedule show` fetches and displays current schedule.
+- [X] T016 [P] [US2] Add schedule tests to `src/Relego.Tests/Cli/ConfigCommandTests.cs` covering: `config schedule daily 08:00` sends correct PUT with timezone, `config schedule daily 25:00` triggers validation error without HTTP call, `config schedule show` fetches and displays current schedule.
 
 ### Implementation for User Story 2
 
-- [X] T017 [US2] Create `src/SunnySunday.Cli/Commands/Config/ConfigScheduleCommand.cs` as `AsyncCommand<Settings>`: validate time format (HH:mm regex), validate cadence (daily/weekly), handle "show" subpath, send `PUT /settings` with `Schedule`, `DeliveryTime`, `Timezone = TimeZoneInfo.Local.Id`, display confirmation.
-- [X] T018 [US2] Register the `config` branch with `schedule` subcommand in `src/SunnySunday.Cli/Program.cs`.
+- [X] T017 [US2] Create `src/Relego.Cli/Commands/Config/ConfigScheduleCommand.cs` as `AsyncCommand<Settings>`: validate time format (HH:mm regex), validate cadence (daily/weekly), handle "show" subpath, send `PUT /settings` with `Schedule`, `DeliveryTime`, `Timezone = TimeZoneInfo.Local.Id`, display confirmation.
+- [X] T018 [US2] Register the `config` branch with `schedule` subcommand in `src/Relego.Cli/Program.cs`.
 
 **Checkpoint**: Schedule configuration works with local timezone propagation. Tests pass.
 
@@ -119,18 +119,18 @@
 
 ## Phase 7: User Story 3 - Configure Highlight Count (Priority: P2)
 
-**Goal**: Configure the number of highlights per recap with `sunny config count`.
+**Goal**: Configure the number of highlights per recap with `relego config count`.
 
-**Independent Test**: Run `sunny config count 10` against a mock server and verify the PUT payload.
+**Independent Test**: Run `relego config count 10` against a mock server and verify the PUT payload.
 
 ### Tests for User Story 3
 
-- [X] T019 [P] [US3] Add count tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config count 10` sends correct PUT, `config count 0` triggers validation error, `config count 20` triggers validation error, `config count show` fetches current count.
+- [X] T019 [P] [US3] Add count tests to `src/Relego.Tests/Cli/ConfigCommandTests.cs` covering: `config count 10` sends correct PUT, `config count 0` triggers validation error, `config count 20` triggers validation error, `config count show` fetches current count.
 
 ### Implementation for User Story 3
 
-- [X] T020 [US3] Create `src/SunnySunday.Cli/Commands/Config/ConfigCountCommand.cs` as `AsyncCommand<Settings>`: validate count is integer 1–15, handle "show" subpath, send `PUT /settings` with `Count`, display confirmation.
-- [X] T021 [US3] Register `count` subcommand under the `config` branch in `src/SunnySunday.Cli/Program.cs`.
+- [X] T020 [US3] Create `src/Relego.Cli/Commands/Config/ConfigCountCommand.cs` as `AsyncCommand<Settings>`: validate count is integer 1–15, handle "show" subpath, send `PUT /settings` with `Count`, display confirmation.
+- [X] T021 [US3] Register `count` subcommand under the `config` branch in `src/Relego.Cli/Program.cs`.
 
 **Checkpoint**: Count configuration works with range validation. Tests pass.
 
@@ -138,39 +138,39 @@
 
 ## Phase 8: User Story 4 - View All Settings (Priority: P2)
 
-**Goal**: Display all current configuration in one place using `sunny config show`.
+**Goal**: Display all current configuration in one place using `relego config show`.
 
-**Independent Test**: Run `sunny config show` against a mock server and verify a table with schedule, count, and Kindle email is displayed.
+**Independent Test**: Run `relego config show` against a mock server and verify a table with schedule, count, and Kindle email is displayed.
 
 ### Tests for User Story 4
 
-- [X] T022 [P] [US4] Add config show tests to `src/SunnySunday.Tests/Cli/ConfigCommandTests.cs` covering: `config show` displays all settings from mock response, UTC times are converted to local.
+- [X] T022 [P] [US4] Add config show tests to `src/Relego.Tests/Cli/ConfigCommandTests.cs` covering: `config show` displays all settings from mock response, UTC times are converted to local.
 
 ### Implementation for User Story 4
 
-- [X] T023 [US4] Create `src/SunnySunday.Cli/Commands/Config/ConfigShowCommand.cs` as `AsyncCommand`: call `GetSettingsAsync`, display table with Schedule, Delivery Day (if weekly), Delivery Time (local), Count, Kindle Email, Timezone.
-- [X] T024 [US4] Register `show` subcommand under the `config` branch in `src/SunnySunday.Cli/Program.cs`.
+- [X] T023 [US4] Create `src/Relego.Cli/Commands/Config/ConfigShowCommand.cs` as `AsyncCommand`: call `GetSettingsAsync`, display table with Schedule, Delivery Day (if weekly), Delivery Time (local), Count, Kindle Email, Timezone.
+- [X] T024 [US4] Register `show` subcommand under the `config` branch in `src/Relego.Cli/Program.cs`.
 
-**Checkpoint**: `sunny config show` displays all settings. Tests pass.
+**Checkpoint**: `relego config show` displays all settings. Tests pass.
 
 ---
 
 ## Phase 9: User Story 5 - Manage Exclusions (Priority: P2)
 
-**Goal**: Exclude highlights, books, or authors from future recaps via `sunny exclude`.
+**Goal**: Exclude highlights, books, or authors from future recaps via `relego exclude`.
 
-**Independent Test**: Run `sunny exclude highlight 5` and `sunny exclude list` against a mock server; verify POST is sent and grouped table is displayed.
+**Independent Test**: Run `relego exclude highlight 5` and `relego exclude list` against a mock server; verify POST is sent and grouped table is displayed.
 
 ### Tests for User Story 5
 
-- [X] T025 [P] [US5] Create `src/SunnySunday.Tests/Cli/ExcludeCommandTests.cs` covering: `exclude highlight 5` sends POST, `exclude remove book 3` sends DELETE, `exclude list` displays grouped table, server 404 displays not-found error.
+- [X] T025 [P] [US5] Create `src/Relego.Tests/Cli/ExcludeCommandTests.cs` covering: `exclude highlight 5` sends POST, `exclude remove book 3` sends DELETE, `exclude list` displays grouped table, server 404 displays not-found error.
 
 ### Implementation for User Story 5
 
-- [X] T026 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeAddCommand.cs` as `AsyncCommand<Settings>`: validate type (highlight/book/author), parse id, call `PostExcludeAsync`, handle 404, display confirmation.
-- [X] T027 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeRemoveCommand.cs` as `AsyncCommand<Settings>`: validate type, parse id, call `DeleteExcludeAsync`, display confirmation or error.
-- [X] T028 [P] [US5] Create `src/SunnySunday.Cli/Commands/Exclude/ExcludeListCommand.cs` as `AsyncCommand`: call `GetExclusionsAsync`, display three grouped tables (Highlights, Books, Authors) with "None" for empty groups.
-- [X] T029 [US5] Register exclude commands in the command tree: `exclude` branch with default add, `remove` subcommand, and `list` subcommand in `src/SunnySunday.Cli/Program.cs`.
+- [X] T026 [P] [US5] Create `src/Relego.Cli/Commands/Exclude/ExcludeAddCommand.cs` as `AsyncCommand<Settings>`: validate type (highlight/book/author), parse id, call `PostExcludeAsync`, handle 404, display confirmation.
+- [X] T027 [P] [US5] Create `src/Relego.Cli/Commands/Exclude/ExcludeRemoveCommand.cs` as `AsyncCommand<Settings>`: validate type, parse id, call `DeleteExcludeAsync`, display confirmation or error.
+- [X] T028 [P] [US5] Create `src/Relego.Cli/Commands/Exclude/ExcludeListCommand.cs` as `AsyncCommand`: call `GetExclusionsAsync`, display three grouped tables (Highlights, Books, Authors) with "None" for empty groups.
+- [X] T029 [US5] Register exclude commands in the command tree: `exclude` branch with default add, `remove` subcommand, and `list` subcommand in `src/Relego.Cli/Program.cs`.
 
 **Checkpoint**: Exclude commands work. Tests pass.
 
@@ -178,19 +178,19 @@
 
 ## Phase 10: User Story 6 - Manage Weights (Priority: P3)
 
-**Goal**: Adjust highlight weights to influence selection frequency via `sunny weight`.
+**Goal**: Adjust highlight weights to influence selection frequency via `relego weight`.
 
-**Independent Test**: Run `sunny weight set 5 3` against a mock server and verify PUT is sent; run `sunny weight list` and verify table display.
+**Independent Test**: Run `relego weight set 5 3` against a mock server and verify PUT is sent; run `relego weight list` and verify table display.
 
 ### Tests for User Story 6
 
-- [X] T030 [P] [US6] Create `src/SunnySunday.Tests/Cli/WeightCommandTests.cs` covering: `weight set 5 3` sends PUT with weight=3, `weight set 5 0` triggers validation error, `weight set 5 6` triggers validation error, `weight list` displays table.
+- [X] T030 [P] [US6] Create `src/Relego.Tests/Cli/WeightCommandTests.cs` covering: `weight set 5 3` sends PUT with weight=3, `weight set 5 0` triggers validation error, `weight set 5 6` triggers validation error, `weight list` displays table.
 
 ### Implementation for User Story 6
 
-- [X] T031 [P] [US6] Create `src/SunnySunday.Cli/Commands/Weight/WeightSetCommand.cs` as `AsyncCommand<Settings>`: validate weight range (1–5), call `PutWeightAsync`, display confirmation.
-- [X] T032 [P] [US6] Create `src/SunnySunday.Cli/Commands/Weight/WeightListCommand.cs` as `AsyncCommand`: call `GetWeightsAsync`, display table with ID, Text (truncated), Book, Weight; show "No custom weights" if empty.
-- [X] T033 [US6] Register weight commands in the command tree: `weight` branch with `set` and `list` subcommands in `src/SunnySunday.Cli/Program.cs`.
+- [X] T031 [P] [US6] Create `src/Relego.Cli/Commands/Weight/WeightSetCommand.cs` as `AsyncCommand<Settings>`: validate weight range (1–5), call `PutWeightAsync`, display confirmation.
+- [X] T032 [P] [US6] Create `src/Relego.Cli/Commands/Weight/WeightListCommand.cs` as `AsyncCommand`: call `GetWeightsAsync`, display table with ID, Text (truncated), Book, Weight; show "No custom weights" if empty.
+- [X] T033 [US6] Register weight commands in the command tree: `weight` branch with `set` and `list` subcommands in `src/Relego.Cli/Program.cs`.
 
 **Checkpoint**: Weight commands work. Tests pass.
 
@@ -200,10 +200,10 @@
 
 **Purpose**: Uniform error handling, exit codes, architecture docs, and full regression validation.
 
-- [ ] T034 [P] Ensure all commands handle HTTP errors uniformly in `src/SunnySunday.Cli/Commands/`: connection refused → "Cannot reach server at {url}. Check SUNNY_SERVER environment variable."; 4xx → parse error body and display field messages; 5xx after retries → "Server error. Try again later."
+- [ ] T034 [P] Ensure all commands handle HTTP errors uniformly in `src/Relego.Cli/Commands/`: connection refused → "Cannot reach server at {url}. Check RELEGO_SERVER environment variable."; 4xx → parse error body and display field messages; 5xx after retries → "Server error. Try again later."
 - [ ] T035 [P] Ensure all commands return exit code 0 on success, 1 on error; verify edge cases end-to-end.
 - [ ] T036 [P] Update `docs/ARCHITECTURE.md` to add CLI section describing command tree, DI setup, HTTP client with Polly retry, and Kindle detection.
-- [ ] T037 Run full test suite: `dotnet test src/SunnySunday.slnx`. Confirm no regressions. All new CLI tests pass alongside existing parser, infrastructure, API, and recap tests.
+- [ ] T037 Run full test suite: `dotnet test src/Relego.slnx`. Confirm no regressions. All new CLI tests pass alongside existing parser, infrastructure, API, and recap tests.
 
 ---
 

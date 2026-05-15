@@ -5,13 +5,13 @@
 
 ## Summary
 
-Implement the server-side REST API and SQLite-backed storage layer for Sunny Sunday. The server exposes 14 Minimal API endpoints organized into 5 domain groups (sync, settings, status, exclusions, weights). Data access uses Dapper over the existing `Microsoft.Data.Sqlite` connection against the schema already bootstrapped by feature 002. Request/response contracts are separate DTOs from domain models. Validation is inline; errors use RFC 9457 ProblemDetails. Tests use `WebApplicationFactory` with in-memory SQLite.
+Implement the server-side REST API and SQLite-backed storage layer for Relego. The server exposes 14 Minimal API endpoints organized into 5 domain groups (sync, settings, status, exclusions, weights). Data access uses Dapper over the existing `Microsoft.Data.Sqlite` connection against the schema already bootstrapped by feature 002. Request/response contracts are separate DTOs from domain models. Validation is inline; errors use RFC 9457 ProblemDetails. Tests use `WebApplicationFactory` with in-memory SQLite.
 
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (`net10.0` TFM)
 **Primary Dependencies**: ASP.NET Minimal API (built-in), Dapper (new), Swashbuckle.AspNetCore (new), Microsoft.Data.Sqlite (existing), Serilog (existing)
-**Storage**: SQLite at `.data/sunny.db` — schema already exists via `SchemaBootstrap` (feature 002)
+**Storage**: SQLite at `.data/relego.db` — schema already exists via `SchemaBootstrap` (feature 002)
 **Testing**: xUnit + `Microsoft.AspNetCore.Mvc.Testing` (`WebApplicationFactory`) with in-memory SQLite
 **Target Platform**: Linux Docker container (primary), cross-platform .NET 10
 **Project Type**: Web service (REST API)
@@ -39,7 +39,7 @@ Implement the server-side REST API and SQLite-backed storage layer for Sunny Sun
 | Exclusion: No web UI | **PASS** | API only |
 | Exclusion: No auth for MVP | **PASS** | No authentication middleware |
 
-**Post-design re-check**: All gates still pass. Dapper is the only new NuGet package for Server; `Microsoft.AspNetCore.Mvc.Testing` added to Tests only. No new projects introduced — all code goes into existing `SunnySunday.Server` and `SunnySunday.Tests`.
+**Post-design re-check**: All gates still pass. Dapper is the only new NuGet package for Server; `Microsoft.AspNetCore.Mvc.Testing` added to Tests only. No new projects introduced — all code goes into existing `Relego.Server` and `Relego.Tests`.
 
 ## Project Structure
 
@@ -59,9 +59,9 @@ specs/004-rest-api-storage/
 ### Source Code (repository root)
 
 ```text
-src/SunnySunday.Server/
+src/Relego.Server/
 ├── Program.cs                          # Updated: DI + MapGroup composition + Swagger (Dev only)
-├── Models/                             # MOVED from SunnySunday.Core — server-side domain only
+├── Models/                             # MOVED from Relego.Core — server-side domain only
 │   ├── Author.cs
 │   ├── Book.cs
 │   ├── Highlight.cs
@@ -86,7 +86,7 @@ src/SunnySunday.Server/
     └── Logging/
         └── SerilogConfiguration.cs
 
-src/SunnySunday.Core/
+src/Relego.Core/
 └── Contracts/                          # NEW — request/response DTOs (shared with CLI)
     ├── SyncRequest.cs
     ├── SyncResponse.cs
@@ -97,7 +97,7 @@ src/SunnySunday.Core/
     ├── SetWeightRequest.cs
     └── WeightedHighlightDto.cs
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 ├── Api/                                # NEW — integration tests
 │   ├── TestWebApplicationFactory.cs
 │   ├── SyncEndpointTests.cs
@@ -111,7 +111,7 @@ src/SunnySunday.Tests/
     └── ClippingsParserTests.cs
 ```
 
-**Structure Decision**: All new code goes into the existing `SunnySunday.Server` and `SunnySunday.Tests` projects. No new projects are added. Server code is organized by concern: `Contracts/` for DTOs, `Data/` for Dapper-based repositories, `Endpoints/` for route definitions. Tests use `WebApplicationFactory` for full-pipeline integration testing with in-memory SQLite.
+**Structure Decision**: All new code goes into the existing `Relego.Server` and `Relego.Tests` projects. No new projects are added. Server code is organized by concern: `Contracts/` for DTOs, `Data/` for Dapper-based repositories, `Endpoints/` for route definitions. Tests use `WebApplicationFactory` for full-pipeline integration testing with in-memory SQLite.
 
 ## Complexity Tracking
 

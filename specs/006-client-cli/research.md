@@ -21,7 +21,7 @@
 
 **Command tree structure**:
 ```
-sunny
+relego
 ├── sync [path]
 ├── status
 ├── config
@@ -90,7 +90,7 @@ sunny
 
 **Rationale**:
 - Each `AsyncCommand.ExecuteAsync` wraps its HTTP call in try/catch. Specific exception types drive specific messages:
-  - `HttpRequestException` (connection refused/timeout after retries) → "Cannot reach server at {url}. Check SUNNY_SERVER environment variable."
+  - `HttpRequestException` (connection refused/timeout after retries) → "Cannot reach server at {url}. Check RELEGO_SERVER environment variable."
   - `HttpRequestException` with status 4xx → parse JSON error body, display field-level validation messages.
   - `HttpRequestException` with status 5xx (after retry exhaustion) → "Server error. Try again later."
   - `TaskCanceledException` → "Request timed out."
@@ -140,7 +140,7 @@ sunny
 
 ### 7. Server URL Resolution
 
-**Decision**: Read `SUNNY_SERVER` environment variable at CLI startup; validate as absolute URI; fail fast with actionable error
+**Decision**: Read `RELEGO_SERVER` environment variable at CLI startup; validate as absolute URI; fail fast with actionable error
 
 **Rationale**:
 - Environment variables are the standard mechanism for configuring Docker-deployed tools (constitution principle VI — Docker distribution).

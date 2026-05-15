@@ -3,39 +3,39 @@
 **Feature Branch**: `007-evolve-cli-to-tui`  
 **Created**: 2026-05-09  
 **Status**: Draft  
-**Input**: User request: "Evolve the current sunny CLI (Spectre.Console.Cli) into a complete Terminal User Interface (TUI) to provide a richer, more guided, end-to-end user experience. The existing CLI command interface must be preserved — the TUI is an additional mode that activates when no command is given."
+**Input**: User request: "Evolve the current relego CLI (Spectre.Console.Cli) into a complete Terminal User Interface (TUI) to provide a richer, more guided, end-to-end user experience. The existing CLI command interface must be preserved — the TUI is an additional mode that activates when no command is given."
 
 ## User Scenarios & Testing
 
 ### User Story 1 — Dual-Mode Launch: TUI vs CLI (Priority: P1)
 
-When the user launches `sunny` without any command or arguments, the application enters TUI mode — a persistent, interactive terminal interface. When the user provides a command (e.g., `sunny sync`, `sunny status`), the existing CLI behavior executes exactly as before, without entering TUI mode. This ensures full backward compatibility while adding the interactive experience.
+When the user launches `relego` without any command or arguments, the application enters TUI mode — a persistent, interactive terminal interface. When the user provides a command (e.g., `relego sync`, `relego status`), the existing CLI behavior executes exactly as before, without entering TUI mode. This ensures full backward compatibility while adding the interactive experience.
 
 **Why this priority**: This is the foundational behavioral split. Every other TUI feature depends on this mode detection working correctly. Breaking existing CLI commands would be a regression.
 
-**Independent Test**: Launch `sunny` with no arguments and verify the TUI screen appears. Launch `sunny sync /path/to/file` and verify the CLI executes the sync command without any TUI rendering.
+**Independent Test**: Launch `relego` with no arguments and verify the TUI screen appears. Launch `relego sync /path/to/file` and verify the CLI executes the sync command without any TUI rendering.
 
 **Acceptance Scenarios**:
 
-1. **Given** the user runs `sunny` with no arguments, **When** the application starts, **Then** the TUI mode activates and the main screen (book list) is displayed.
-2. **Given** the user runs `sunny sync /path/to/file`, **When** the application starts, **Then** the existing Spectre.Console.Cli CommandApp processes the command and exits — no TUI is rendered.
-3. **Given** the user runs `sunny config show`, **When** the application starts, **Then** the config show command executes and outputs to stdout — no TUI is rendered.
-4. **Given** the user runs `sunny --version`, **When** the application starts, **Then** the version is printed and the process exits — no TUI is rendered.
-5. **Given** the user runs `sunny --help`, **When** the application starts, **Then** the help text is printed and the process exits — no TUI is rendered.
+1. **Given** the user runs `relego` with no arguments, **When** the application starts, **Then** the TUI mode activates and the main screen (book list) is displayed.
+2. **Given** the user runs `relego sync /path/to/file`, **When** the application starts, **Then** the existing Spectre.Console.Cli CommandApp processes the command and exits — no TUI is rendered.
+3. **Given** the user runs `relego config show`, **When** the application starts, **Then** the config show command executes and outputs to stdout — no TUI is rendered.
+4. **Given** the user runs `relego --version`, **When** the application starts, **Then** the version is printed and the process exits — no TUI is rendered.
+5. **Given** the user runs `relego --help`, **When** the application starts, **Then** the help text is printed and the process exits — no TUI is rendered.
 
 ---
 
 ### User Story 2 — Startup Splash and Always-Visible Chrome (Priority: P1)
 
-When the TUI launches, the user sees a branded startup experience: a "SunnySunday" Figlet-style ASCII art banner, the CLI version, the server connection status, and — if the Kindle email is not configured — a persistent yellow warning. These elements remain visible across all TUI screens.
+When the TUI launches, the user sees a branded startup experience: a "Relego" Figlet-style ASCII art banner, the CLI version, the server connection status, and — if the Kindle email is not configured — a persistent yellow warning. These elements remain visible across all TUI screens.
 
 **Why this priority**: The splash and status chrome establish trust and orientation. Server connection status and the Kindle email warning prevent the user from performing actions on an unreachable server or forgetting to configure email — reducing wasted effort and confusion.
 
-**Independent Test**: Launch `sunny` in TUI mode against a running server and verify the Figlet banner, version, connection status, and (if applicable) Kindle email warning are all visible. Navigate to the settings page and verify they remain visible.
+**Independent Test**: Launch `relego` in TUI mode against a running server and verify the Figlet banner, version, connection status, and (if applicable) Kindle email warning are all visible. Navigate to the settings page and verify they remain visible.
 
 **Acceptance Scenarios**:
 
-1. **Given** TUI mode starts, **When** the main screen renders, **Then** the "SunnySunday" text is displayed in a Figlet-style ASCII font at the top of the screen.
+1. **Given** TUI mode starts, **When** the main screen renders, **Then** the "Relego" text is displayed in a Figlet-style ASCII font at the top of the screen.
 2. **Given** TUI mode starts, **When** the main screen renders, **Then** the CLI version (e.g., `v1.2.0`) is displayed in a fixed location.
 3. **Given** a reachable server (determined by a successful `GET /` returning HTTP 200), **When** the TUI main screen renders, **Then** a green connection status indicator is shown (e.g., `● Connected to http://localhost:8080`).
 4. **Given** an unreachable server (determined by a failed `GET /`), **When** the TUI main screen renders, **Then** a red connection status indicator is shown (e.g., `● Disconnected — cannot reach http://localhost:8080`).
@@ -51,7 +51,7 @@ On startup, the TUI displays a table of all imported books retrieved from the se
 
 **Why this priority**: The book list is the primary landing screen and the entry point to all highlight-level interactions. Without it, the TUI has no content to display.
 
-**Independent Test**: Launch `sunny` in TUI mode with highlights synced to the server. Verify a table appears with books, and that arrow keys move the selection cursor between rows.
+**Independent Test**: Launch `relego` in TUI mode with highlights synced to the server. Verify a table appears with books, and that arrow keys move the selection cursor between rows.
 
 **Acceptance Scenarios**:
 
@@ -185,18 +185,16 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 - **Very large number of books (100+)**: The book list must remain navigable through scrolling; rendering performance must not degrade noticeably.
 - **Terminal too small**: If the terminal dimensions are below a minimum usable size (e.g., less than 80×24), the TUI displays a message asking the user to resize.
 - **Non-interactive terminal (piped input)**: If stdin is not a TTY, the TUI does not start; the help text is displayed instead (same as `sunny --help`).
-- **Sync path prompt cancelled**: If the user cancels clippings path confirmation or manual entry, the TUI returns to the current screen without side effects.
-- **Invalid clippings path in TUI sync**: If the user enters a missing or unreadable path, the TUI shows a validation error and allows retry without leaving TUI mode.
 - **Concurrent modification**: If another CLI instance modifies data while the TUI is open, the TUI shows stale data until the user presses `R` to refresh the current screen.
 - **Interrupted API call**: If the user navigates away during an in-flight API call, the TUI cancels the request and returns to the previous screen without error.
-- **Figlet rendering in narrow terminals**: If the terminal is too narrow for the full Figlet text, fall back to a plain-text "SunnySunday" heading.
+- **Figlet rendering in narrow terminals**: If the terminal is too narrow for the full Figlet text, fall back to a plain-text "Relego" heading.
 
 ## Requirements
 
 ### Functional Requirements
 
 - **FR-007-01**: Application MUST detect whether command-line arguments contain a known command; if no command is provided, TUI mode activates; if a command is provided, the existing CLI CommandApp processes it.
-- **FR-007-02**: Application MUST display a "SunnySunday" Figlet-style ASCII art banner at the top of the TUI on every screen.
+- **FR-007-02**: Application MUST display a "Relego" Figlet-style ASCII art banner at the top of the TUI on every screen.
 - **FR-007-03**: Application MUST display the CLI version on every TUI screen.
 - **FR-007-04**: Application MUST display server connection status (connected/disconnected) on every TUI screen, determined by calling `GET /` on the server and checking for HTTP 200. Updated on initial load, after each API call failure, and on manual refresh (`R`).
 - **FR-007-05**: Application MUST display a persistent yellow warning on every TUI screen when the Kindle email is not configured on the server.
@@ -239,7 +237,7 @@ The TUI is built using Terminal.Gui v2 — a dedicated TUI framework with a nati
 
 - **SC-007-01**: Users can launch the TUI by running `sunny` with no arguments and see the book list within 3 seconds (under normal network conditions).
 - **SC-007-02**: All existing CLI commands (`sunny sync`, `sunny status`, `sunny config *`, `sunny exclude *`, `sunny weight *`) continue to work identically — zero regressions.
-- **SC-007-03**: Users can import highlights, navigate the book list, view highlight details, and modify settings without leaving the TUI — completing a full management workflow in a single session.
+- **SC-007-03**: Users can navigate the book list, view highlight details, and modify settings without leaving the TUI — completing a full management workflow in a single session.
 - **SC-007-04**: Users without Kindle email configured are informed by a persistent warning visible on every screen, reducing failed recap deliveries.
 - **SC-007-05**: Users with 100+ books can scroll and search the book list without perceptible rendering lag.
 - **SC-007-06**: The TUI renders correctly in terminals with at least 80 columns and 24 rows.

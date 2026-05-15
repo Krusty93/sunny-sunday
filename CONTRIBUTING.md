@@ -1,4 +1,4 @@
-# Contributing to Sunny Sunday
+# Contributing to Relego
 
 Thank you for your interest in contributing. This document covers how to report issues, propose changes, and submit pull requests.
 
@@ -22,14 +22,14 @@ Thank you for your interest in contributing. This document covers how to report 
 ### Run the server locally
 
 ```sh
-cd src/SunnySunday.Server
+cd src/Relego.Server
 dotnet run
 ```
 
 ### Run the client CLI locally
 
 ```sh
-cd src/SunnySunday.Cli
+cd src/Relego.Cli
 dotnet run -- <command>
 ```
 
@@ -57,7 +57,7 @@ Open a [GitHub issue](https://github.com/Krusty93/sunny-sunday/issues/new?templa
 - What you did
 - What you expected
 - What happened instead
-- Your OS, Docker version, and `sunny version` output
+- Your OS, Docker version, and `relego version` output
 
 ---
 

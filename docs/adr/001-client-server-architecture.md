@@ -11,8 +11,8 @@ The tool must sync highlights from a Kindle (connected via USB to the user's lap
 
 Split the system into two components:
 
-- A **client CLI** (`sunny`) that runs on the user's laptop for on-demand highlight sync and settings management.
-- A **server** (`sunny-server`) that runs as an always-on Docker container on a home server, NAS, or Raspberry Pi for scheduling, recap generation, and email delivery.
+- A **client CLI** (`relego`) that runs on the user's laptop for on-demand highlight sync and settings management.
+- A **server** (`relego-server`) that runs as an always-on Docker container on a home server, NAS, or Raspberry Pi for scheduling, recap generation, and email delivery.
 
 ## Consequences
 

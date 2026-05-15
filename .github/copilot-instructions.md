@@ -1,21 +1,21 @@
-# Copilot Instructions — Sunny Sunday
+# Copilot Instructions — Relego
 
 > Quick links: [Architecture](../docs/ARCHITECTURE.md) · [DX](../docs/DX.md) · [PRD](../docs/PRD.md)
 
 ## Project overview
 
-Self-hosted tool that delivers Kindle highlight recaps to the user's Kindle via Send-to-Kindle email. Architecture: `sunny` CLI (client) + `sunny-server` Docker container (server).
+Self-hosted tool that delivers Kindle highlight recaps to the user's Kindle via Send-to-Kindle email. Architecture: `relego` CLI (client) + `relego-server` Docker container (server).
 
-**Stack:** C# / .NET 10 · SQLite (`/data/sunny.db`) · Serilog · MailKit · Quartz.NET · Spectre.Console · REST HTTP (no auth, MVP)
+**Stack:** C# / .NET 10 · SQLite (`/data/relego.db`) · Serilog · MailKit · Quartz.NET · Spectre.Console · REST HTTP (no auth, MVP)
 
-**Solution:** `src/SunnySunday.slnx` → Core · Server · Cli · Tests
+**Solution:** `src/Relego.slnx` → Core · Server · Cli · Tests
 
 ## Coding conventions
 
 - .NET/C# conventions (use already installed skills csharp-async, dotnet-best-practices, dotnet-upgrade,etc.)
 - All REST endpoints return JSON; errors are actionable 
 - TDD where applicable (e.g. API endpoints, parsers) using already installed skills csharp-xunit, etc.; not required for mechanical changes (e.g. NuGet updates, csproj edits)
-- When adding new .NET projects: `dotnet sln src/SunnySunday.slnx add src/<Project>/<Project>.csproj` in the same PR
+- When adding new .NET projects: `dotnet sln src/Relego.slnx add src/<Project>/<Project>.csproj` in the same PR
 - Diagrams: Mermaid preferred; ASCII only for spatial layouts
 
 ## ADR conventions

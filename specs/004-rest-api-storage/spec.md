@@ -3,7 +3,7 @@
 **Feature Branch**: `004-rest-api-storage`  
 **Created**: 2026-04-18  
 **Status**: Draft  
-**Input**: User description: "Implement the server-side REST API and SQLite-backed storage layer for Sunny Sunday"
+**Input**: User description: "Implement the server-side REST API and SQLite-backed storage layer for Relego"
 
 ## User Scenarios & Testing
 
@@ -134,7 +134,7 @@ A user assigns weights (1–5) to individual highlights to influence how often t
 - **Highlight**: A single text passage from a Kindle book. Core entity — carries weight, exclusion status, and delivery history. Belongs to one Book and one User.
 - **Book**: A Kindle book identified by title. Contains multiple Highlights. Belongs to one Author and one User.
 - **Author**: A book author identified by name. Has many Books.
-- **User**: The Sunny Sunday user. Has Highlights, Books, Settings, and Exclusions. Single-user for MVP.
+- **User**: The Relego user. Has Highlights, Books, Settings, and Exclusions. Single-user for MVP.
 - **Settings**: Per-user configuration for recap delivery: schedule, delivery time, count, Kindle email.
 - **Excluded Book**: A book-level exclusion record. All highlights in the book are excluded from recaps.
 - **Excluded Author**: An author-level exclusion record. All highlights in all books by the author are excluded from recaps.
@@ -157,7 +157,7 @@ A user assigns weights (1–5) to individual highlights to influence how often t
 - Single-user operation for MVP: the system auto-creates or reuses a single user record; multi-user support is deferred.
 - The client CLI is responsible for parsing `My Clippings.txt` and sending structured data to the server; the server does not parse raw clippings text.
 - The server database (SQLite) and schema bootstrap are already implemented in feature 002; this feature builds on that foundation.
-- Domain models (Highlight, Book, Author, User, Settings) are already defined in `SunnySunday.Server/Models/`.
+- Domain models (Highlight, Book, Author, User, Settings) are already defined in `Relego.Server/Models/`.
 - No authentication is required for MVP — the server trusts all requests on the local network (per ADR-004).
 - Delivery time is expressed in the client's local timezone.
 - The sync endpoint receives data in the same structure as the parser output (`ParseResult` with `ParsedBook` and `ParsedHighlight` records).

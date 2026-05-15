@@ -1,8 +1,8 @@
-# Spec: Sunny Sunday — Kindle Highlights Recap Delivery
+# Spec: Relego — Kindle Highlights Recap Delivery
 
 ## What we are building
 
-Sunny Sunday is a self-hosted, open source tool that helps readers retain what they highlight on their Kindle by delivering periodic recap documents directly to their Kindle device.
+Relego is a self-hosted, open source tool that helps readers retain what they highlight on their Kindle by delivering periodic recap documents directly to their Kindle device.
 
 The tool reads highlights from `My Clippings.txt` — the file a Kindle saves locally when the user highlights text, accessible by connecting the device via USB. It selects a subset of highlights using a spaced repetition algorithm (highlights seen less recently are prioritized), composes a recap document, and sends it as an email attachment to the user's Kindle email address via Amazon's Send-to-Kindle personal document service. The recap renders as a native document on the Kindle, readable on e-ink without eye strain.
 
@@ -50,7 +50,7 @@ Readers who highlight and annotate texts on Kindle and want to review those high
 - Excluded highlights are never selected.
 - The system tracks delivery history per highlight (delivery count, last seen date).
 
-## What Sunny Sunday does NOT do
+## What Relego does NOT do
 
 - No mobile app, no web UI.
 - No cloud SaaS version — self-hosted only.
@@ -75,5 +75,5 @@ Readers who highlight and annotate texts on Kindle and want to review those high
 
 - Client CLI authentication to server: none — local network is assumed trusted.
 - Number of highlights per recap: configurable by the user (min 1, max 15, default 3).
-- `sunny sync` auto-detects the Kindle mount path; if not found, prompts the user to enter it interactively.
+- `relego sync` auto-detects the Kindle mount path; if not found, prompts the user to enter it interactively.
 - SMTP configuration: provided as environment variables to the server container (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`).

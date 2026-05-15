@@ -84,7 +84,7 @@ A book author.
 
 ### User
 
-A Sunny Sunday user. Single-user for MVP, but modeled as a table for future multi-user support.
+A Relego user. Single-user for MVP, but modeled as a table for future multi-user support.
 
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 ---
 
-## C# Model Classes (SunnySunday.Core/Models/)
+## C# Model Classes (Relego.Core/Models/)
 
 | File | Class | Maps to table |
 |------|-------|---------------|

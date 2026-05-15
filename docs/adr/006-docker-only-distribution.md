@@ -13,20 +13,20 @@ Alternatives considered:
 
 ## Decision
 
-Distribute the server exclusively as a **Docker image** published to GitHub Container Registry (`ghcr.io/krusty93/sunnysunday.server`).
+Distribute the server exclusively as a **Docker image** published to GitHub Container Registry (`ghcr.io/krusty93/relego.server`).
 
 Configuration is passed entirely via environment variables:
 - `KINDLE_EMAIL` — the user's Send-to-Kindle email address
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` — outbound email credentials
-- `SUNNY_SERVER` — server address (used by the client; also set here for reference)
+- `RELEGO_SERVER` — server address (used by the client; also set here for reference)
 
-Data is persisted in a named Docker volume (`sunny-data`).
+Data is persisted in a named Docker volume (`relego-data`).
 
 ## Consequences
 
 - A single command (`docker run` or `docker-compose up`) fully deploys the server — no installation steps, no dependency management.
 - Image provenance is verifiable through GitHub Artifact Attestations (`gh attestation verify`).
 - Environment variables are a well-understood configuration pattern for containerized workloads.
-- The user is responsible for backing up the Docker volume (`/data/sunny.db`).
+- The user is responsible for backing up the Docker volume (`/data/relego.db`).
 - No native package is provided for the server — Docker is the only supported server deployment method.
 - The client CLI is distributed separately as a binary (see ADR-002) and does not require Docker on the user's laptop.

@@ -202,7 +202,7 @@ var trigger = TriggerBuilder.Create()
 - **EPUB**: pure function (highlights → byte[]) → unit tests; verify ZIP structure, required EPUB files, and highlight/source text content.
 - **Delivery + retry**: `IMailDeliveryService` interface allows injecting a fake that throws on the first N calls, then succeeds; verify attempt count and history update behavior.
 - **Scheduler**: verify `GetNextFireTimeAsync` returns a value close to the expected UTC slot after `ScheduleAsync` is called; avoid testing actual Quartz clock firing (brittle).
-- **Settings/Status endpoints**: extend existing `SettingsEndpointTests` / `StatusEndpointTests` in `SunnySunday.Tests` with new test cases for `timezone` and `LastRecapStatus`/`LastRecapError` fields.
+- **Settings/Status endpoints**: extend existing `SettingsEndpointTests` / `StatusEndpointTests` in `Relego.Tests` with new test cases for `timezone` and `LastRecapStatus`/`LastRecapError` fields.
 
 **Alternatives considered**:
 - **Testing actual Quartz firing**: requires wall-clock waiting or virtual-time injection; too brittle for CI.

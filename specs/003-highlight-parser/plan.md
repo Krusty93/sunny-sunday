@@ -5,16 +5,16 @@
 
 ## Summary
 
-Parse Kindle `My Clippings.txt` files into structured highlight data. The parser is a pure function in `SunnySunday.Cli/Parsing/` that reads the file line-by-line, extracts book/author/highlight/metadata, deduplicates by exact `(title, author, text)` match, groups highlights by book, and returns an immutable `ParseResult`. Notes are treated as highlights with a `[my note]` prefix. Malformed entries are logged as warnings. No database, no HTTP, no side effects.
+Parse Kindle `My Clippings.txt` files into structured highlight data. The parser is a pure function in `Relego.Cli/Parsing/` that reads the file line-by-line, extracts book/author/highlight/metadata, deduplicates by exact `(title, author, text)` match, groups highlights by book, and returns an immutable `ParseResult`. Notes are treated as highlights with a `[my note]` prefix. Malformed entries are logged as warnings. No database, no HTTP, no side effects.
 
 ## Technical Context
 
 **Language/Version**: C# / .NET 10 (`net10.0` TFM)
 **Primary Dependencies**: Microsoft.Extensions.Logging (for `ILogger<T>` — warning logs for malformed entries)
 **Storage**: N/A — parser is a pure function with no persistence
-**Testing**: xUnit (via `SunnySunday.Tests`)
+**Testing**: xUnit (via `Relego.Tests`)
 **Target Platform**: Cross-platform (.NET 10 runtime)
-**Project Type**: CLI-exclusive logic in `SunnySunday.Cli`
+**Project Type**: CLI-exclusive logic in `Relego.Cli`
 **Performance Goals**: 10,000 clippings parsed, deduplicated, and grouped in < 5 seconds
 **Constraints**: Single-pass streaming, no external dependencies beyond .NET BCL
 **Scale/Scope**: Typical file: 500–5,000 clippings; stress test: 50,000+ clippings
@@ -53,7 +53,7 @@ specs/003-highlight-parser/
 ### Source Code (repository root)
 
 ```text
-src/SunnySunday.Cli/
+src/Relego.Cli/
 ├── Program.cs
 └── Parsing/                   # Parser types and logic
     ├── RawClipping.cs         # Internal intermediate parse result
@@ -62,7 +62,7 @@ src/SunnySunday.Cli/
     ├── ParseResult.cs         # Public: top-level result container
     └── ClippingsParser.cs     # Public: static parser entry point
 
-src/SunnySunday.Core/
+src/Relego.Core/
 └── Models/                    # Existing persistence models (UNCHANGED)
     ├── Author.cs
     ├── Book.cs
@@ -70,12 +70,12 @@ src/SunnySunday.Core/
     ├── Settings.cs
     └── User.cs
 
-src/SunnySunday.Tests/
+src/Relego.Tests/
 └── Parsing/                   # NEW — parser unit tests
     └── ClippingsParserTests.cs
 ```
 
-**Structure Decision**: Parser code goes into a new `Parsing/` namespace within the existing `SunnySunday.Cli` project (CLI-exclusive, not shared with server). Tests go into the existing `SunnySunday.Tests` project under a `Parsing/` folder. This avoids adding a 5th project (YAGNI).
+**Structure Decision**: Parser code goes into a new `Parsing/` namespace within the existing `Relego.Cli` project (CLI-exclusive, not shared with server). Tests go into the existing `Relego.Tests` project under a `Parsing/` folder. This avoids adding a 5th project (YAGNI).
 
 ## Complexity Tracking
 
