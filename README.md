@@ -4,6 +4,8 @@
 
 Existing solutions deliver periodic recaps only via mobile or web apps. Sunny Sunday delivers them to your Kindle — free, self-hosted, and without a subscription.
 
+![Relego landing page hero section in dark theme](docs/assets/landing-hero-dark.jpg)
+
 ---
 
 ## How it works

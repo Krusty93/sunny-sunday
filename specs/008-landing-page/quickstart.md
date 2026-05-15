@@ -26,9 +26,9 @@ src/landing/
 │   ├── Button.astro
 │   ├── FeatureCard.astro
 │   ├── Footer.astro
+│   ├── GettingStarted.astro
 │   ├── Navbar.astro
 │   ├── Section.astro
-│   ├── StepCard.astro
 │   └── ThemeToggle.astro
 ├── config/
 │   └── site.ts             # Site configuration (GitHub URL, etc.)
@@ -103,10 +103,12 @@ Update the GitHub URL and other site-wide settings here:
 export const siteConfig = {
   name: "Relego",
   logotype: "relego.",
-  tagline: "Periodic highlights recap, delivered to your Kindle. For free.",
-  githubUrl: "https://github.com/Krusty93/sunny-sunday",
-  docsUrl: "/docs",
+  tagline: "Revisit your highlights, delivered to your Kindle. For free.",
+  githubUrl: "https://github.com/Krusty93/relego",
+  docsUrl: "https://github.com/Krusty93/relego/blob/main/README.md",
   license: "MIT",
+  licenseUrl: "https://github.com/Krusty93/relego/blob/main/LICENSE",
+  contributingUrl: "https://github.com/Krusty93/relego/blob/main/CONTRIBUTING.md",
 } as const;
 ```
 

@@ -5,13 +5,17 @@ export interface SiteConfig {
 	githubUrl: string;
 	docsUrl: string;
 	license: string;
+	licenseUrl: string;
+	contributingUrl: string;
 }
 
 export const siteConfig = {
 	name: 'Relego',
 	logotype: 'relego.',
-	tagline: 'Periodic highlights recap, delivered to your Kindle. For free.',
+	tagline: 'Revisit your highlights, delivered to your Kindle. For free.',
 	githubUrl: 'https://github.com/Krusty93/relego',
-	docsUrl: '/docs',
+	docsUrl: 'https://github.com/Krusty93/relego/blob/main/README.md',
 	license: 'MIT',
+	licenseUrl: 'https://github.com/Krusty93/relego/blob/main/LICENSE',
+	contributingUrl: 'https://github.com/Krusty93/relego/blob/main/CONTRIBUTING.md',
 } as const satisfies SiteConfig;
