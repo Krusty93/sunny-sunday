@@ -26,10 +26,10 @@ Register a new ADR whenever a significant architectural decision is made during 
 
 ## GitHub Project conventions
 
-**Kanban:** project #2 on `Krusty93/sunny-sunday`. Use `gh` CLI to resolve IDs at runtime:
+**Kanban:** project #2 on `Krusty93/relego`. Use `gh` CLI to resolve IDs at runtime:
 - Project ID + status field ID: `gh project view 2 --owner Krusty93 --format json`
 - Status option IDs: `gh project field-list 2 --owner Krusty93 --format json`
-- Item ID for an issue: `gh api graphql -f query='{ repository(owner:"Krusty93", name:"sunny-sunday") { issue(number:N) { projectItems(first:1) { nodes { id } } } } }'`
+- Item ID for an issue: `gh api graphql -f query='{ repository(owner:"Krusty93", name:"relego") { issue(number:N) { projectItems(first:1) { nodes { id } } } } }'`
 - Move item: `gh project item-edit --id <ITEM_ID> --project-id <PROJECT_ID> --field-id <FIELD_ID> --single-select-option-id <OPTION_ID>`
 
 Status names: `Backlog` · `Ready` · `In progress` · `In review` · `Done`

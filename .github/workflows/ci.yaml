@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/SunnySunday.**'
+      - 'src/Relego.**'
       - 'Dockerfile.ci'
       - '.github/workflows/ci.yaml'
 

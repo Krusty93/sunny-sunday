@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,7 +14,7 @@ public sealed class ClippingsSyncWorkflowTests : IDisposable
 
     public ClippingsSyncWorkflowTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), $"sunny-sync-workflow-{Guid.NewGuid():N}");
+        _tempDir = Path.Combine(Path.GetTempPath(), $"relego-sync-workflow-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_tempDir);
     }
 

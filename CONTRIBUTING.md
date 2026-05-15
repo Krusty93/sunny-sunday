@@ -6,7 +6,7 @@ Thank you for your interest in contributing. This document covers how to report 
 
 ## Before you start
 
-- Check [open issues](https://github.com/Krusty93/sunny-sunday/issues) to avoid duplicating work.
+- Check [open issues](https://github.com/Krusty93/relego/issues) to avoid duplicating work.
 - For significant changes (new features, breaking changes), open an issue first to discuss the approach before writing code.
 - Keep contributions focused — one logical change per pull request.
 
@@ -52,7 +52,7 @@ dotnet test
 
 ## Reporting bugs
 
-Open a [GitHub issue](https://github.com/Krusty93/sunny-sunday/issues/new?template=bug_report.md) with:
+Open a [GitHub issue](https://github.com/Krusty93/relego/issues/new?template=bug_report.md) with:
 
 - What you did
 - What you expected
@@ -63,7 +63,7 @@ Open a [GitHub issue](https://github.com/Krusty93/sunny-sunday/issues/new?templa
 
 ## Requesting features
 
-Open a [GitHub issue](https://github.com/Krusty93/sunny-sunday/issues/new?template=feature_request.md) describing the use case and the problem it solves. Focus on the *what* and *why*, not the *how*.
+Open a [GitHub issue](https://github.com/Krusty93/relego/issues/new?template=feature_request.md) describing the use case and the problem it solves. Focus on the *what* and *why*, not the *how*.
 
 ---
 

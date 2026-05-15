@@ -52,12 +52,12 @@ public sealed class MailDeliveryService : IMailDeliveryService
     public async Task SendTestEmailAsync(string toAddress, CancellationToken cancellationToken = default)
     {
         using var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Sunny Sunday", _settings.Username));
+        message.From.Add(new MailboxAddress("Relego", _settings.Username));
         message.To.Add(MailboxAddress.Parse(toAddress));
-        message.Subject = "Sunny Sunday - Test Email";
+        message.Subject = "Relego - Test Email";
         message.Body = new TextPart("plain")
         {
-            Text = "This is a test email from Sunny Sunday. If you received this, your SMTP configuration is working correctly."
+            Text = "This is a test email from Relego. If you received this, your SMTP configuration is working correctly."
         };
 
         using var client = new SmtpClient();

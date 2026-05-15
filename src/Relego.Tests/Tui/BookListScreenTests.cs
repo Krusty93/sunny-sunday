@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.Logging.Abstractions;
 using RichardSzalay.MockHttp;
 using Relego.Cli.Infrastructure;
@@ -10,7 +10,7 @@ namespace Relego.Tests.Tui;
 public sealed class BookListScreenTests : IDisposable
 {
     private readonly MockHttpMessageHandler _mockHttp = new();
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"sunny-book-screen-{Guid.NewGuid():N}");
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"relego-book-screen-{Guid.NewGuid():N}");
 
     public BookListScreenTests()
     {
