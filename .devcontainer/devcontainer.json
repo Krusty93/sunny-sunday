@@ -18,8 +18,7 @@
   "postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git && dotnet tool install -g Rnwood.Smtp4dev",
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-    "dotnet-https-cert": "dotnet dev-certs https",
-    // "smtp4dev": "smtp4dev --urls http://0.0.0.0:3000 --smtpport 2525 --imapport 1143 --db /tmp/smtp4dev.db"
+    "dotnet-https-cert": "dotnet dev-certs https"
   },
   "forwardPorts": [8080, 3000, 4321],
   "portsAttributes": {
@@ -53,7 +52,8 @@
         "ionutvmi.path-autocomplete",
         "humao.rest-client",
         "alexcvzz.vscode-sqlite",
-        "astro-build.astro-vscode"
+        "astro-build.astro-vscode",
+        "ms-playwright.playwright"
       ],
       "mcp": {
         "servers": {
