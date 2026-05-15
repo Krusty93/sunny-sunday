@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Theme Toggle', () => {
 	test.beforeEach(async ({ page }) => {
+		await page.emulateMedia({ colorScheme: 'light' });
 		await page.goto('/');
 	});
 
