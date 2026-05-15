@@ -20,7 +20,7 @@ test('capture dark hero section for README', async ({ page }) => {
 
 	// Hide fixed navbar to keep only the hero composition in the exported image.
 	await page.addStyleTag({
-		content: 'nav { display: none !important; }',
+		content: 'nav { display: none !important; } #hero a[href="#getting-started"] { display: none !important; }',
 	});
 
 	const hero = page.locator('#hero');

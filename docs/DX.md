@@ -50,15 +50,15 @@ docker run --rm -e RELEGO_SERVER=http://192.168.1.10:8080 ghcr.io/krusty93/releg
 **Option B — Download binary:**
 ```sh
 # macOS (Apple Silicon)
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/relego-darwin-arm64 -o /usr/local/bin/relego
+curl -L https://github.com/Krusty93/relego/releases/latest/download/relego-darwin-arm64 -o /usr/local/bin/relego
 chmod +x /usr/local/bin/relego
 
 # macOS (Intel)
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/relego-darwin-amd64 -o /usr/local/bin/relego
+curl -L https://github.com/Krusty93/relego/releases/latest/download/relego-darwin-amd64 -o /usr/local/bin/relego
 chmod +x /usr/local/bin/relego
 
 # Linux
-curl -L https://github.com/Krusty93/sunny-sunday/releases/latest/download/relego-linux-amd64 -o /usr/local/bin/relego
+curl -L https://github.com/Krusty93/relego/releases/latest/download/relego-linux-amd64 -o /usr/local/bin/relego
 chmod +x /usr/local/bin/relego
 
 # Windows (via winget)

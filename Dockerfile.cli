@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY src/ ./
-RUN dotnet restore SunnySunday.Cli/SunnySunday.Cli.csproj
-RUN dotnet publish SunnySunday.Cli/SunnySunday.Cli.csproj \
+RUN dotnet restore Relego.Cli/Relego.Cli.csproj
+RUN dotnet publish Relego.Cli/Relego.Cli.csproj \
     --configuration Release \
     --output /out \
     --no-restore
@@ -13,6 +13,6 @@ WORKDIR /app
 
 COPY --from=build /out/ ./
 
-ENV SUNNY_SERVER=http://localhost:8080
+ENV RELEGO_SERVER=http://localhost:8080
 
-ENTRYPOINT ["dotnet", "SunnySunday.Cli.dll"]
+ENTRYPOINT ["dotnet", "Relego.Cli.dll"]

@@ -59,7 +59,7 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish src/SunnySunday.Cli \
+          dotnet publish src/Relego.Cli \
             --configuration Release \
             --runtime ${{ matrix.rid }} \
             --self-contained true \
@@ -71,17 +71,17 @@ jobs:
           V="${{ needs.metadata.outputs.version }}"
           RID="${{ matrix.rid }}"
           EXT="${{ matrix.ext }}"
-          mv "publish/${RID}/SunnySunday.Cli${EXT}" \
-             "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
-          mv "publish/${RID}/sunny${EXT}" \
-             "publish/sunny-${V}-${RID}${EXT}" 2>/dev/null || \
-          find "publish/${RID}" -maxdepth 1 -type f -not -name "*.pdb" -exec mv {} "publish/sunny-${V}-${RID}${EXT}" \;
+           mv "publish/${RID}/Relego.Cli${EXT}" \
+             "publish/relego-${V}-${RID}${EXT}" 2>/dev/null || \
+           mv "publish/${RID}/relego${EXT}" \
+             "publish/relego-${V}-${RID}${EXT}" 2>/dev/null || \
+           find "publish/${RID}" -maxdepth 1 -type f -not -name "*.pdb" -exec mv {} "publish/relego-${V}-${RID}${EXT}" \;
 
       - name: Upload CLI Artifacts
         uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.rid }}
-          path: publish/sunny-*
+          path: publish/relego-*
 
   create-release:
     name: Create GitHub Release

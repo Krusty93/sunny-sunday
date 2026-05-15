@@ -2,28 +2,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "SunnySunday.Cli",
+            "name": "Relego.Cli",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build: SunnySunday.Cli",
-            "program": "${workspaceFolder}/src/SunnySunday.Cli/bin/Debug/net10.0/SunnySunday.Cli.dll",
+            "preLaunchTask": "build: Relego.Cli",
+            "program": "${workspaceFolder}/src/Relego.Cli/bin/Debug/net10.0/Relego.Cli.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/SunnySunday.Cli",
+            "cwd": "${workspaceFolder}/src/Relego.Cli",
             "console": "integratedTerminal",
             "stopAtEntry": false
         },
         {
-            "name": "SunnySunday.Server",
+            "name": "Relego.Server",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build: SunnySunday.Server",
-            "program": "${workspaceFolder}/src/SunnySunday.Server/bin/Debug/net10.0/SunnySunday.Server.dll",
+            "preLaunchTask": "build: Relego.Server",
+            "program": "${workspaceFolder}/src/Relego.Server/bin/Debug/net10.0/Relego.Server.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/SunnySunday.Server",
+            "cwd": "${workspaceFolder}/src/Relego.Server",
             "console": "integratedTerminal",
             "stopAtEntry": false,
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "${input:serverEnvironment}"
+                "ASPNETCORE_ENVIRONMENT": "${input:serverEnvironment}",
+                "ASPNETCORE_URLS": "http://+:8080"
             },
             "serverReadyAction": {
                 "action": "openExternally",
@@ -33,10 +34,10 @@
     ],
     "compounds": [
         {
-            "name": "SunnySunday: Server + Cli",
+            "name": "Relego: Server + Cli",
             "configurations": [
-                "SunnySunday.Server",
-                "SunnySunday.Cli"
+                "Relego.Server",
+                "Relego.Cli"
             ],
             "stopAll": true
         }
@@ -45,7 +46,7 @@
         {
             "id": "serverEnvironment",
             "type": "pickString",
-            "description": "Pick the environment for SunnySunday.Server",
+            "description": "Pick the environment for Relego.Server",
             "options": [
                 "Development",
                 "Production"

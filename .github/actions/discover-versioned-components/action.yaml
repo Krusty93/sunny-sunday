@@ -1,5 +1,5 @@
 name: "Discover Versioned Components"
-description: "Discover versioned SunnySunday components from csproj files under src."
+description: "Discover versioned application components from csproj files under src."
 
 outputs:
   components_json:
@@ -34,9 +34,11 @@ runs:
           project_dir=$(basename "$project_path")
           csproj_name=$(basename "$csproj_path" .csproj)
 
-          raw_name="${project_dir#SunnySunday.}"
+          raw_name="$project_dir"
+          raw_name="${raw_name#*.}"
           if [ "$raw_name" = "$project_dir" ]; then
-            raw_name="${csproj_name#SunnySunday.}"
+            raw_name="$csproj_name"
+            raw_name="${raw_name#*.}"
           fi
 
           component_name=$(printf '%s' "$raw_name" | tr '[:upper:]' '[:lower:]')

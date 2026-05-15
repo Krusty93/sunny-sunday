@@ -1,0 +1,159 @@
+﻿using System.Data;
+using System.Reflection;
+using Dapper;
+using Microsoft.Data.Sqlite;
+using Microsoft.OpenApi;
+using Quartz;
+using Serilog;
+using Relego.Core.Contracts;
+using Relego.Server.Data;
+using Relego.Server.Endpoints;
+using Relego.Server.Infrastructure.Database;
+using Relego.Server.Infrastructure.Logging;
+using Relego.Server.Infrastructure.Smtp;
+using Relego.Server.Jobs;
+using Relego.Server.Services;
+
+SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
+
+var dbPath = ".data/relego.db";
+var connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
+
+var builder = WebApplication.CreateBuilder(args);
+
+SerilogConfiguration.ConfigureLogging(builder);
+
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    ["Smtp:Host"] = Environment.GetEnvironmentVariable("SMTP_HOST"),
+    ["Smtp:Port"] = Environment.GetEnvironmentVariable("SMTP_PORT"),
+    ["Smtp:Username"] = Environment.GetEnvironmentVariable("SMTP_USER"),
+    ["Smtp:Password"] = Environment.GetEnvironmentVariable("SMTP_PASSWORD"),
+});
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc(
+       "v1",
+        new OpenApiInfo
+        {
+            Title = "Relego APIs",
+            Version = "v1",
+            Contact = new OpenApiContact
+            {
+                Name = "Relego",
+                Url = new Uri("https://relego.io"),
+            }
+        }
+    );
+
+    IncludeXmlCommentsIfPresent(options, Assembly.GetExecutingAssembly());
+    IncludeXmlCommentsIfPresent(options, typeof(SettingsResponse).Assembly);
+});
+
+builder.Services.AddScoped<IDbConnection>(_ =>
+{
+    var conn = new SqliteConnection(connectionString);
+    conn.Open();
+    using var pragma = conn.CreateCommand();
+    pragma.CommandText = "PRAGMA foreign_keys = ON;";
+    pragma.ExecuteNonQuery();
+    return conn;
+});
+
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<SyncRepository>();
+builder.Services.AddScoped<SettingsRepository>();
+builder.Services.AddScoped<StatusRepository>();
+builder.Services.AddScoped<ExclusionRepository>();
+builder.Services.AddScoped<WeightRepository>();
+builder.Services.AddScoped<RecapRepository>();
+builder.Services.AddScoped<HighlightRepository>();
+
+builder.Services.AddQuartz(q =>
+{
+    q.UseTimeZoneConverter();
+
+    q.UsePersistentStore(store =>
+    {
+        store.UseNewtonsoftJsonSerializer();
+        store.UseMicrosoftSQLite(db =>
+        {
+            db.ConnectionString = connectionString;
+        });
+    });
+});
+builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+builder.Services.AddSingleton<ISchedulerService, SchedulerService>();
+builder.Services.AddTransient<RecapJob>();
+builder.Services.AddScoped<HighlightSelectionService>();
+
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IMailDeliveryService, DevMailDeliveryService>();
+else
+    builder.Services.AddScoped<IMailDeliveryService, MailDeliveryService>();
+
+builder.Services.AddScoped<IRecapService, RecapService>();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.DisplayRequestDuration();
+    });
+    app.MapDevEndpoints();
+}
+
+app.MapGet("/", () => "Relego server is running.");
+
+app.MapSyncEndpoints();
+app.MapSettingsEndpoints();
+app.MapStatusEndpoints();
+app.MapExclusionEndpoints();
+app.MapWeightEndpoints();
+app.MapHighlightEndpoints();
+
+var schemaBootstrap = new SchemaBootstrap();
+await schemaBootstrap.ApplyAsync(dbPath);
+await QuartzSchemaInitializer.ApplyAsync(connectionString);
+
+// Schedule recap trigger only on first run (persistent store preserves it across restarts)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var schedulerService = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
+
+    if (schedulerService.GetNextFireTimeUtc() is null)
+    {
+        var userRepo = scope.ServiceProvider.GetRequiredService<UserRepository>();
+        var settingsRepo = scope.ServiceProvider.GetRequiredService<SettingsRepository>();
+
+        var userId = await userRepo.EnsureUserAsync();
+        var settings = await settingsRepo.GetByUserIdAsync(userId);
+
+        // Default the timezone to the host machine's local timezone on first run
+        settings.Timezone = TimeZoneInfo.Local.Id;
+        await settingsRepo.UpsertAsync(settings);
+
+        await schedulerService.ScheduleAsync(settings);
+    }
+}
+
+Log.Information("Relego server started. Database: {DbPath}", dbPath);
+
+await app.RunAsync();
+
+static void IncludeXmlCommentsIfPresent(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options, Assembly assembly)
+{
+    var xmlFile = $"{assembly.GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+}

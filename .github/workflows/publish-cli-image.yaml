@@ -39,7 +39,7 @@ jobs:
       id-token: write
       attestations: write
     with:
-      image_name: ghcr.io/krusty93/sunnysunday.cli
+      image_name: ghcr.io/krusty93/relego.cli
       dockerfile: Dockerfile.cli
       version: ${{ needs.check-tag.outputs.version }}
       description: Periodic notes recaps, on your Kindle

@@ -4,9 +4,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/SunnySunday.**'
+      - 'src/Relego.**'
       - 'Dockerfile.ci'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/ci.yaml'
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
           context: .
           file: Dockerfile.ci
           target: build
-          tags: sunny-sunday-ci:latest
+          tags: relego-ci:latest
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -41,8 +41,8 @@ jobs:
           mkdir -p test-results
           docker run --rm \
             -v "${{ github.workspace }}/test-results:/test-results" \
-            sunny-sunday-ci:latest \
-            dotnet test /src/SunnySunday.Tests/SunnySunday.Tests.csproj \
+            relego-ci:latest \
+            dotnet test /src/Relego.Tests/Relego.Tests.csproj \
               --no-build \
               --configuration Release \
               --logger "trx;LogFileName=results.trx" \

@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY src/ ./
-RUN dotnet restore SunnySunday.Server/SunnySunday.Server.csproj
-RUN dotnet publish SunnySunday.Server/SunnySunday.Server.csproj \
+RUN dotnet restore Relego.Server/Relego.Server.csproj
+RUN dotnet publish Relego.Server/Relego.Server.csproj \
     --configuration Release \
     --output /out \
     --no-restore
@@ -21,4 +21,4 @@ RUN mkdir -p /data \
 VOLUME ["/data"]
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "SunnySunday.Server.dll"]
+ENTRYPOINT ["dotnet", "Relego.Server.dll"]
