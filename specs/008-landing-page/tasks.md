@@ -153,9 +153,9 @@
 
 **Purpose**: Create a dedicated CI workflow for the landing page that builds, tests, and deploys to GitHub Pages
 
-- [X] T040 Create `.github/workflows/landing-page.yml` with: trigger on push to `main` with path filter `src/landing/**`; trigger on pull requests with same path filter (build + test only, no deploy); Node.js 24 setup; `cd src/landing && npm ci`; `npm run build`; `npx playwright install --with-deps chromium && npx playwright test`; on push to `main`: upload `dist/` as Pages artifact via `actions/upload-pages-artifact@v4` and deploy via `actions/deploy-pages@v4`; set `permissions: pages: write, id-token: write` for OIDC deployment
-- [X] T041 [P] Add `.github/workflows/landing-page.yml` concurrency group to prevent overlapping deployments: `concurrency: { group: "pages", cancel-in-progress: false }`
-- [X] T042 Verify CI workflow syntax: run `cd /workspaces/sunny-sunday && cat .github/workflows/landing-page.yml | head -5` and validate YAML structure is correct
+- [X] T040 Create `.github/workflows/landing-page.yaml` with: trigger on push to `main` with path filter `src/landing/**`; trigger on pull requests with same path filter (build + test only, no deploy); Node.js 24 setup; `cd src/landing && npm ci`; `npm run build`; `npx playwright install --with-deps chromium && npx playwright test`; on push to `main`: upload `dist/` as Pages artifact via `actions/upload-pages-artifact@v4` and deploy via `actions/deploy-pages@v4`; set `permissions: pages: write, id-token: write` for OIDC deployment
+- [X] T041 [P] Add `.github/workflows/landing-page.yaml` concurrency group to prevent overlapping deployments: `concurrency: { group: "pages", cancel-in-progress: false }`
+- [X] T042 Verify CI workflow syntax: run `cd /workspaces/sunny-sunday && cat .github/workflows/landing-page.yaml | head -5` and validate YAML structure is correct
 
 **Checkpoint**: CI pipeline created. Builds, tests, and deploys the landing page to GitHub Pages on push to main.
 
