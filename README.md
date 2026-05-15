@@ -30,8 +30,6 @@
 
 Run `relego` without arguments to open the interactive TUI:
 
-[TODO: GIF della TUI]
-
 Use the TUI to configure the server, browse highlights, and manage exclusions. For automation and scripting, use the CLI commands directly (see CLI reference).
 
 ## Getting started
