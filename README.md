@@ -1,11 +1,9 @@
-<p align="center">
-  <img src="docs/assets/header.png" width="500" />
-</p>
+![Relego landing page hero section in dark theme](docs/assets/landing-hero-dark.jpg)
 
 <h1 align="center">Relego</h1>
 
 <p align="center">
-  Periodic highlights recap, delivered to your Kindle. For free.
+  Revisit your highlights, delivered to your Kindle. For free.
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,8 +16,6 @@
 - **Free and self-hosted**: no subscription, no data leaving your infrastructure
 - **No lock-in**: your highlights stay yours, in an open format
 - **Privacy**: your reading habits are not sent to any cloud service
-
-![Relego landing page hero section in dark theme](docs/assets/landing-hero-dark.jpg)
 
 ---
 
