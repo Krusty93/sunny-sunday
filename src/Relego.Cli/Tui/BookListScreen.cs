@@ -122,8 +122,9 @@ public sealed class BookListScreen(
         };
         _searchFrame.SetScheme(CreateSearchFrameScheme(isFocused: false));
 
+        var palette = TuiTheme.Palette;
         var fieldAttribute = new Terminal.Gui.Drawing.Attribute(
-            Terminal.Gui.Drawing.Color.White, StatusChrome.Background);
+            palette.Text, palette.Background);
 
         _searchField = new SearchTextField
         {
@@ -151,7 +152,7 @@ public sealed class BookListScreen(
             Visible = string.IsNullOrEmpty(GetToolbarText())
         };
         _searchPlaceholder.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(90, 90, 90), StatusChrome.Background)));
+            palette.TextMuted, palette.Background)));
 
         _searchFrame.Add(_searchField, _searchPlaceholder);
         container.Add(_searchFrame);
@@ -165,19 +166,20 @@ public sealed class BookListScreen(
 
     private static Scheme CreateSearchFrameScheme(bool isFocused)
     {
+        var palette = TuiTheme.Palette;
         var borderColor = isFocused
-            ? new Terminal.Gui.Drawing.Color(110, 200, 255)
-            : new Terminal.Gui.Drawing.Color(60, 100, 140);
+            ? palette.BorderFocus
+            : palette.Border;
 
-        return new Scheme(new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background))
+        return new Scheme(new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background))
         {
-            Normal = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
-            Focus = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
-            Active = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
-            HotNormal = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
-            HotFocus = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
-            HotActive = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background),
-            Disabled = new Terminal.Gui.Drawing.Attribute(borderColor, StatusChrome.Background)
+            Normal = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background),
+            Focus = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background),
+            Active = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background),
+            HotNormal = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background),
+            HotFocus = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background),
+            HotActive = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background),
+            Disabled = new Terminal.Gui.Drawing.Attribute(borderColor, palette.Background)
         };
     }
 
@@ -260,7 +262,7 @@ public sealed class BookListScreen(
                 Y = Pos.Center()
             };
             _errorLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-                new Terminal.Gui.Drawing.Color(255, 100, 100), StatusChrome.Background)));
+                TuiTheme.Palette.Error, TuiTheme.Palette.Background)));
             container.Add(_errorLabel);
 
             void RefreshEmpty()
@@ -291,7 +293,7 @@ public sealed class BookListScreen(
             Width = Dim.Fill(TableHorizontalPadding * 2)
         };
         titleLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(110, 200, 255), StatusChrome.Background)));
+            TuiTheme.Palette.AccentText, TuiTheme.Palette.Background)));
 
         var headerLabel = new Label
         {
@@ -301,7 +303,7 @@ public sealed class BookListScreen(
             Width = Dim.Fill(TableHorizontalPadding * 2)
         };
         headerLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+            TuiTheme.Palette.TextMuted, TuiTheme.Palette.Background)));
 
         var headerRuleLabel = new Label
         {
@@ -311,7 +313,7 @@ public sealed class BookListScreen(
             Text = string.Empty
         };
         headerRuleLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(60, 100, 140), StatusChrome.Background)));
+            TuiTheme.Palette.Border, TuiTheme.Palette.Background)));
 
         var displayItems = new ObservableCollection<string>(
             _filteredBooks.Select(book => FormatBookRow(book, tableLayout)));
@@ -971,9 +973,10 @@ public sealed class BookListScreen(
     {
         feedbackLabel.Text = _feedbackMessage ?? string.Empty;
         feedbackLabel.Visible = !string.IsNullOrWhiteSpace(_feedbackMessage);
+        var palette = TuiTheme.Palette;
         feedbackLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            _feedbackIsError ? new Terminal.Gui.Drawing.Color(255, 100, 100) : new Terminal.Gui.Drawing.Color(150, 190, 230),
-            StatusChrome.Background)));
+            _feedbackIsError ? palette.Error : palette.TextMuted,
+            palette.Background)));
     }
 
 }

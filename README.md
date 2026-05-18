@@ -32,6 +32,11 @@ Run `relego` without arguments to open the interactive TUI:
 
 Use the TUI to configure the server, browse highlights, and manage exclusions. For automation and scripting, use the CLI commands directly (see CLI reference).
 
+Theme selection for TUI:
+
+- `RELEGO_THEME=dark` (default)
+- `RELEGO_THEME=light`
+
 ## Getting started
 
 ### 1. Connect your Kindle device

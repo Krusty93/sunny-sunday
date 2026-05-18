@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* Shared palette reference: docs/BRAND_COLORS.md */
+
 :root {
 	color-scheme: light;
 	--color-bg: #f7f1e8;

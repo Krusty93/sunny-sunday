@@ -139,7 +139,7 @@ public sealed class HighlightDetailScreen : IScreen
             Text = _bookTitle
         };
         _titleLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(110, 200, 255), StatusChrome.Background)));
+            TuiTheme.Palette.AccentText, TuiTheme.Palette.Background)));
 
         _authorLabel = new Label
         {
@@ -151,7 +151,7 @@ public sealed class HighlightDetailScreen : IScreen
             Text = $"by {_authorName}"
         };
         _authorLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+            TuiTheme.Palette.TextMuted, TuiTheme.Palette.Background)));
 
         _summaryLabel = new Label
         {
@@ -172,7 +172,7 @@ public sealed class HighlightDetailScreen : IScreen
             CanFocus = false
         };
         _headerLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+            TuiTheme.Palette.TextMuted, TuiTheme.Palette.Background)));
 
         _headerRuleLabel = new Label
         {
@@ -184,7 +184,7 @@ public sealed class HighlightDetailScreen : IScreen
             CanFocus = false
         };
         _headerRuleLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(60, 100, 140), StatusChrome.Background)));
+            TuiTheme.Palette.Border, TuiTheme.Palette.Background)));
 
         _highlightRows = new ObservableCollection<string>();
         _highlightList = new ShortcutListView
@@ -324,7 +324,7 @@ public sealed class HighlightDetailScreen : IScreen
             CanFocus = false
         };
         _statusLabel.SetScheme(new Terminal.Gui.Drawing.Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Terminal.Gui.Drawing.Color(150, 190, 230), StatusChrome.Background)));
+            TuiTheme.Palette.TextMuted, TuiTheme.Palette.Background)));
 
         container.KeyDown += async (_, key) => await HandleContainerKeyDownAsync(key).ConfigureAwait(false);
         container.SubViewsLaidOut += (_, _) => UpdateTableLayout();
