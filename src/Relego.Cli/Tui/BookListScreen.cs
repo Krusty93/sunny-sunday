@@ -30,6 +30,7 @@ public sealed class BookListScreen(
     private const string SearchPlaceholderFocused = "Press Esc to return to the list";
     private const string SyncPlaceholderDetected = "Press Enter to sync or edit the path";
     private const string SyncPlaceholderManual = "Enter the path to My Clippings.txt";
+    private const string RenamePlaceholder = "Enter new title, press Enter to confirm or Esc to cancel";
 
     private readonly RelegoHttpClient _client = client;
     private readonly ClippingsSyncWorkflow _syncWorkflow = syncWorkflow;
@@ -41,6 +42,7 @@ public sealed class BookListScreen(
     private bool _isSearchActive;
     private string _searchQuery = string.Empty;
     private string _syncPathInput = string.Empty;
+    private string _renameInput = string.Empty;
     private string? _detectedSyncPath;
     private bool _hasDetectedSyncPath;
     private FrameView? _searchFrame;
@@ -67,6 +69,8 @@ public sealed class BookListScreen(
 
     public bool IsSyncPromptActive => _toolbarMode == ToolbarMode.SyncPath;
 
+    public bool IsRenamePromptActive => _toolbarMode == ToolbarMode.Rename;
+
     public string SearchQuery => _searchQuery;
 
     public string SyncPathInput => _syncPathInput;
@@ -82,6 +86,7 @@ public sealed class BookListScreen(
         ("↑↓", "Navigate"),
         ("Enter", "View"),
         ("I", "Import"),
+        ("N", "Rename"),
         ("S", "Settings"),
         ("/", "Search"),
         ("R", "Refresh"),
@@ -93,7 +98,8 @@ public sealed class BookListScreen(
     private enum ToolbarMode
     {
         Search,
-        SyncPath
+        SyncPath,
+        Rename
     }
 
     public int ToolbarHeight => 4;
@@ -492,6 +498,96 @@ public sealed class BookListScreen(
         UpdateToolbarChrome();
     }
 
+    public void BeginRenamePrompt(BookViewModel book)
+    {
+        _toolbarMode = ToolbarMode.Rename;
+        _isSearchActive = false;
+        _renameInput = book.Title;
+
+        if (_searchField is not null)
+        {
+            _searchField.Text = _renameInput;
+            _searchField.SetFocus();
+            _searchField.MoveEnd();
+        }
+
+        UpdateToolbarChrome();
+    }
+
+    public void CancelRenamePrompt()
+    {
+        _toolbarMode = ToolbarMode.Search;
+        _renameInput = string.Empty;
+
+        if (_searchField is null)
+        {
+            return;
+        }
+
+        _searchField.Text = _searchQuery;
+
+        if (_listView is not null)
+            _listView.SetFocus();
+        else
+            _searchField.SetFocus();
+
+        UpdateToolbarChrome();
+    }
+
+    public async Task SubmitRenameAsync(string? newTitle = null, CancellationToken cancellationToken = default)
+    {
+        var resolvedTitle = (newTitle ?? _renameInput).Trim();
+
+        if (string.IsNullOrWhiteSpace(resolvedTitle))
+        {
+            SetFeedback("Enter a title or press Esc to cancel.", isError: true);
+            return;
+        }
+
+        var book = GetSelectedBook();
+        if (book is null)
+        {
+            CancelRenamePrompt();
+            return;
+        }
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await _client.RenameBookAsync(book.BookId, new Core.Contracts.RenameBookRequest { Title = resolvedTitle }, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            SetFeedback("Cannot reach server.", isError: true);
+            CancelRenamePrompt();
+            return;
+        }
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            SetFeedback($"Book {book.BookId} not found.", isError: true);
+            CancelRenamePrompt();
+            return;
+        }
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            SetFeedback($"A book titled \"{resolvedTitle}\" by the same author already exists.", isError: true);
+            CancelRenamePrompt();
+            return;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        CancelRenamePrompt();
+        SetFeedback($"Book renamed to \"{resolvedTitle}\".", isError: false);
+
+        // Reload so the list reflects the new title
+        await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        _refreshVisibleBooks?.Invoke();
+    }
+
     public async Task<ClippingsSyncOutcome> SubmitSyncAsync(string? filePath = null, CancellationToken cancellationToken = default)
     {
         var resolvedPath = filePath ?? _syncPathInput;
@@ -627,6 +723,12 @@ public sealed class BookListScreen(
 
             case 'i':
                 focusSyncField?.Invoke();
+                return true;
+
+            case 'n':
+                var bookToRename = GetSelectedBook();
+                if (bookToRename is not null)
+                    BeginRenamePrompt(bookToRename);
                 return true;
 
             case 'r':
@@ -860,6 +962,10 @@ public sealed class BookListScreen(
         {
             _syncPathInput = _searchField.Text ?? string.Empty;
         }
+        else if (_toolbarMode == ToolbarMode.Rename)
+        {
+            _renameInput = _searchField.Text ?? string.Empty;
+        }
         else
         {
             _searchQuery = _searchField.Text ?? string.Empty;
@@ -883,6 +989,17 @@ public sealed class BookListScreen(
             return;
         }
 
+        if (_toolbarMode == ToolbarMode.Rename)
+        {
+            if (key.KeyCode == KeyCode.Esc)
+            {
+                CancelRenamePrompt();
+                key.Handled = true;
+            }
+
+            return;
+        }
+
         if (key.KeyCode is KeyCode.Esc or KeyCode.CursorDown)
         {
             LeaveSearchInput(_refreshVisibleBooks);
@@ -893,6 +1010,12 @@ public sealed class BookListScreen(
 
     private async Task HandleToolbarSubmitAsync()
     {
+        if (_toolbarMode == ToolbarMode.Rename)
+        {
+            await SubmitRenameAsync(cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            return;
+        }
+
         if (_toolbarMode != ToolbarMode.SyncPath)
         {
             return;
@@ -901,7 +1024,12 @@ public sealed class BookListScreen(
         await SubmitSyncAsync(cancellationToken: CancellationToken.None).ConfigureAwait(false);
     }
 
-    private string GetToolbarText() => _toolbarMode == ToolbarMode.SyncPath ? _syncPathInput : _searchQuery;
+    private string GetToolbarText() => _toolbarMode switch
+    {
+        ToolbarMode.SyncPath => _syncPathInput,
+        ToolbarMode.Rename => _renameInput,
+        _ => _searchQuery
+    };
 
     private string GetToolbarPlaceholder(bool hasFocus)
     {
@@ -911,6 +1039,9 @@ public sealed class BookListScreen(
                 ? SyncPlaceholderDetected
                 : SyncPlaceholderManual;
         }
+
+        if (_toolbarMode == ToolbarMode.Rename)
+            return RenamePlaceholder;
 
         return hasFocus ? SearchPlaceholderFocused : SearchPlaceholderIdle;
     }
@@ -929,7 +1060,12 @@ public sealed class BookListScreen(
             return;
         }
 
-        _searchFrame.Title = _toolbarMode == ToolbarMode.SyncPath ? " Import " : string.Empty;
+        _searchFrame.Title = _toolbarMode switch
+        {
+            ToolbarMode.SyncPath => " Import ",
+            ToolbarMode.Rename => " Rename ",
+            _ => string.Empty
+        };
         _searchPlaceholder.Visible = string.IsNullOrEmpty(_searchField.Text);
         _searchPlaceholder.Text = GetToolbarPlaceholder(_searchField.HasFocus);
         _searchFrame.SetScheme(CreateSearchFrameScheme(_searchField.HasFocus));

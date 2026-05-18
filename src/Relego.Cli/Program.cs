@@ -107,6 +107,9 @@ app.Configure(config =>
         wgt.AddCommand<WeightListCommand>("list")
             .WithDescription("List all highlights with custom weights.");
     });
+
+    config.AddCommand<RenameBookCommand>("rename-book")
+        .WithDescription("Rename a book by its ID.");
 });
 
 return await app.RunAsync(args);
