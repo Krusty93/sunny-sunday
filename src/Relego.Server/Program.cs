@@ -111,8 +111,7 @@ if (app.Environment.IsDevelopment())
     app.MapDevEndpoints();
 }
 
-app.MapGet("/", () => "Relego server is running.");
-
+app.MapProbeEndpoints();
 app.MapSyncEndpoints();
 app.MapSettingsEndpoints();
 app.MapStatusEndpoints();
