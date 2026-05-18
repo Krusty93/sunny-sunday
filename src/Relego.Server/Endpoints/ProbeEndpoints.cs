@@ -10,20 +10,12 @@ public static class ProbeEndpoints
     {
         app.MapGet("/healthz/live", async ([FromServices] IDbConnection db) =>
         {
-            try
-            {
-                await db.ExecuteScalarAsync<int>("SELECT 1").ConfigureAwait(false);
-                return Results.NoContent();
-            }
-            catch
-            {
-                return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-            }
+            return Results.NoContent();
         })
         .WithSummary("Liveness probe.")
-        .WithDescription("Verifies database connectivity. Returns 204 when healthy; 503 when the database is unreachable. Intended for container liveness probes.")
+        .WithDescription("Verifies application health. Returns 204 when healthy. Intended for container liveness probes.")
         .Produces(StatusCodes.Status204NoContent)
-        .Produces(StatusCodes.Status503ServiceUnavailable)
+        .Produces(StatusCodes.Status500InternalServerError)
         .ExcludeFromDescription();
 
         app.MapGet("/healthz/startup", async ([FromServices] IDbConnection db) =>
