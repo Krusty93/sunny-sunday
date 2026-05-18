@@ -115,7 +115,7 @@ public sealed class SettingsScreen : IScreen
             CanFocus = false
         };
         headerLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Color(110, 200, 255), StatusChrome.Background)));
+            TuiTheme.Palette.AccentText, TuiTheme.Palette.Background)));
 
         _fieldRows = new System.Collections.ObjectModel.ObservableCollection<string>();
         _fieldList = new ShortcutListView
@@ -149,7 +149,7 @@ public sealed class SettingsScreen : IScreen
             CanFocus = false
         };
         _editPromptLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(
-            new Color(150, 190, 230), StatusChrome.Background)));
+            TuiTheme.Palette.TextMuted, TuiTheme.Palette.Background)));
 
         _editField = new TextField
         {
@@ -160,7 +160,7 @@ public sealed class SettingsScreen : IScreen
             Visible = false,
             CanFocus = true
         };
-        var editFieldAttribute = new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background);
+        var editFieldAttribute = new Terminal.Gui.Drawing.Attribute(TuiTheme.Palette.Text, TuiTheme.Palette.Background);
         _editField.SetScheme(CreateEditFieldScheme(editFieldAttribute));
         _editField.Accepting += async (_, _) => await HandleEditSubmitAsync().ConfigureAwait(false);
         _editField.KeyDown += (_, key) =>
@@ -550,8 +550,8 @@ public sealed class SettingsScreen : IScreen
             {
                 _statusLabel.Text = _statusMessage;
                 _statusLabel.Visible = true;
-                var color = _statusIsError ? new Color(255, 100, 100) : new Color(100, 220, 100);
-                _statusLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(color, StatusChrome.Background)));
+                var color = _statusIsError ? TuiTheme.Palette.Error : TuiTheme.Palette.Success;
+                _statusLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(color, TuiTheme.Palette.Background)));
             }
             else
             {

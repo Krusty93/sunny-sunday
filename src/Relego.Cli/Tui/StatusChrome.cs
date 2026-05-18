@@ -17,7 +17,7 @@ public sealed class StatusChrome(string serverUrl, string version)
         "╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚══════╝   ╚═════╝   ╚═════╝ ",
     ];
 
-    public static readonly Color Background = new(30, 30, 30);
+    public static Color Background => TuiTheme.Palette.Background;
 
     public const int LogoHeight = 7; // 6 logo + separator
 
@@ -30,7 +30,8 @@ public sealed class StatusChrome(string serverUrl, string version)
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the parent container hierarchy")]
     public View CreateView()
     {
-        var bg = Background;
+        var palette = TuiTheme.Palette;
+        var bg = palette.Background;
 
         var container = new View
         {
@@ -39,7 +40,7 @@ public sealed class StatusChrome(string serverUrl, string version)
             Width = Dim.Fill(),
             Height = LogoHeight
         };
-        container.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, bg)));
+        container.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Text, bg)));
 
         for (var i = 0; i < LogoLines.Length; i++)
         {
@@ -50,7 +51,7 @@ public sealed class StatusChrome(string serverUrl, string version)
                 Y = i,
                 Width = Dim.Fill(1)
             };
-            logoLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(0, 191, 255), bg)));
+            logoLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.AccentText, bg)));
             container.Add(logoLabel);
         }
 
@@ -61,7 +62,7 @@ public sealed class StatusChrome(string serverUrl, string version)
             Y = LogoLines.Length,
             Width = Dim.Fill()
         };
-        separatorLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(60, 60, 60), bg)));
+        separatorLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Border, bg)));
         container.Add(separatorLabel);
 
         var longestContent = $"⟳ Checking...  {serverUrl}";
@@ -76,7 +77,7 @@ public sealed class StatusChrome(string serverUrl, string version)
             Height = 5,
             BorderStyle = LineStyle.Rounded
         };
-        infoFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(80, 85, 90), bg)));
+        infoFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Border, bg)));
 
         var versionLabel = new Label
         {
@@ -86,7 +87,7 @@ public sealed class StatusChrome(string serverUrl, string version)
             Width = Dim.Fill(1),
             TextAlignment = Alignment.End
         };
-        versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), bg)));
+        versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.TextMuted, bg)));
 
         _connectionLabel = new Label
         {
@@ -142,7 +143,8 @@ public sealed class StatusChrome(string serverUrl, string version)
 
     public void UpdateLabels()
     {
-        var bg = Background;
+        var palette = TuiTheme.Palette;
+        var bg = palette.Background;
 
         if (_connectionLabel is not null)
         {
@@ -151,8 +153,8 @@ public sealed class StatusChrome(string serverUrl, string version)
                 : $"● Disconnected  {serverUrl}";
 
             _connectionLabel.SetScheme(IsConnected
-                ? new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(0, 200, 0), bg))
-                : new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(255, 0, 0), bg)));
+                ? new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Success, bg))
+                : new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Error, bg)));
         }
 
         if (_warningLabel is not null)
@@ -164,7 +166,7 @@ public sealed class StatusChrome(string serverUrl, string version)
             else
             {
                 _warningLabel.Text = "⚠ Kindle email not configured";
-                _warningLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(255, 255, 0), bg)));
+                _warningLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Warning, bg)));
             }
         }
     }

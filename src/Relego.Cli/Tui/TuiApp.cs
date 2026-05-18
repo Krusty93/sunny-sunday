@@ -21,19 +21,6 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
         "╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚══════╝   ╚═════╝   ╚═════╝ ",
     ];
 
-    private static readonly Color[] LineColors =
-    [
-        new(30, 80, 220),
-        new(0, 120, 255),
-        new(0, 160, 255),
-        new(0, 191, 255),
-        new(100, 220, 255),
-        new(0, 160, 255),
-    ];
-
-    private static readonly Color FooterKeyColor = new(110, 200, 255);
-    private static readonly Color FooterLabelColor = new(190, 190, 190);
-
     private readonly RelegoHttpClient _client = client;
     private readonly ClippingsSyncWorkflow _syncWorkflow = syncWorkflow;
     private readonly StatusChrome _chrome = new(serverUrl, version);
@@ -73,7 +60,8 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
                 Title = "Relego",
                 BorderStyle = LineStyle.None
             };
-            _window.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background)));
+            var palette = TuiTheme.Palette;
+            _window.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Text, palette.Background)));
 
             using var headerView = _chrome.CreateView();
             _window.Add(headerView);
@@ -87,7 +75,7 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
                 Title = _screens.Peek().Title,
                 CanFocus = true
             };
-            _contentFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(60, 100, 140), StatusChrome.Background)));
+            _contentFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Border, palette.Background)));
             _window.Add(_contentFrame);
 
             _statusBar = new View
@@ -98,7 +86,7 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
                 Height = 1,
                 CanFocus = false
             };
-            _statusBar.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(180, 180, 180), StatusChrome.Background)));
+            _statusBar.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.TextMuted, palette.Background)));
             _window.Add(_statusBar);
 
             ShowCurrentScreen();
@@ -123,12 +111,13 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
         }
 
         using var win = new Window { BorderStyle = LineStyle.None };
-        win.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background)));
+        var palette = TuiTheme.Palette;
+        win.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Text, palette.Background)));
 
         var line1 = new Label { Text = "Terminal too small.", X = Pos.Center(), Y = Pos.AnchorEnd(4) };
         var line2 = new Label { Text = "Please resize to at least 80×24 and restart.", X = Pos.Center(), Y = Pos.AnchorEnd(3) };
         var line3 = new Label { Text = "Press any key to exit.", X = Pos.Center(), Y = Pos.AnchorEnd(2) };
-        line3.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), StatusChrome.Background)));
+        line3.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.TextMuted, palette.Background)));
         win.Add(line1, line2, line3);
         win.KeyDown += (_, _) => _app!.RequestStop();
         _app.Run(win);
@@ -147,7 +136,8 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
         {
             BorderStyle = LineStyle.None
         };
-        splashWindow.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(Color.White, StatusChrome.Background)));
+        var palette = TuiTheme.Palette;
+        splashWindow.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Text, palette.Background)));
 
         var maxWidth = SplashLines.Max(line => line.Length);
         var splashContentWidth = maxWidth;
@@ -186,7 +176,7 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
                 Width = splashContentWidth,
                 TextAlignment = Alignment.Center
             };
-            labels[i].SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(LineColors[i], StatusChrome.Background)));
+            labels[i].SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.SplashLineColors[i], palette.Background)));
             splashContent.Add(labels[i]);
         }
 
@@ -198,7 +188,7 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
             Width = splashContentWidth,
             TextAlignment = Alignment.Center
         };
-        versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(new Color(128, 128, 128), StatusChrome.Background)));
+        versionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.TextMuted, palette.Background)));
         splashContent.Add(versionLabel);
 
         var token = _app.Begin(splashWindow);
@@ -353,6 +343,8 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
             return;
         }
 
+        var palette = TuiTheme.Palette;
+
         _statusBar.RemoveAll();
 
         var cursorX = 1;
@@ -377,7 +369,7 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
                 Text = keyText,
                 CanFocus = false
             };
-            keyLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(FooterKeyColor, StatusChrome.Background)));
+            keyLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.AccentText, palette.Background)));
             _statusBar.Add(keyLabel);
             cursorX += keyText.Length;
 
@@ -393,7 +385,7 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
                     Text = labelText,
                     CanFocus = false
                 };
-                descriptionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(FooterLabelColor, StatusChrome.Background)));
+                descriptionLabel.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.TextMuted, palette.Background)));
                 _statusBar.Add(descriptionLabel);
                 cursorX += labelText.Length;
             }
