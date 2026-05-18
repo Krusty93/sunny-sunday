@@ -1,5 +1,7 @@
 ﻿using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
+using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Relego.Cli.Infrastructure;
@@ -10,6 +12,15 @@ namespace Relego.Cli.Tui;
 public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWorkflow, string serverUrl, string version)
 {
     private const int SplashTopPadding = 1;
+    private const int ExitConfirmationWidth = 56;
+    private const int ExitConfirmationHeight = 5;
+
+    private static readonly IReadOnlyList<(string Key, string Label)> ExitConfirmationHints =
+    [
+        ("Y", "Confirm"),
+        ("N", "Cancel"),
+        ("Esc", "Cancel")
+    ];
 
     private static readonly string[] SplashLines =
     [
@@ -30,6 +41,9 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
     private View? _toolbarView;
     private View? _statusBar;
     private Window? _window;
+    private FrameView? _exitConfirmationFrame;
+    private bool _isExitConfirmationOpen;
+    private IReadOnlyList<(string Key, string Label)> _currentHints = [];
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -88,6 +102,14 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
             };
             _statusBar.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.TextMuted, palette.Background)));
             _window.Add(_statusBar);
+
+            _window.KeyDown += (_, key) =>
+            {
+                if (HandleExitConfirmationKey(key))
+                {
+                    key.Handled = true;
+                }
+            };
 
             ShowCurrentScreen();
 
@@ -245,6 +267,9 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
             case ScreenAction.Reload:
                 ShowCurrentScreen();
                 return;
+            case ScreenAction.ConfirmQuit:
+                OpenExitConfirmation();
+                return;
             case ScreenAction.Push when result.Next is not null:
                 _ = Task.Run(async () =>
                 {
@@ -332,7 +357,110 @@ public sealed class TuiApp(RelegoHttpClient client, ClippingsSyncWorkflow syncWo
         _contentFrame.Add(view);
         view.SetFocus();
 
-        UpdateStatusBar(screen.KeyHints);
+        _currentHints = screen.KeyHints;
+        UpdateStatusBar(_isExitConfirmationOpen ? ExitConfirmationHints : _currentHints);
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Views are owned by the window hierarchy")]
+    private void EnsureExitConfirmationView()
+    {
+        if (_window is null || _exitConfirmationFrame is not null)
+        {
+            return;
+        }
+
+        var palette = TuiTheme.Palette;
+        _exitConfirmationFrame = new FrameView
+        {
+            X = Pos.Center() - (ExitConfirmationWidth / 2),
+            Y = Pos.Center() - (ExitConfirmationHeight / 2),
+            Width = ExitConfirmationWidth,
+            Height = ExitConfirmationHeight,
+            Title = "Confirm Exit",
+            CanFocus = true,
+            Visible = false
+        };
+        _exitConfirmationFrame.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.BorderFocus, palette.Background)));
+
+        var message = new Label
+        {
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(2),
+            Height = 1,
+            Text = "Exit Relego? Press Y to confirm or N/Esc to cancel.",
+            CanFocus = false
+        };
+        message.SetScheme(new Scheme(new Terminal.Gui.Drawing.Attribute(palette.Text, palette.Background)));
+
+        _exitConfirmationFrame.Add(message);
+        _window.Add(_exitConfirmationFrame);
+    }
+
+    private void OpenExitConfirmation()
+    {
+        if (_isExitConfirmationOpen)
+        {
+            return;
+        }
+
+        EnsureExitConfirmationView();
+        if (_exitConfirmationFrame is null)
+        {
+            return;
+        }
+
+        _isExitConfirmationOpen = true;
+        _exitConfirmationFrame.Visible = true;
+        _exitConfirmationFrame.SetFocus();
+        UpdateStatusBar(ExitConfirmationHints);
+    }
+
+    private void CloseExitConfirmation()
+    {
+        if (!_isExitConfirmationOpen)
+        {
+            return;
+        }
+
+        _isExitConfirmationOpen = false;
+        if (_exitConfirmationFrame is not null)
+        {
+            _exitConfirmationFrame.Visible = false;
+        }
+
+        if (_contentFrame?.SubViews.FirstOrDefault() is { } currentView)
+        {
+            currentView.SetFocus();
+        }
+
+        UpdateStatusBar(_currentHints);
+    }
+
+    private bool HandleExitConfirmationKey(Key key)
+    {
+        if (!_isExitConfirmationOpen)
+        {
+            return false;
+        }
+
+        var rune = key.AsRune.Value;
+        var confirm = rune is 'y' or 'Y' || key.KeyCode == KeyCode.Enter;
+        var cancel = rune is 'n' or 'N' || key.KeyCode == KeyCode.Esc;
+
+        if (confirm)
+        {
+            _app?.RequestStop();
+            return true;
+        }
+
+        if (cancel)
+        {
+            CloseExitConfirmation();
+            return true;
+        }
+
+        return true;
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Labels are owned by the footer view")]

@@ -216,11 +216,21 @@ public sealed class SettingsScreenTests
     }
 
     [Fact]
-    public async Task HandleKeyAsync_QReturnsQuit()
+    public async Task HandleKeyAsync_QReturnsConfirmQuit()
     {
         var screen = await CreateInitializedScreen();
 
         var result = await screen.HandleKeyAsync(Key(ConsoleKey.Q, 'q'), CancellationToken.None);
+
+        Assert.Equal(ScreenAction.ConfirmQuit, result.Action);
+    }
+
+    [Fact]
+    public async Task HandleKeyAsync_CtrlCReturnsQuit()
+    {
+        var screen = await CreateInitializedScreen();
+
+        var result = await screen.HandleKeyAsync(new ConsoleKeyInfo('c', ConsoleKey.C, false, false, true), CancellationToken.None);
 
         Assert.Equal(ScreenAction.Quit, result.Action);
     }

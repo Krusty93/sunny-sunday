@@ -386,7 +386,7 @@ public sealed class HighlightDetailScreen : IScreen
             ConsoleKey.Enter => OpenHighlightPreview(),
             ConsoleKey.A => OpenActionMenu(),
             ConsoleKey.R => await RefreshAsync(cancellationToken).ConfigureAwait(false),
-            ConsoleKey.Q => ScreenResult.Quit(),
+            ConsoleKey.Q => ScreenResult.ConfirmQuit(),
             ConsoleKey.Escape => ScreenResult.Pop(),
             ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control) => ScreenResult.Quit(),
             _ => ScreenResult.Stay()
@@ -493,7 +493,7 @@ public sealed class HighlightDetailScreen : IScreen
             ConsoleKey.DownArrow => MoveActionSelection(1),
             ConsoleKey.Escape => CloseActionMenu(),
             ConsoleKey.Enter => await ExecuteSelectedActionAsync(cancellationToken).ConfigureAwait(false),
-            ConsoleKey.Q => ScreenResult.Quit(),
+            ConsoleKey.Q => ScreenResult.ConfirmQuit(),
             ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control) => ScreenResult.Quit(),
             _ => ScreenResult.Stay()
         };
@@ -530,7 +530,7 @@ public sealed class HighlightDetailScreen : IScreen
             case ConsoleKey.NumPad5:
                 return SelectPendingWeight(5);
             case ConsoleKey.Q:
-                return ScreenResult.Quit();
+                return ScreenResult.ConfirmQuit();
             case ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control):
                 return ScreenResult.Quit();
             default:
@@ -545,7 +545,7 @@ public sealed class HighlightDetailScreen : IScreen
             ConsoleKey.Escape => CloseHighlightPreview(),
             ConsoleKey.Enter => CloseHighlightPreview(),
             ConsoleKey.A => CloseHighlightPreview(),
-            ConsoleKey.Q => ScreenResult.Quit(),
+            ConsoleKey.Q => ScreenResult.ConfirmQuit(),
             ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control) => ScreenResult.Quit(),
             _ => ScreenResult.Stay()
         };
@@ -564,7 +564,7 @@ public sealed class HighlightDetailScreen : IScreen
                 await DeleteSelectedHighlightAsync(cancellationToken).ConfigureAwait(false);
                 return ScreenResult.Stay();
             case ConsoleKey.Q:
-                return ScreenResult.Quit();
+                return ScreenResult.ConfirmQuit();
             case ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control):
                 return ScreenResult.Quit();
             default:

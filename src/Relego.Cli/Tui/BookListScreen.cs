@@ -618,7 +618,7 @@ public sealed class BookListScreen(
         switch (char.ToLowerInvariant(shortcutKey))
         {
             case 'q':
-                navigate(ScreenResult.Quit());
+                navigate(ScreenResult.ConfirmQuit());
                 return true;
 
             case 's':
