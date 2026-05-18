@@ -63,7 +63,7 @@ public sealed class RelegoHttpClient(HttpClient http)
 
     public async Task<bool> PingAsync(CancellationToken ct = default)
     {
-        using var response = await http.GetAsync("/", ct).ConfigureAwait(false);
+        using var response = await http.GetAsync("/healthz/live", ct).ConfigureAwait(false);
         return response.IsSuccessStatusCode;
     }
 
