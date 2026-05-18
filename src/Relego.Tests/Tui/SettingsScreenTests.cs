@@ -67,7 +67,7 @@ public sealed class SettingsScreenTests
             .Respond("application/json", JsonSerializer.Serialize(settings, CamelCaseOptions));
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
-        var screen = new SettingsScreen(new SunnyHttpClient(httpClient));
+        var screen = new SettingsScreen(new RelegoHttpClient(httpClient));
         await screen.InitializeAsync(CancellationToken.None);
 
         Assert.Equal(6, screen.Fields.Count); // 5 editable (includes delivery day) + 1 action
@@ -86,7 +86,7 @@ public sealed class SettingsScreenTests
             .Respond("application/json", JsonSerializer.Serialize(settings, CamelCaseOptions));
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
-        var screen = new SettingsScreen(new SunnyHttpClient(httpClient));
+        var screen = new SettingsScreen(new RelegoHttpClient(httpClient));
         await screen.InitializeAsync(CancellationToken.None);
 
         Assert.Equal("monday", screen.Fields.First(f => f.FieldId == "deliveryDay").Value);
@@ -104,7 +104,7 @@ public sealed class SettingsScreenTests
             .Respond("application/json", JsonSerializer.Serialize(updatedSettings, CamelCaseOptions));
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
-        var screen = new SettingsScreen(new SunnyHttpClient(httpClient));
+        var screen = new SettingsScreen(new RelegoHttpClient(httpClient));
         await screen.InitializeAsync(CancellationToken.None);
 
         Assert.Equal(TimeZoneInfo.Local.Id, screen.Settings!.Timezone);
@@ -120,7 +120,7 @@ public sealed class SettingsScreenTests
         // No PUT mock — if a PUT is attempted, it would fail
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
-        var screen = new SettingsScreen(new SunnyHttpClient(httpClient));
+        var screen = new SettingsScreen(new RelegoHttpClient(httpClient));
         await screen.InitializeAsync(CancellationToken.None);
 
         Assert.Equal(TimeZoneInfo.Local.Id, screen.Settings!.Timezone);
@@ -365,7 +365,7 @@ public sealed class SettingsScreenTests
             .Respond("application/json", JsonSerializer.Serialize(settings, CamelCaseOptions));
         var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
-        var screen = new SettingsScreen(new SunnyHttpClient(httpClient));
+        var screen = new SettingsScreen(new RelegoHttpClient(httpClient));
         await screen.InitializeAsync(CancellationToken.None);
         return screen;
     }
