@@ -154,13 +154,25 @@ public sealed class HighlightDetailScreenTests
     }
 
     [Fact]
-    public async Task HandleKeyAsync_QQuitsScreen()
+    public async Task HandleKeyAsync_QRequestsQuitConfirmation()
     {
         using var mockHttp = new MockHttpMessageHandler();
         using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
         var screen = CreateScreen(new RelegoHttpClient(httpClient));
 
         var result = await screen.HandleKeyAsync(Key(ConsoleKey.Q, 'q'), CancellationToken.None);
+
+        Assert.Equal(ScreenAction.ConfirmQuit, result.Action);
+    }
+
+    [Fact]
+    public async Task HandleKeyAsync_CtrlCQuitsScreenImmediately()
+    {
+        using var mockHttp = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(mockHttp, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
+        var screen = CreateScreen(new RelegoHttpClient(httpClient));
+
+        var result = await screen.HandleKeyAsync(new ConsoleKeyInfo('c', ConsoleKey.C, false, false, true), CancellationToken.None);
 
         Assert.Equal(ScreenAction.Quit, result.Action);
     }

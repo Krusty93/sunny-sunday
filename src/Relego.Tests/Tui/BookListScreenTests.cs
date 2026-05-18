@@ -87,7 +87,7 @@ public sealed class BookListScreenTests : IDisposable
     }
 
     [Fact]
-    public async Task TryHandleShortcutKey_Q_RequestsQuit()
+    public async Task TryHandleShortcutKey_Q_RequestsQuitConfirmation()
     {
         var screen = await CreateScreenAsync();
         ScreenResult? result = null;
@@ -96,7 +96,7 @@ public sealed class BookListScreenTests : IDisposable
 
         Assert.True(handled);
         Assert.NotNull(result);
-        Assert.Equal(ScreenAction.Quit, result!.Action);
+        Assert.Equal(ScreenAction.ConfirmQuit, result!.Action);
     }
 
     [Fact]

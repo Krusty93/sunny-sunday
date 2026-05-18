@@ -239,7 +239,7 @@ public sealed class SettingsScreen : IScreen
             ConsoleKey.Enter => await HandleEnterAsync(cancellationToken).ConfigureAwait(false),
             ConsoleKey.T => await HandleTestEmailAsync(cancellationToken).ConfigureAwait(false),
             ConsoleKey.R => await HandleRefreshAsync(cancellationToken).ConfigureAwait(false),
-            ConsoleKey.Q => ScreenResult.Quit(),
+            ConsoleKey.Q => ScreenResult.ConfirmQuit(),
             ConsoleKey.Escape => ScreenResult.Pop(),
             ConsoleKey.C when key.Modifiers.HasFlag(ConsoleModifiers.Control) => ScreenResult.Quit(),
             _ => ScreenResult.Stay()
