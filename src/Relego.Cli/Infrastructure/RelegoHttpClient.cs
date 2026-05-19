@@ -76,6 +76,9 @@ public sealed class RelegoHttpClient(HttpClient http)
     public Task<HttpResponseMessage> DeleteHighlightAsync(int id, CancellationToken ct = default)
         => http.DeleteAsync($"/highlights/{id}", ct);
 
+    public Task<HttpResponseMessage> RenameBookAsync(int bookId, RenameBookRequest request, CancellationToken ct = default)
+        => http.PutAsJsonAsync($"/books/{bookId}/title", request, RelegoJsonContext.Default.RenameBookRequest, ct);
+
     public async Task<List<WeightedHighlightDto>> GetWeightsAsync(CancellationToken ct = default)
         => (await http.GetFromJsonAsync("/highlights/weights", RelegoJsonContext.Default.ListWeightedHighlightDto, ct).ConfigureAwait(false))!;
 }

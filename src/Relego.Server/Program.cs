@@ -72,6 +72,7 @@ builder.Services.AddScoped<ExclusionRepository>();
 builder.Services.AddScoped<WeightRepository>();
 builder.Services.AddScoped<RecapRepository>();
 builder.Services.AddScoped<HighlightRepository>();
+builder.Services.AddScoped<BookRepository>();
 
 builder.Services.AddQuartz(q =>
 {
@@ -118,6 +119,7 @@ app.MapStatusEndpoints();
 app.MapExclusionEndpoints();
 app.MapWeightEndpoints();
 app.MapHighlightEndpoints();
+app.MapBookEndpoints();
 
 var schemaBootstrap = new SchemaBootstrap();
 await schemaBootstrap.ApplyAsync(dbPath);

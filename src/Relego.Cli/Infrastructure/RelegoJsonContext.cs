@@ -18,4 +18,5 @@ namespace Relego.Cli.Infrastructure;
 [JsonSerializable(typeof(HighlightItemDto))]
 [JsonSerializable(typeof(SetWeightRequest))]
 [JsonSerializable(typeof(List<WeightedHighlightDto>))]
+[JsonSerializable(typeof(RenameBookRequest))]
 internal partial class RelegoJsonContext : JsonSerializerContext;
