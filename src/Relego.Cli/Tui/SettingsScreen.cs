@@ -312,6 +312,11 @@ public sealed class SettingsScreen : IScreen
 
     private void CancelEdit()
     {
+        // Preserve the selected index: SetFocus() on the ListView may fire ValueChanged,
+        // which would overwrite _selectedField with whatever SelectedItem the list reports
+        // (potentially 0), so we save and restore the value around the SetFocus call.
+        var savedSelectedField = _selectedField;
+
         _isEditing = false;
         _isSelectMode = false;
         _selectOptions = [];
@@ -326,6 +331,7 @@ public sealed class SettingsScreen : IScreen
             _editOverlay.Visible = false;
 
         _fieldList?.SetFocus();
+        _selectedField = savedSelectedField;
         UpdateViewStateIfCreated();
     }
 
@@ -530,6 +536,11 @@ public sealed class SettingsScreen : IScreen
 
     private void UpdateViewState()
     {
+        // Snapshot selection before modifying _fieldRows: collection-change notifications
+        // (e.g. from Clear()) can fire ValueChanged on the ListView, which would
+        // overwrite _selectedField with SelectedItem = 0 before we restore it.
+        var selectedField = _selectedField;
+
         if (_fieldRows is not null)
         {
             _fieldRows.Clear();
@@ -541,7 +552,7 @@ public sealed class SettingsScreen : IScreen
 
         if (_fieldList is not null && _fields.Count > 0)
         {
-            _fieldList.SelectedItem = Math.Clamp(_selectedField, 0, _fields.Count - 1);
+            _fieldList.SelectedItem = Math.Clamp(selectedField, 0, _fields.Count - 1);
         }
 
         if (_statusLabel is not null)
