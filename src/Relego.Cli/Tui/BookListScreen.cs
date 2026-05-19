@@ -350,6 +350,10 @@ public sealed class BookListScreen(
 
         void RefreshVisibleBooks()
         {
+            // Snapshot selection before Clear: the ObservableCollection change fires
+            // ValueChanged on the ListView, which would overwrite _selectedIndex to 0.
+            var selectedIndex = _selectedIndex;
+
             displayItems.Clear();
             foreach (var item in _filteredBooks.Select(book => FormatBookRow(book, tableLayout)))
             {
@@ -358,7 +362,7 @@ public sealed class BookListScreen(
 
             if (_filteredBooks.Count > 0)
             {
-                listView.SelectedItem = Math.Min(_selectedIndex, _filteredBooks.Count - 1);
+                listView.SelectedItem = Math.Min(selectedIndex, _filteredBooks.Count - 1);
             }
             else
             {
@@ -398,7 +402,14 @@ public sealed class BookListScreen(
         _listView = listView;
         _refreshVisibleBooks = RefreshVisibleBooks;
         SetupContainerKeyBindings(container, listView, navigate, RefreshVisibleBooks, BeginSearchInput, () => BeginSyncPrompt());
+
+        // Save/restore selection around SetFocus: Terminal.Gui may fire ValueChanged
+        // with SelectedItem = 0 when the ListView gains focus, overwriting _selectedIndex.
+        var savedIndex = _selectedIndex;
         listView.SetFocus();
+        _selectedIndex = savedIndex;
+        if (_filteredBooks.Count > 0)
+            listView.SelectedItem = Math.Min(savedIndex, _filteredBooks.Count - 1);
 
         return container;
     }
