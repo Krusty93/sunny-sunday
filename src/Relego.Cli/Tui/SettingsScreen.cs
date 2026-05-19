@@ -536,6 +536,11 @@ public sealed class SettingsScreen : IScreen
 
     private void UpdateViewState()
     {
+        // Snapshot selection before modifying _fieldRows: collection-change notifications
+        // (e.g. from Clear()) can fire ValueChanged on the ListView, which would
+        // overwrite _selectedField with SelectedItem = 0 before we restore it.
+        var selectedField = _selectedField;
+
         if (_fieldRows is not null)
         {
             _fieldRows.Clear();
@@ -547,7 +552,7 @@ public sealed class SettingsScreen : IScreen
 
         if (_fieldList is not null && _fields.Count > 0)
         {
-            _fieldList.SelectedItem = Math.Clamp(_selectedField, 0, _fields.Count - 1);
+            _fieldList.SelectedItem = Math.Clamp(selectedField, 0, _fields.Count - 1);
         }
 
         if (_statusLabel is not null)
